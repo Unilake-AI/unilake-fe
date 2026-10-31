@@ -1,0 +1,25 @@
+# Thư viện phụ thuộc và kết quả dựng ứng dụng
+node_modules/
+.next/
+out/
+build/
+dist/
+.pnpm-store/
+*.tsbuildinfo
+.lighthouseci/
+
+# Môi trường và thông tin bí mật
+.env
+.env.local
+.env.*.local
+
+# IDE và hệ điều hành
+.vscode/
+.idea/
+.DS_Store
+
+.git/
+.env*
+coverage/
+playwright-report/
+test-results/

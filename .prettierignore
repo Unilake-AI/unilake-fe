@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+.next/
+out/
+build/
+dist/
+
+# Generated
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Static
+public/
+coverage/
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Test & CI
+playwright-report/
+test-results/
+.lighthouseci/
+
+# Data
+*.min.js
+*.min.css
