@@ -111,7 +111,7 @@ pnpm test
 
 ### Continuous integration
 
-Workflow [Frontend CI/CD](.github/workflows/ci-frontend.yml) áp dụng cho sự kiện push và pull request vào `main`, `develop`. Quy trình gồm cài đặt dependency, kiểm tra TypeScript, ESLint, định dạng, Vitest, build và đánh giá bằng Lighthouse CI. Sau khi tất cả kiểm tra thành công, push lên `main` được deploy lên Vercel Production, push lên `develop` được deploy lên Vercel Preview. Pull request chỉ chạy CI và không sử dụng secrets triển khai.
+Workflow [Frontend CI/CD](.github/workflows/ci-frontend.yml) áp dụng cho sự kiện push và pull request vào `main`, `develop`. Quy trình gồm cài đặt dependency, kiểm tra TypeScript, ESLint, định dạng, Vitest, build và đánh giá bằng Lighthouse CI. Sau khi tất cả kiểm tra thành công, chỉ push lên `develop` được deploy lên Vercel Production. Nhánh `main` chỉ chạy CI. Pull request chỉ chạy CI và không sử dụng secrets triển khai.
 
 ## Tổ chức mã nguồn
 
@@ -157,8 +157,8 @@ Snapshot OpenAPI được lưu tại `docs/api/openapi.json`. Khi tích hợp m�
 
 #### Thiết lập một lần
 
-1. Tạo project trên Vercel cho repository này, chọn framework **Next.js**, Root Directory là thư mục gốc repository (`.`), Node.js **24.x** và Production Branch là `main`.
-2. Trong **Vercel → Project → Settings → Environment Variables**, thêm các biến dưới đây cho cả **Production** và **Preview**. Có thể dùng backend khác nhau cho từng môi trường:
+1. Tạo project trên Vercel cho repository này, chọn framework **Next.js**, Root Directory là thư mục gốc repository (`.`), Node.js **24.x** và Production Branch là `develop`.
+2. Trong **Vercel → Project → Settings → Environment Variables**, thêm các biến dưới đây cho môi trường **Production**:
 
    | Biến | Ví dụ |
    | --- | --- |
@@ -166,7 +166,7 @@ Snapshot OpenAPI được lưu tại `docs/api/openapi.json`. Khi tích hợp m�
    | `NEXT_PUBLIC_API_URL` | `https://api.example.com` |
    | `NEXT_PUBLIC_API_BASE_URL` | `/api/proxy` |
 
-   Thay `api.example.com` bằng backend thực tế có HTTPS, truy cập được từ Vercel và trình duyệt. Backend cần cho phép CORS với domain Production và các domain Preview được sử dụng. Không dùng `localhost` cho backend đã triển khai.
+   Thay `api.example.com` bằng backend thực tế có HTTPS, truy cập được từ Vercel và trình duyệt. Backend cần cho phép CORS với domain Production của frontend. Không dùng `localhost` cho backend đã triển khai.
 
 3. Tạo token tại [Vercel Account Settings → Tokens](https://vercel.com/account/tokens), cấp quyền cho tài khoản hoặc team sở hữu project.
 4. Lấy Project ID và Team/Organization ID trong phần Settings tương ứng trên Vercel. Hoặc chạy tại thư mục gốc repository:
@@ -186,21 +186,21 @@ Snapshot OpenAPI được lưu tại `docs/api/openapi.json`. Khi tích hợp m�
    | `VERCEL_ORG_ID` | `orgId` của team hoặc tài khoản sở hữu project |
    | `VERCEL_PROJECT_ID` | `projectId` của project frontend |
 
-   Khai báo secrets bằng giao diện GitHub, không ghi token vào repository. Workflow sử dụng GitHub Environments `production` và `preview`; nếu repository đã đặt quy tắc bảo vệ môi trường, cần cho phép nhánh tương ứng triển khai.
+   Khai báo secrets bằng giao diện GitHub, không ghi token vào repository. Workflow sử dụng GitHub Environment `production`; nếu repository đã đặt quy tắc bảo vệ môi trường, cần cho phép nhánh `develop` triển khai.
 
 #### Luồng triển khai
 
 | Sự kiện | Kết quả sau khi CI thành công |
 | --- | --- |
 | Pull request vào `main` hoặc `develop` | Chỉ kiểm tra CI |
-| Push/merge vào `develop` | Deploy Preview |
-| Push/merge vào `main` | Deploy Production và cập nhật domain production |
+| Push/merge vào `develop` | Deploy Production và cập nhật domain production |
+| Push/merge vào `main` | Chỉ kiểm tra CI |
 
 Job deploy chạy `vercel pull` để lấy cấu hình và biến môi trường, `vercel build` để tạo artifact, sau đó `vercel deploy --prebuilt` để triển khai. Production dùng thêm `--prod` ở cả bước build và deploy, theo [hướng dẫn GitHub Actions của Vercel](https://vercel.com/kb/guide/how-can-i-use-github-actions-with-vercel). Bản build trong job CI dùng để kiểm tra và chạy Lighthouse; job deploy build lại với đúng biến môi trường lấy từ Vercel.
 
 File [vercel.json](vercel.json) tắt tự động deploy từ Git bằng `git.deploymentEnabled: false` để chỉ triển khai qua workflow sau khi CI thành công, theo [cấu hình Git của Vercel](https://vercel.com/docs/project-configuration/git-configuration). Workflow báo lỗi rõ ràng nếu thiếu secrets. URL triển khai được ghi trong **GitHub Actions → workflow run → Summary** và GitHub Environment tương ứng.
 
-Sau khi cấu hình xong, push thay đổi lên `develop` để kiểm tra Preview, sau đó merge vào `main` để đưa lên Production. Khi thay đổi biến `NEXT_PUBLIC_*` trên Vercel, cần chạy lại workflow để build và deploy với giá trị mới.
+Sau khi cấu hình xong, push thay đổi lên `develop` để đưa lên Production. Merge vào `main` không kích hoạt deploy. Khi thay đổi biến `NEXT_PUBLIC_*` trên Vercel, cần chạy lại workflow để build và deploy với giá trị mới.
 
 ### Chạy trực tiếp
 
