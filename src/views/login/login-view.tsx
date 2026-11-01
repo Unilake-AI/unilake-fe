@@ -135,7 +135,7 @@ export function LoginView() {
           </ol>
         </div>
 
-        <p className="hidden font-mono text-[10px] font-medium text-slate-500 lg:block">
+        <p className="hidden font-mono text-[10px] font-medium text-slate-400 lg:block">
           Phiên bản 1.0 · Capstone C1SE.11 · Đại học Duy Tân
         </p>
       </section>
