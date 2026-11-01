@@ -52,4 +52,3 @@ jobs:
         run: pnpm lighthouse:ci
         env:
           CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
-          LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
