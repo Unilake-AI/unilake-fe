@@ -1,4 +1,4 @@
-name: Frontend CI
+name: Frontend CI/CD
 
 on:
   pull_request:
@@ -9,10 +9,15 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: frontend-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   frontend:
     name: Lint, type-check, format, and build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -25,7 +30,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
@@ -41,6 +46,9 @@ jobs:
       - name: Format check
         run: pnpm format:check
 
+      - name: Test
+        run: pnpm test
+
       - name: Build
         run: pnpm build
 
@@ -52,3 +60,74 @@ jobs:
         run: pnpm lighthouse:ci
         env:
           CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+
+  deploy:
+    name: Deploy to Vercel
+    needs: frontend
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Validate Vercel secrets
+        shell: bash
+        run: |
+          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing GitHub Actions secret: $name"
+              exit 1
+            fi
+          done
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel settings and environment variables
+        run: vercel pull --yes --environment="$VERCEL_ENVIRONMENT" --token="$VERCEL_TOKEN"
+
+      - name: Build Vercel artifacts
+        shell: bash
+        run: |
+          args=()
+          if [[ "$VERCEL_ENVIRONMENT" == "production" ]]; then
+            args+=(--prod)
+          fi
+          vercel build "${args[@]}" --token="$VERCEL_TOKEN"
+
+      - name: Deploy prebuilt artifacts
+        id: deploy
+        shell: bash
+        run: |
+          args=()
+          if [[ "$VERCEL_ENVIRONMENT" == "production" ]]; then
+            args+=(--prod)
+          fi
+          url=$(vercel deploy --prebuilt "${args[@]}" --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "### Vercel deployment ($VERCEL_ENVIRONMENT)" >> "$GITHUB_STEP_SUMMARY"
+          echo "$url" >> "$GITHUB_STEP_SUMMARY"
