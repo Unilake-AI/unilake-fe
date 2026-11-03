@@ -11,9 +11,9 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { API_SignIn } from '@/api/api_auth'
-import { getDefaultHomeForRoles } from '@/config/roles'
+import { getDefaultHomeForRoles, toRoleCode } from '@/config/roles'
 import { SESSION_EXPIRED_PARAM, storeSession } from '@/lib/session'
-import type { ApiErrorBody, LoginFormValues, RoleCode } from '@/types/auth'
+import type { ApiErrorBody, LoginFormValues } from '@/types/auth'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -60,12 +60,15 @@ export function LoginView() {
     setSessionExpired(false)
     try {
       const data = await API_SignIn(values)
+      const role = toRoleCode(data.user?.role)
+      if (!role) {
+        setServerError('Tài khoản chưa được gán vai trò phù hợp. Vui lòng liên hệ quản trị viên.')
+        return
+      }
 
       storeSession(data)
 
-      const role = data.user?.role?.toUpperCase() as RoleCode | undefined
-      const userRoles: RoleCode[] = role ? [role] : ['VIEWER']
-      const redirectPath = getDefaultHomeForRoles(userRoles)
+      const redirectPath = getDefaultHomeForRoles([role])
 
       router.push(redirectPath)
       router.refresh()

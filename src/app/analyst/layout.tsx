@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
-import { AppShell } from '@/components/layout/app-shell'
+import { DepartmentLayout } from '@/components/layout/department-layout'
 
 export default function AnalystLayout({ children }: { children: ReactNode }) {
-  return <AppShell role="ANALYST">{children}</AppShell>
+  return <DepartmentLayout workspace="STAFF">{children}</DepartmentLayout>
 }

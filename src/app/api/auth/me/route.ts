@@ -1,9 +1,8 @@
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
-import type { AuthUser, RoleCode } from '@/types/auth'
-
-const VALID_ROLE_CODES: RoleCode[] = ['ADMIN', 'DATA_ADMIN', 'ANALYST', 'MANAGER', 'VIEWER']
+import { extractRolesFromToken } from '@/config/roles'
+import type { AuthUser } from '@/types/auth'
 
 function parseJwtPayload(token: string): Record<string, unknown> | null {
   try {
@@ -30,15 +29,9 @@ export async function GET() {
     return NextResponse.json({ authenticated: false, user: null }, { status: 401 })
   }
 
-  const rawRoles = (payload.roles as unknown[]) ?? (payload.role ? [payload.role] : [])
-  const roles: RoleCode[] = Array.isArray(rawRoles)
-    ? rawRoles
-        .map((r) => String(r).toUpperCase())
-        .filter((r): r is RoleCode => VALID_ROLE_CODES.includes(r as RoleCode))
-    : []
-
+  const roles = extractRolesFromToken(token)
   if (roles.length === 0) {
-    roles.push('VIEWER')
+    return NextResponse.json({ authenticated: false, user: null }, { status: 401 })
   }
 
   const sub = typeof payload.sub === 'string' ? payload.sub : undefined

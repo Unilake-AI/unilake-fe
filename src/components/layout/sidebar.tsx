@@ -35,7 +35,7 @@ import {
 } from 'lucide-react'
 
 import { ROLE_MENUS } from '@/config/menu'
-import { ROLE_DEFINITIONS } from '@/config/roles'
+import { ROLE_DEFINITIONS, getWorkspaceForRole } from '@/config/roles'
 import type { RoleCode } from '@/types/auth'
 
 const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
@@ -75,7 +75,7 @@ interface SidebarProps {
 export function Sidebar({ role, onCloseMobile }: SidebarProps) {
   const pathname = usePathname()
   const roleDef = ROLE_DEFINITIONS[role]
-  const menuGroups = ROLE_MENUS[role] ?? []
+  const menuGroups = ROLE_MENUS[getWorkspaceForRole(role)]
   // Mục đang mở là mục có đường dẫn dài nhất khớp với URL (vd. /data/sources/new → Nguồn dữ liệu).
   const activeHref = menuGroups
     .flatMap((group) => group.items.map((item) => item.href))
