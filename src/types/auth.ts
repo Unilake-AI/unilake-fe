@@ -1,4 +1,15 @@
-export type RoleCode = 'ADMIN' | 'DATA_ADMIN' | 'ANALYST' | 'MANAGER' | 'VIEWER'
+export type RoleCode =
+  | 'ADMIN'
+  | 'DATA_ADMIN'
+  | 'VIEWER'
+  | 'ADMISSIONS_MANAGER'
+  | 'ADMISSIONS_STAFF'
+  | 'ACADEMIC_MANAGER'
+  | 'ACADEMIC_STAFF'
+  | 'HR_MANAGER'
+  | 'HR_STAFF'
+
+export type RoleWorkspace = 'ADMIN' | 'DATA_ADMIN' | 'VIEWER' | 'MANAGER' | 'STAFF'
 
 export interface AuthUser {
   id?: string | number

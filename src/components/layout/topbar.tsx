@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Bell, Building2, ChevronDown, Layers, Menu, Sparkles } from 'lucide-react'
 
 import { ASK_AI_PATHS } from '@/config/menu'
+import { getWorkspaceForRole } from '@/config/roles'
 import type { RoleCode } from '@/types/auth'
 
 import { DomainSelector } from './domain-selector'
@@ -16,7 +17,7 @@ interface TopbarProps {
 }
 
 export function Topbar({ role, onOpenMobile }: TopbarProps) {
-  const askAiPath = ASK_AI_PATHS[role]
+  const askAiPath = ASK_AI_PATHS[getWorkspaceForRole(role)]
 
   return (
     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-3 sm:gap-3 md:px-4">

@@ -7,9 +7,9 @@ import { DomainProvider } from '@/hooks/use-domain'
 
 import { DomainSelector } from './domain-selector'
 
-function renderSelector() {
+function renderSelector(role?: 'HR_STAFF') {
   return render(
-    <DomainProvider>
+    <DomainProvider role={role}>
       <DomainSelector />
     </DomainProvider>
   )
@@ -52,5 +52,19 @@ describe('DomainSelector', () => {
     renderSelector()
 
     expect(await screen.findByText('Đào tạo')).toBeInTheDocument()
+  })
+
+  it('chỉ cho role phòng ban thấy phân hệ được giao dù storage cũ là phân hệ khác', async () => {
+    window.sessionStorage.setItem(DOMAIN_STORAGE_KEY, 'academic')
+    const user = userEvent.setup()
+    renderSelector('HR_STAFF')
+
+    const trigger = screen.getByRole('button', { name: 'Chọn phân hệ nghiệp vụ' })
+    expect(trigger).toHaveTextContent('Nhân sự')
+    await user.click(trigger)
+
+    expect(await screen.findByRole('menuitem', { name: /Nhân sự/ })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: /Đào tạo/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: /Tuyển sinh/ })).not.toBeInTheDocument()
   })
 })

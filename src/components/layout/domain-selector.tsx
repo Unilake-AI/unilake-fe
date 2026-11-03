@@ -20,7 +20,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { DOMAINS } from '@/config/domains'
 import type { DomainDefinition } from '@/config/domains'
 import { useDomain } from '@/hooks/use-domain'
 
@@ -32,7 +31,7 @@ const DOMAIN_ICONS: Record<DomainDefinition['iconName'], ComponentType<{ classNa
 }
 
 export function DomainSelector() {
-  const { domain, setDomain } = useDomain()
+  const { domain, availableDomains, setDomain } = useDomain()
 
   return (
     <DropdownMenu>
@@ -51,7 +50,7 @@ export function DomainSelector() {
         <DropdownMenuLabel className="font-mono text-[10px] font-medium uppercase tracking-wider text-slate-400">
           Chọn phân hệ nghiệp vụ
         </DropdownMenuLabel>
-        {DOMAINS.map((item) => {
+        {availableDomains.map((item) => {
           const Icon = DOMAIN_ICONS[item.iconName]
           const selected = item.code === domain.code
           return (
