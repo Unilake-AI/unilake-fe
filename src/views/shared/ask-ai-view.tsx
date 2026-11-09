@@ -12,16 +12,28 @@ import { API_AskNlq } from '@/api/api_data'
 import { getApiErrorMessage } from '@/api/http'
 import { Card, PageHeader, Tag } from '@/components/page/page-parts'
 import { getDomain } from '@/config/domains'
+import type { DomainCode } from '@/config/domains'
 import { useDomain } from '@/hooks/use-domain'
 import { addQueryHistory } from '@/lib/query-history'
 import type { NlqResponse } from '@/types/data'
 
-const SUGGESTIONS = [
-  'Tỷ lệ nhập học theo từng phương thức năm 2026?',
-  'Khoa CNTT có bao nhiêu giảng viên?',
-  'Điểm trung bình của sinh viên theo từng ngành?',
-  'So sánh số nhập học theo ngành 2025 và 2026',
-]
+const SUGGESTIONS: Record<DomainCode, string[]> = {
+  all: [
+    'Tỷ lệ nhập học theo từng phương thức năm 2026?',
+    'Khoa CNTT có bao nhiêu giảng viên?',
+    'Điểm trung bình của sinh viên theo từng ngành?',
+    'So sánh số nhập học theo ngành 2025 và 2026',
+  ],
+  admissions: [
+    'Tỷ lệ nhập học theo từng phương thức năm 2026?',
+    'So sánh số nhập học theo ngành 2025 và 2026',
+  ],
+  academic: [
+    'Điểm trung bình của sinh viên theo từng ngành?',
+    'Số sinh viên đang học theo từng khoa?',
+  ],
+  hr: ['Khoa CNTT có bao nhiêu giảng viên?', 'Số giảng viên theo từng khoa?'],
+}
 
 interface Turn {
   id: number
@@ -193,7 +205,7 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
 
       <Card title="Gợi ý câu hỏi thường gặp" subtitle="Nhấn để hỏi nhanh">
         <div className="flex flex-wrap gap-2">
-          {SUGGESTIONS.map((item) => (
+          {SUGGESTIONS[domain.code].map((item) => (
             <button
               key={item}
               type="button"
@@ -298,7 +310,7 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
         <input
           id="ask-input"
           className="h-9 min-w-0 flex-1 rounded-md px-2 text-sm focus-visible:outline-none"
-          placeholder="Nhập câu hỏi về dữ liệu Tuyển sinh, Đào tạo hoặc Nhân sự…"
+          placeholder={`Nhập câu hỏi về dữ liệu ${domain.code === 'all' ? 'Tuyển sinh, Đào tạo hoặc Nhân sự' : domain.shortLabel}…`}
           value={question}
           maxLength={500}
           onChange={(event) => setQuestion(event.target.value)}

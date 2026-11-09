@@ -1,35 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-import { getDefaultHomeForRoles, hasAccessToRoute } from '@/config/roles'
-import type { RoleCode } from '@/types/auth'
-
-const VALID_ROLES: RoleCode[] = ['ADMIN', 'DATA_ADMIN', 'ANALYST', 'MANAGER', 'VIEWER']
-
-function extractRolesFromToken(token: string): RoleCode[] {
-  try {
-    const parts = token.split('.')
-    if (parts.length !== 3 || !parts[1]) return ['VIEWER']
-
-    const base64Url = parts[1]
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-    const jsonStr =
-      typeof atob === 'function' ? atob(base64) : Buffer.from(base64, 'base64').toString('utf-8')
-
-    const payload = JSON.parse(jsonStr) as Record<string, unknown>
-    const rawRoles = (payload.roles as unknown[]) ?? (payload.role ? [payload.role] : [])
-
-    const roles: RoleCode[] = Array.isArray(rawRoles)
-      ? rawRoles
-          .map((r) => String(r).toUpperCase())
-          .filter((r): r is RoleCode => VALID_ROLES.includes(r as RoleCode))
-      : []
-
-    return roles.length > 0 ? roles : ['VIEWER']
-  } catch {
-    return ['VIEWER']
-  }
-}
+import { extractRolesFromToken, getDefaultHomeForRoles, hasAccessToRoute } from '@/config/roles'
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -51,6 +23,12 @@ export function middleware(request: NextRequest) {
 
   // 2. Người dùng đã xác thực: lấy vai trò
   const userRoles = extractRolesFromToken(token)
+  if (userRoles.length === 0) {
+    if (pathname === '/login') return NextResponse.next()
+    const response = NextResponse.redirect(new URL('/login', request.url))
+    response.cookies.delete('access_token')
+    return response
+  }
   const defaultHome = getDefaultHomeForRoles(userRoles)
 
   // Nếu truy cập /login hoặc đường dẫn gốc /, chuyển đến trang chủ theo vai trò người dùng
@@ -59,6 +37,15 @@ export function middleware(request: NextRequest) {
   }
 
   // Kiểm tra quyền truy cập các tuyến theo tiền tố vai trò
+  if (
+    (pathname === '/viewer/ask' ||
+      pathname.startsWith('/viewer/ask/') ||
+      pathname === '/viewer/history' ||
+      pathname.startsWith('/viewer/history/')) &&
+    !userRoles.includes('ADMIN')
+  ) {
+    return NextResponse.redirect(new URL('/viewer', request.url))
+  }
   if (!hasAccessToRoute(pathname, userRoles)) {
     return NextResponse.redirect(new URL(defaultHome, request.url))
   }

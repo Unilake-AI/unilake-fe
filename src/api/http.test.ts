@@ -152,6 +152,38 @@ describe('http interceptors', () => {
     expect(sent).toBe('Bearer abc')
   })
 
+  it('giữ Authorization riêng kể cả khi backend trả 401', async () => {
+    Cookies.set('access_token', 'session-token')
+    let sent: unknown
+    http.defaults.adapter = (config) => {
+      sent = config.headers.get('Authorization')
+      return respondWith(401)(config)
+    }
+    await expect(
+      http.get('/custom', { headers: { Authorization: 'Bearer custom-token' } })
+    ).rejects.toBeInstanceOf(AxiosError)
+    expect(sent).toBe('Bearer custom-token')
+    expect(API_RefreshToken).not.toHaveBeenCalled()
+    expect(redirectToLoginExpired).not.toHaveBeenCalled()
+  })
+
+  it('dùng token đã được request khác làm mới khi 401 đến muộn', async () => {
+    Cookies.set('access_token', 'expired')
+    const seen: string[] = []
+    http.defaults.adapter = (config) => {
+      const auth = String(config.headers.get('Authorization'))
+      seen.push(auth)
+      if (auth === 'Bearer expired') {
+        Cookies.set('access_token', 'fresh')
+        return respondWith(401)(config)
+      }
+      return respondWith(200)(config)
+    }
+    await http.get('/late')
+    expect(seen).toEqual(['Bearer expired', 'Bearer fresh'])
+    expect(API_RefreshToken).not.toHaveBeenCalled()
+  })
+
   it('đưa về trang đăng nhập khi 401 mà không có refresh token', async () => {
     Cookies.set('access_token', 'expired')
     http.defaults.adapter = respondWith(401)

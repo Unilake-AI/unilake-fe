@@ -1,15 +1,14 @@
 import axios from 'axios'
 import Cookies from 'js-cookie'
 
-import { API } from '@/api/api'
-import { API_RefreshToken } from '@/api/api_auth'
+import { API_BASE_URL, API_TIMEOUT } from '@/api/api'
 import { readRefreshToken, redirectToLoginExpired, storeSession } from '@/lib/session'
 import type { ApiErrorBody } from '@/types/auth'
 
 import type { InternalAxiosRequestConfig } from 'axios'
 
 /** Client gọi REST API của backend (`/api/v1`), tự gắn Bearer token đã lưu khi đăng nhập. */
-export const http = axios.create({ baseURL: `${API}/api/v1`, timeout: 30_000 })
+export const http = axios.create({ baseURL: API_BASE_URL, timeout: API_TIMEOUT })
 
 function readAccessToken(): string | undefined {
   const fromCookie = Cookies.get('access_token')
@@ -23,16 +22,27 @@ function readAccessToken(): string | undefined {
   }
 }
 
-http.interceptors.request.use((config) => {
+// Các endpoint này xác thực bằng payload, không dùng access token của phiên hiện tại.
+const SESSION_ENDPOINTS = new Set(['/auth/login', '/auth/refresh', '/auth/logout'])
+
+http.interceptors.request.use((config: RetriableConfig) => {
+  if (SESSION_ENDPOINTS.has(config.url ?? '')) {
+    config._sessionAuthorization = false
+    return config
+  }
   // Không ghi đè khi request đã có token (vd. gửi lại với token vừa làm mới).
   const token = readAccessToken()
   if (token && !config.headers.has('Authorization')) {
     config.headers.set('Authorization', `Bearer ${token}`)
+    config._sessionAuthorization = true
   }
   return config
 })
 
-type RetriableConfig = InternalAxiosRequestConfig & { _retriedAfterRefresh?: boolean }
+type RetriableConfig = InternalAxiosRequestConfig & {
+  _retriedAfterRefresh?: boolean
+  _sessionAuthorization?: boolean
+}
 
 // Nhiều request cùng gặp 401 thì chỉ gọi /auth/refresh một lần, các request còn lại chờ chung.
 let refreshing: Promise<string | null> | null = null
@@ -45,6 +55,8 @@ export function refreshAccessToken(): Promise<string | null> {
       return null
     }
     try {
+      // Import khi cần để tránh phụ thuộc vòng: api_auth cũng dùng instance http này.
+      const { API_RefreshToken } = await import('@/api/api_auth')
       const data = await API_RefreshToken(refreshToken)
       storeSession(data)
       return data.access_token
@@ -63,11 +75,16 @@ http.interceptors.response.use(undefined, async (error: unknown) => {
   if (
     axios.isAxiosError(error) &&
     error.response?.status === 401 &&
-    error.config?.headers.has('Authorization')
+    (error.config as RetriableConfig | undefined)?._sessionAuthorization
   ) {
     const config = error.config as RetriableConfig
     if (!config._retriedAfterRefresh) {
-      const token = await refreshAccessToken()
+      // Một 401 đến muộn sau khi request khác đã refresh: dùng token mới đã lưu.
+      const currentToken = readAccessToken()
+      const token =
+        currentToken && config.headers.get('Authorization') !== `Bearer ${currentToken}`
+          ? currentToken
+          : await refreshAccessToken()
       if (token) {
         config._retriedAfterRefresh = true
         config.headers.set('Authorization', `Bearer ${token}`)

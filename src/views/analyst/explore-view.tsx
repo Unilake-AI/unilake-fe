@@ -15,6 +15,7 @@ import {
   Tag,
   statusTone,
 } from '@/components/page/page-parts'
+import { useDomain } from '@/hooks/use-domain'
 import { cn } from '@/lib/utils'
 
 const LAYERS = ['all', 'gold', 'silver', 'bronze'] as const
@@ -22,10 +23,13 @@ const LAYERS = ['all', 'gold', 'silver', 'bronze'] as const
 export function ExploreView() {
   const [layer, setLayer] = useState<(typeof LAYERS)[number]>('all')
   const [selected, setSelected] = useState<string | null>(null)
+  const { domain } = useDomain()
 
   const catalog = useQuery({ queryKey: ['catalog'], queryFn: () => API_GetCatalog() })
   const entries = (catalog.data ?? []).filter(
-    (entry) => layer === 'all' || entry.layer.toLowerCase() === layer
+    (entry) =>
+      (domain.code === 'all' || entry.domain_id === domain.code) &&
+      (layer === 'all' || entry.layer.toLowerCase() === layer)
   )
   const current =
     entries.find((entry) => `${entry.layer}.${entry.dataset}` === selected) ?? entries[0]

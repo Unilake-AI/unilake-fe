@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
 
+import { API_BASE_URL } from '@/api/api'
+
 export async function POST(request: Request) {
   try {
     const contentType = request.headers.get('content-type') ?? ''
-    const apiBase = process.env.API_BASE_URL ?? 'http://localhost:8000/api/v1'
+    const apiBase = API_BASE_URL
 
     let res: Response
     if (contentType.includes('application/json')) {

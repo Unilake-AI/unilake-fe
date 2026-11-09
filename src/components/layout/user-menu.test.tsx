@@ -8,8 +8,12 @@ const logout = vi.fn()
 
 vi.mock('@/hooks/use-auth', () => ({
   useAuth: () => ({
-    user: { username: 'analyst', fullName: 'Trần Thị Mai Phương', roles: ['ANALYST', 'VIEWER'] },
-    roles: ['ANALYST', 'VIEWER'],
+    user: {
+      username: 'academic_staff',
+      fullName: 'Trần Thị Mai Phương',
+      roles: ['ACADEMIC_STAFF', 'VIEWER'],
+    },
+    roles: ['ACADEMIC_STAFF', 'VIEWER'],
     logout,
     isLoggingOut: false,
   }),
@@ -21,7 +25,7 @@ describe('getInitials', () => {
   })
 
   it('uses the first two letters of a single-word username', () => {
-    expect(getInitials('analyst')).toBe('AN')
+    expect(getInitials('academic_staff')).toBe('AC')
   })
 
   it('falls back to U for an empty name', () => {
@@ -35,20 +39,20 @@ describe('UserMenu', () => {
   })
 
   it('shows the user name and current role on the trigger', () => {
-    render(<UserMenu role="ANALYST" />)
+    render(<UserMenu role="ACADEMIC_STAFF" />)
 
     const trigger = screen.getByRole('button', { name: 'Mở menu người dùng' })
     expect(trigger).toHaveTextContent('Trần Thị Mai Phương')
-    expect(trigger).toHaveTextContent('[ANALYST]')
+    expect(trigger).toHaveTextContent('[ACADEMIC_STAFF]')
   })
 
   it('lists the workspaces the user can switch to and logs out', async () => {
     const user = userEvent.setup()
-    render(<UserMenu role="ANALYST" />)
+    render(<UserMenu role="ACADEMIC_STAFF" />)
 
     await user.click(screen.getByRole('button', { name: 'Mở menu người dùng' }))
 
-    expect(await screen.findByRole('menuitem', { name: /Chuyên viên Phân tích/ })).toHaveAttribute(
+    expect(await screen.findByRole('menuitem', { name: /Nhân viên Đào tạo/ })).toHaveAttribute(
       'href',
       '/analyst'
     )
