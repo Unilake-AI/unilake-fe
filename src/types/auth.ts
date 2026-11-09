@@ -68,13 +68,15 @@ export interface LogoutRequest {
   refresh_token?: string
 }
 
-export interface ApiErrorBody {
-  error?: { code?: string; message?: string }
-  detail?: string
-  message?: string
-}
-
 export interface AuthMeResponse {
   authenticated: boolean
   user: AuthUser | null
+}
+
+export interface LoginSession {
+  login_session_id: number
+  login_at: string
+  ip_address: string | null
+  user_agent: string | null
+  session_status: string
 }

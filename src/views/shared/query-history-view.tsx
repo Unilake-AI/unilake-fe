@@ -6,7 +6,15 @@ import Link from 'next/link'
 
 import { Trash2 } from 'lucide-react'
 
-import { Button, Card, EmptyState, PageHeader, Tag, statusTone } from '@/components/page/page-parts'
+import {
+  Button,
+  Card,
+  EmptyState,
+  PageHeader,
+  Tag,
+  statusLabel,
+  statusTone,
+} from '@/components/page/page-parts'
 import { getDomain } from '@/config/domains'
 import { useDomain } from '@/hooks/use-domain'
 import { clearQueryHistory, readQueryHistory } from '@/lib/query-history'
@@ -31,7 +39,7 @@ export function QueryHistoryView({ askHref }: { askHref: string }) {
       <PageHeader
         breadcrumb={[getDomain(domain.code).shortLabel, 'Lịch sử truy vấn']}
         title="Lịch sử truy vấn"
-        description="Xem lại câu hỏi, SQL đã sinh và kết quả trước đó."
+        description="Xem lại câu hỏi và kết quả trước đó."
         actions={
           entries.length > 0 && (
             <Button onClick={clearAll} icon={<Trash2 className="size-3.5" aria-hidden="true" />}>
@@ -41,8 +49,7 @@ export function QueryHistoryView({ askHref }: { askHref: string }) {
         }
       />
       <p className="rounded-md border border-dashed border-slate-300 bg-white px-3 py-2 text-[11px] text-slate-600">
-        Lịch sử đang lưu trên trình duyệt này. Backend chưa có{' '}
-        <code className="font-mono">GET /query-history</code>; khi có sẽ đồng bộ theo tài khoản.
+        Lịch sử chỉ được lưu trên trình duyệt bạn đang dùng.
       </p>
 
       <Card
@@ -85,7 +92,7 @@ export function QueryHistoryView({ askHref }: { askHref: string }) {
                         {entry.question}
                       </td>
                       <td className="px-3 py-2.5">
-                        <Tag tone={statusTone(entry.status)}>{entry.status}</Tag>
+                        <Tag tone={statusTone(entry.status)}>{statusLabel(entry.status)}</Tag>
                       </td>
                       <td className="px-3 py-2.5 font-mono text-slate-700">{entry.rowCount}</td>
                       <td className="px-3 py-2.5 font-mono text-slate-700">
@@ -115,7 +122,9 @@ export function QueryHistoryView({ askHref }: { askHref: string }) {
                               {entry.sql}
                             </pre>
                           ) : (
-                            <p className="text-xs text-rose-700">{entry.error}</p>
+                            <p className="text-xs text-rose-700">
+                              Câu hỏi này chưa có câu trả lời. Bạn có thể gửi lại ở trang Hỏi AI.
+                            </p>
                           )}
                         </td>
                       </tr>

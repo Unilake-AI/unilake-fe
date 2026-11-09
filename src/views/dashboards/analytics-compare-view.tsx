@@ -69,7 +69,7 @@ export function AnalyticsCompareView({ askHref }: { askHref: string }) {
           </Link>
         }
       />
-      <MockNotice api="GET /dashboard/admissions/breakdown" />
+      <MockNotice />
 
       <Card
         title="So sánh số nhập học theo ngành"

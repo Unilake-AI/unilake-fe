@@ -8,7 +8,12 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('access_token')?.value
 
   // Không chặn hoặc chuyển hướng tài nguyên nội bộ Next.js hay tuyến API
-  if (pathname.startsWith('/api') || pathname.startsWith('/_next') || pathname.includes('.')) {
+  if (
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
+    pathname.includes('.') ||
+    pathname === '/icon'
+  ) {
     return NextResponse.next()
   }
 

@@ -114,7 +114,7 @@ export function DomainsCompareView({ detailHref }: { detailHref: string }) {
         description="So sánh nhanh ba phân hệ Tuyển sinh, Đào tạo, Nhân sự. Bấm một phân hệ để xem dashboard chi tiết."
         actions={<Tag tone="amber">Gold Layer · 3 data mart</Tag>}
       />
-      <MockNotice api="GET /dashboard/*/overview" />
+      <MockNotice />
 
       <div className="grid gap-4 xl:grid-cols-3">
         {PANELS.map((panel) => (

@@ -154,7 +154,10 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
       })
     },
     onError: (error, { id, text }) => {
-      const message = getApiErrorMessage(error, 'Dịch vụ AI tạm thời không khả dụng.')
+      const message = getApiErrorMessage(
+        error,
+        'Chưa thể trả lời câu hỏi lúc này. Vui lòng thử lại.'
+      )
       setTurns((prev) =>
         prev.map((t) => (t.id === id ? { ...t, state: 'error', error: message } : t))
       )
@@ -192,7 +195,7 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
       <PageHeader
         breadcrumb={[getDomain(domain.code).shortLabel, 'Hỏi AI']}
         title="Hỏi AI — Truy vấn bằng ngôn ngữ tự nhiên"
-        description="Đặt câu hỏi bằng tiếng Việt, hệ thống sinh SQL, kiểm tra an toàn rồi truy vấn dữ liệu. Nguồn: POST /api/v1/nlq/ask."
+        description="Đặt câu hỏi bằng tiếng Việt để tìm thông tin trong dữ liệu."
         actions={
           <Link
             href={historyHref}
@@ -241,13 +244,13 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
               }
               right={
                 turn.state === 'processing' ? (
-                  <Tag tone="amber">PROCESSING</Tag>
+                  <Tag tone="amber">Đang tìm câu trả lời</Tag>
                 ) : turn.state === 'error' ? (
-                  <Tag tone="rose">FAILED</Tag>
+                  <Tag tone="rose">Chưa trả lời được</Tag>
                 ) : turn.result?.rows.length ? (
-                  <Tag tone="emerald">COMPLETED</Tag>
+                  <Tag tone="emerald">Đã có kết quả</Tag>
                 ) : (
-                  <Tag tone="slate">NO_DATA</Tag>
+                  <Tag tone="slate">Không có kết quả</Tag>
                 )
               }
               bodyClassName="space-y-3"
@@ -258,7 +261,7 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
                     className="size-4 animate-spin text-indigo-600"
                     aria-hidden="true"
                   />
-                  Đang phân tích câu hỏi… Đang xác định ý định, lấy schema và sinh SQL.
+                  Đang tìm dữ liệu để trả lời câu hỏi của bạn…
                 </p>
               )}
               {turn.state === 'error' && (
@@ -289,7 +292,8 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
                   ) : (
                     <p className="flex items-center gap-2 text-sm text-slate-600">
                       <SearchX className="size-4 text-slate-400" aria-hidden="true" />
-                      Không tìm thấy dữ liệu phù hợp. Thử nới bộ lọc năm hoặc ngành.
+                      Không tìm thấy dữ liệu phù hợp. Hãy thử hỏi về một khoảng thời gian hoặc nhóm
+                      ngành rộng hơn.
                     </p>
                   )}
                   {turn.result.sql && <SqlBlock sql={turn.result.sql} />}

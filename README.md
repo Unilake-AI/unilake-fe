@@ -72,16 +72,15 @@ pnpm dev
 
 Các biến môi trường được khai báo trong `.env.local`, dựa trên [.env.local.example](.env.local.example).
 
-| Biến | Giá trị mặc định | Phạm vi sử dụng |
+| Biến | Development | Production |
 | --- | --- | --- |
-| `API_BASE_URL` | `http://localhost:8000/api/v1` | Route handler phía server; URL bao gồm tiền tố `/api/v1` |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Axios client trên trình duyệt; client tự bổ sung tiền tố `/api/v1` |
-| `NEXT_PUBLIC_API_BASE_URL` | `/api/proxy` | OpenAPI client; mặc định chuyển tiếp qua proxy cùng origin của Next.js |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | URL backend thực tế dùng `https://` |
 
-Ứng dụng sử dụng hai luồng kết nối:
+Đây là biến URL backend duy nhất, được đọc tại `src/api/api.ts` cho cả Axios client và route handler. Nếu biến trống, ứng dụng dùng `http://localhost:8000`. Có thể cấu hình URL có hoặc không có `/api/v1` vì ứng dụng tự chuẩn hóa tiền tố. Không đặt token, mật khẩu hoặc query trong URL này vì `NEXT_PUBLIC_*` là cấu hình công khai.
 
-- **Axios:** trình duyệt gửi yêu cầu trực tiếp đến backend qua các hàm trong `src/api/`. Backend cần cấu hình `CORS_ORIGINS` cho phép origin của frontend, bao gồm protocol, hostname và cổng.
-- **OpenAPI client:** yêu cầu được gửi đến `/api/proxy/*`, sau đó route handler của Next.js chuyển tiếp đến backend theo `API_BASE_URL`.
+- **Axios:** trình duyệt gọi trực tiếp backend qua `src/api/http.ts`; login/refresh/logout và API nghiệp vụ dùng chung instance `http`, cùng URL và timeout 30 giây. Interceptor bỏ qua gắn token và refresh cho ba endpoint xác thực để tránh vòng lặp 401. Backend cần cho phép origin frontend trong CORS, cùng header `Authorization`, `Content-Type` và các method sử dụng.
+- **Next.js:** các route handler giữ `fetch` phía server để bảo toàn xử lý cookie, FormData và chuyển tiếp response stream. OpenAPI client hiện chưa được sử dụng trong giao diện, giữ proxy cùng origin `/api/proxy` và kiểu sinh tự động.
+- **HTTPS** URL cấu hình ở production phải dùng HTTPS. Development và test cho phép HTTP trên `localhost` và `127.0.0.1`.
 
 ### Vai trò đăng nhập
 
@@ -131,11 +130,12 @@ Workflow [Frontend CI/CD](.github/workflows/ci-frontend.yml) áp dụng cho sự
 ```text
 .
 ├── src/
-│   ├── app/          # Định tuyến, layout, provider và API route handler
+│   ├── app/          # Định tuyến, layout và provider
+│   │   └── api/      # Route handler của Next.js
+│   ├── api/          # Cấu hình backend, Axios client và kiểu OpenAPI
 │   ├── views/        # Màn hình theo nhóm chức năng nghiệp vụ
 │   ├── components/   # Thành phần giao diện, bố cục và biểu đồ
-│   ├── api/          # Axios client và các hàm gọi API nghiệp vụ
-│   ├── lib/          # OpenAPI client, session, lịch sử truy vấn và tiện ích
+│   ├── lib/          # Session, lịch sử truy vấn và tiện ích
 │   ├── config/       # Cấu hình vai trò, menu, phân hệ và nguồn dữ liệu
 │   ├── hooks/        # Hook xác thực và lựa chọn phân hệ
 │   ├── types/        # Khai báo kiểu dữ liệu dùng chung
@@ -146,7 +146,7 @@ Workflow [Frontend CI/CD](.github/workflows/ci-frontend.yml) áp dụng cho sự
 └── Dockerfile        # Cấu hình build và chạy container
 ```
 
-Các file kiểm thử `*.test.ts` và `*.test.tsx` được đặt cạnh mã nguồn tương ứng. Proxy backend nằm tại `src/app/api/proxy/[...path]/route.ts`; khai báo OpenAPI được sinh tại `src/lib/api/schema.d.ts`.
+Các file kiểm thử `*.test.ts` và `*.test.tsx` được đặt cạnh mã nguồn tương ứng. Proxy backend nằm tại `src/app/api/proxy/[...path]/route.ts`; khai báo OpenAPI được sinh tại `src/api/schema.d.ts`.
 
 ## Quản lý API contract
 
@@ -159,10 +159,10 @@ Snapshot OpenAPI được lưu tại `docs/api/openapi.json`. Khi tích hợp m�
    pnpm gen:api
    ```
 
-3. Rà soát thay đổi trong `src/lib/api/schema.d.ts`; cập nhật các hàm gọi API và kiểu dữ liệu liên quan trong `src/api/`, `src/types/`.
+3. Rà soát thay đổi trong `src/api/schema.d.ts`; cập nhật các hàm gọi API và kiểu dữ liệu liên quan trong `src/api/`, `src/types/`.
 4. Chạy kiểm tra TypeScript, kiểm thử tự động và kiểm tra tích hợp cho các luồng bị ảnh hưởng.
 
-`src/lib/api/schema.d.ts` là file được sinh tự động. Mọi thay đổi contract cần bắt đầu từ snapshot OpenAPI để tránh bị ghi đè ở lần sinh tiếp theo.
+`src/api/schema.d.ts` là file được sinh tự động. Mọi thay đổi contract cần bắt đầu từ snapshot OpenAPI để tránh bị ghi đè ở lần sinh tiếp theo.
 
 ## Triển khai
 
@@ -171,13 +171,11 @@ Snapshot OpenAPI được lưu tại `docs/api/openapi.json`. Khi tích hợp m�
 #### Thiết lập một lần
 
 1. Tạo project trên Vercel cho repository này, chọn framework **Next.js**, Root Directory là thư mục gốc repository (`.`), Node.js **24.x** và Production Branch là `develop`.
-2. Trong **Vercel → Project → Settings → Environment Variables**, thêm các biến dưới đây cho môi trường **Production**:
+2. Trong **Vercel → Project → Settings → Environment Variables**, đặt `NEXT_PUBLIC_API_URL` cho môi trường **Production**.
 
    | Biến | Ví dụ |
    | --- | --- |
-   | `API_BASE_URL` | `https://api.example.com/api/v1` |
    | `NEXT_PUBLIC_API_URL` | `https://api.example.com` |
-   | `NEXT_PUBLIC_API_BASE_URL` | `/api/proxy` |
 
    Thay `api.example.com` bằng backend thực tế có HTTPS, truy cập được từ Vercel và trình duyệt. Backend cần cho phép CORS với domain Production của frontend. Không dùng `localhost` cho backend đã triển khai.
 
@@ -226,23 +224,21 @@ pnpm start
 
 ### Chạy bằng Docker
 
-Ví dụ dưới đây áp dụng cho Docker Desktop trên macOS hoặc Windows, với backend chạy trên máy host:
+Ví dụ production (thay domain ví dụ bằng backend HTTPS thực tế):
 
 ```bash
 docker build \
-  --build-arg NEXT_PUBLIC_API_URL=http://localhost:8000 \
-  --build-arg NEXT_PUBLIC_API_BASE_URL=/api/proxy \
+  --build-arg NEXT_PUBLIC_API_URL=https://backend.example.com \
   -t unilake-fe .
 
 docker run --rm \
   -p 3000:3000 \
-  -e API_BASE_URL=http://host.docker.internal:8000/api/v1 \
   unilake-fe
 ```
 
 Ứng dụng được cung cấp tại [http://localhost:3000](http://localhost:3000).
 
-Khi cấu hình môi trường triển khai, `NEXT_PUBLIC_API_URL` phải là địa chỉ backend truy cập được từ trình duyệt người dùng. `API_BASE_URL` phải là địa chỉ truy cập được từ server hoặc container frontend. Hai địa chỉ có thể khác nhau tùy cấu trúc mạng; backend cần cho phép origin thực tế của frontend trong cấu hình CORS.
+Khi backend đổi domain, chỉ sửa `NEXT_PUBLIC_API_URL` trong `.env.local` hoặc cấu hình hosting/build Docker, rồi build lại ứng dụng. Backend cần cấu hình CORS cho origin thực tế của frontend.
 
 ## Trạng thái tích hợp
 

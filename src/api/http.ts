@@ -1,15 +1,13 @@
 import axios from 'axios'
 import Cookies from 'js-cookie'
 
-import { API } from '@/api/api'
-import { API_RefreshToken } from '@/api/api_auth'
+import { API_BASE_URL, API_TIMEOUT } from '@/api/api'
 import { readRefreshToken, redirectToLoginExpired, storeSession } from '@/lib/session'
-import type { ApiErrorBody } from '@/types/auth'
 
 import type { InternalAxiosRequestConfig } from 'axios'
 
 /** Client gọi REST API của backend (`/api/v1`), tự gắn Bearer token đã lưu khi đăng nhập. */
-export const http = axios.create({ baseURL: `${API}/api/v1`, timeout: 30_000 })
+export const http = axios.create({ baseURL: API_BASE_URL, timeout: API_TIMEOUT })
 
 function readAccessToken(): string | undefined {
   const fromCookie = Cookies.get('access_token')
@@ -23,16 +21,27 @@ function readAccessToken(): string | undefined {
   }
 }
 
-http.interceptors.request.use((config) => {
+// Các endpoint này xác thực bằng payload, không dùng access token của phiên hiện tại.
+const SESSION_ENDPOINTS = new Set(['/auth/login', '/auth/refresh', '/auth/logout'])
+
+http.interceptors.request.use((config: RetriableConfig) => {
+  if (SESSION_ENDPOINTS.has(config.url ?? '')) {
+    config._sessionAuthorization = false
+    return config
+  }
   // Không ghi đè khi request đã có token (vd. gửi lại với token vừa làm mới).
   const token = readAccessToken()
   if (token && !config.headers.has('Authorization')) {
     config.headers.set('Authorization', `Bearer ${token}`)
+    config._sessionAuthorization = true
   }
   return config
 })
 
-type RetriableConfig = InternalAxiosRequestConfig & { _retriedAfterRefresh?: boolean }
+type RetriableConfig = InternalAxiosRequestConfig & {
+  _retriedAfterRefresh?: boolean
+  _sessionAuthorization?: boolean
+}
 
 // Nhiều request cùng gặp 401 thì chỉ gọi /auth/refresh một lần, các request còn lại chờ chung.
 let refreshing: Promise<string | null> | null = null
@@ -45,6 +54,8 @@ export function refreshAccessToken(): Promise<string | null> {
       return null
     }
     try {
+      // Import khi cần để tránh phụ thuộc vòng: api_auth cũng dùng instance http này.
+      const { API_RefreshToken } = await import('@/api/api_auth')
       const data = await API_RefreshToken(refreshToken)
       storeSession(data)
       return data.access_token
@@ -63,11 +74,16 @@ http.interceptors.response.use(undefined, async (error: unknown) => {
   if (
     axios.isAxiosError(error) &&
     error.response?.status === 401 &&
-    error.config?.headers.has('Authorization')
+    (error.config as RetriableConfig | undefined)?._sessionAuthorization
   ) {
     const config = error.config as RetriableConfig
     if (!config._retriedAfterRefresh) {
-      const token = await refreshAccessToken()
+      // Một 401 đến muộn sau khi request khác đã refresh: dùng token mới đã lưu.
+      const currentToken = readAccessToken()
+      const token =
+        currentToken && config.headers.get('Authorization') !== `Bearer ${currentToken}`
+          ? currentToken
+          : await refreshAccessToken()
       if (token) {
         config._retriedAfterRefresh = true
         config.headers.set('Authorization', `Bearer ${token}`)
@@ -83,36 +99,70 @@ const STATUS_MESSAGES: Record<number, string> = {
   401: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
   403: 'Bạn không có quyền thực hiện thao tác này.',
   404: 'Không tìm thấy dữ liệu yêu cầu.',
+  422: 'Thông tin chưa hợp lệ. Vui lòng kiểm tra lại.',
   429: 'Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút.',
 }
 
-const SERVER_ERROR_MESSAGE = 'Máy chủ đang gặp sự cố. Vui lòng thử lại sau.'
+const API_ERROR_MESSAGES = new Map([
+  ['USER_INACTIVE', 'Tài khoản của bạn đang bị khóa. Vui lòng liên hệ quản trị viên.'],
+  ['ROLE_REQUIRED', 'Tài khoản chưa được cấp quyền phù hợp. Vui lòng liên hệ quản trị viên.'],
+  ['SESSION_NOT_FOUND', 'Phiên đăng nhập này đã kết thúc hoặc không còn hoạt động.'],
+  ['SOURCE_NAME_EXIST', 'Tên nguồn dữ liệu đã được sử dụng. Vui lòng chọn tên khác.'],
+  ['SOURCE_SYSTEM_NOT_FOUND', 'Không tìm thấy hệ thống nguồn. Vui lòng chọn lại.'],
+  ['CONFIGURATION_INVALID', 'Thông tin kết nối chưa hợp lệ. Vui lòng kiểm tra lại.'],
+  ['DATA_SOURCE_NOT_FOUND', 'Không tìm thấy nguồn dữ liệu này.'],
+  ['INGESTION_JOB_NOT_FOUND', 'Không tìm thấy lần nạp dữ liệu này.'],
+  ['INGESTION_NOT_FOUND', 'Không tìm thấy nguồn hoặc bộ dữ liệu đích. Vui lòng kiểm tra lại.'],
+  ['SOURCE_ALREADY_RUNNING', 'Nguồn này đang được nạp. Hãy đợi lần nạp hiện tại hoàn tất.'],
+  ['SOURCE_INACTIVE', 'Nguồn đang tắt. Hãy bật nguồn trước khi nạp dữ liệu.'],
+  ['BRONZE_DATASET_REQUIRED', 'Vui lòng chọn một bộ dữ liệu thô làm nơi lưu.'],
+  [
+    'DATASET_SOURCE_MISMATCH_OR_INACTIVE',
+    'Hãy chọn bộ dữ liệu đang hoạt động và thuộc cùng hệ thống nguồn.',
+  ],
+  [
+    'SOURCE_CONFIGURATION_INVALID_OR_UNSUPPORTED',
+    'Không thể sử dụng nguồn này. Vui lòng kiểm tra thông tin kết nối.',
+  ],
+  ['INVALID_SOURCE_TABLE', 'Tên tệp hoặc bảng nguồn chưa hợp lệ. Vui lòng kiểm tra lại.'],
+  [
+    'BRONZE_INPUT_VALIDATION_BLOCKED',
+    'Dữ liệu nguồn chưa đạt yêu cầu. Hãy kiểm tra nội dung trước khi nạp lại.',
+  ],
+  ['INGESTION_READING_FAILED', 'Không đọc được dữ liệu. Vui lòng kiểm tra nguồn và thử lại.'],
+  ['INGESTION_WRITING_FAILED', 'Không lưu được dữ liệu. Vui lòng thử lại sau.'],
+  ['SUCCESSFUL_BRONZE_JOB_REQUIRED', 'Chỉ có thể làm sạch sau khi dữ liệu đã được nạp thành công.'],
+  ['DEDICATED_DEMO_CATALOG_REQUIRED', 'Bộ dữ liệu này chưa được hỗ trợ làm sạch.'],
+  ['UNSUPPORTED_BRONZE_FILE_TYPE', 'Loại tệp này chưa được hỗ trợ làm sạch.'],
+  ['INVALID_SQL', 'Chưa thể trả lời câu hỏi này. Bạn có thể thử hỏi theo cách khác.'],
+])
 
-/**
- * Lấy thông báo lỗi dễ đọc. Ưu tiên nội dung backend trả trong envelope lỗi chuẩn;
- * lỗi máy chủ (5xx) luôn dùng câu chung để không lộ chi tiết kỹ thuật.
- */
-export function getApiErrorMessage(error: unknown, fallback: string): string {
+export function getErrorMessageForCode(code: unknown): string | undefined {
+  return typeof code === 'string' ? API_ERROR_MESSAGES.get(code) : undefined
+}
+
+/** Chỉ dùng câu đã soạn cho giao diện, kể cả khi máy chủ trả thêm chi tiết. */
+export function getApiErrorMessage(
+  error: unknown,
+  fallback: string,
+  unauthorizedMessage = STATUS_MESSAGES[401]
+): string {
   if (!axios.isAxiosError(error)) {
     return fallback
   }
   if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
-    return 'Máy chủ phản hồi quá lâu. Vui lòng thử lại sau.'
+    return 'Yêu cầu mất quá nhiều thời gian. Vui lòng thử lại sau.'
   }
   if (!error.response) {
-    return 'Không thể kết nối đến máy chủ. Vui lòng thử lại sau.'
+    return 'Không thể kết nối. Vui lòng kiểm tra mạng và thử lại.'
   }
   const { status } = error.response
   if (status >= 500) {
-    return SERVER_ERROR_MESSAGE
+    return 'Hệ thống đang gặp sự cố. Vui lòng thử lại sau.'
   }
-  const body = error.response.data as (ApiErrorBody & { detail?: unknown }) | undefined
-  const detail = typeof body?.detail === 'string' ? body.detail : undefined
-  // Lỗi kiểm tra dữ liệu mặc định của FastAPI: `{"detail": [{loc, msg}, ...]}`.
-  if (status === 422 && Array.isArray(body?.detail)) {
-    return 'Dữ liệu gửi lên không hợp lệ. Vui lòng kiểm tra lại các trường được đánh dấu.'
-  }
-  return body?.error?.message ?? detail ?? body?.message ?? STATUS_MESSAGES[status] ?? fallback
+  if (status === 401 && unauthorizedMessage) return unauthorizedMessage
+  const body = error.response.data as { error?: { code?: unknown } } | undefined
+  return getErrorMessageForCode(body?.error?.code) ?? STATUS_MESSAGES[status] ?? fallback
 }
 
 /**
@@ -129,48 +179,4 @@ export function shouldRetryRequest(error: unknown): boolean {
   }
   const status = error.response?.status
   return status === undefined || status >= 500
-}
-
-/** Mã request_id backend gắn vào lỗi, dùng để tra log khi báo sự cố. */
-export function getApiRequestId(error: unknown): string | undefined {
-  if (!axios.isAxiosError(error)) {
-    return undefined
-  }
-  const body = error.response?.data as { error?: { request_id?: unknown } } | undefined
-  const fromBody = body?.error?.request_id
-  if (typeof fromBody === 'string' && fromBody) {
-    return fromBody
-  }
-  const fromHeader: unknown = error.response?.headers?.['x-request-id']
-  return typeof fromHeader === 'string' && fromHeader ? fromHeader : undefined
-}
-
-interface FastApiValidationItem {
-  loc?: unknown[]
-  msg?: unknown
-}
-
-/**
- * Danh sách lỗi chi tiết để hiện dưới thông báo chính: `error.details.errors` của envelope
- * chuẩn (vd. cấu hình nguồn dữ liệu sai) hoặc danh sách `detail` của FastAPI (`trường: lỗi`).
- */
-export function getApiErrorDetails(error: unknown): string[] {
-  if (!axios.isAxiosError(error)) {
-    return []
-  }
-  const body = error.response?.data as
-    { error?: { details?: { errors?: unknown } | null }; detail?: unknown } | undefined
-  const errors = body?.error?.details?.errors
-  if (Array.isArray(errors)) {
-    return errors.filter((item): item is string => typeof item === 'string')
-  }
-  if (Array.isArray(body?.detail)) {
-    return (body.detail as FastApiValidationItem[])
-      .filter((item) => typeof item?.msg === 'string')
-      .map((item) => {
-        const field = (item.loc ?? []).filter((part) => part !== 'body').join('.')
-        return field ? `${field}: ${String(item.msg)}` : String(item.msg)
-      })
-  }
-  return []
 }

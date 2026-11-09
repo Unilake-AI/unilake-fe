@@ -16,6 +16,11 @@ function tokenWithRoles(roles: string[]): string {
 }
 
 describe('role theo backend seed', () => {
+  it('từ chối token đăng nhập mẫu từ bản cũ', () => {
+    const token = `header.${btoa(JSON.stringify({ roles: ['ADMIN'] }))}.demo_signature`
+    expect(extractRolesFromToken(token)).toEqual([])
+  })
+
   it('nhận đúng chín role và không coi role cũ là VIEWER', () => {
     expect(ROLE_PRIORITY).toHaveLength(9)
     expect(extractRolesFromToken(tokenWithRoles(['HR_STAFF', 'ANALYST']))).toEqual(['HR_STAFF'])

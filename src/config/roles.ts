@@ -118,6 +118,8 @@ export function extractRolesFromToken(token: string): RoleCode[] {
   try {
     const parts = token.split('.')
     if (parts.length !== 3 || !parts[1]) return []
+    // Từ chối token mẫu còn lưu trong trình duyệt từ bản cũ.
+    if (parts[2] === 'demo_signature') return []
     const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
     const payload = JSON.parse(atob(base64)) as Record<string, unknown>
     const raw = Array.isArray(payload.roles) ? payload.roles : payload.role ? [payload.role] : []

@@ -102,14 +102,18 @@ export function LineageView() {
       <PageHeader
         breadcrumb={['Quản trị dữ liệu', 'Data Lineage']}
         title="Data Lineage — Truy vết nguồn gốc dữ liệu"
-        description="Luồng Source → Bronze → Silver → Gold của một dataset (nodes + edges)."
+        description="Xem dữ liệu đến từ đâu và đã qua những bước xử lý nào."
       />
-      <MockNotice api="GET /governance/lineage" />
+      <MockNotice />
 
       <Card
         title="Luồng dữ liệu · Admissions Gold Data Mart"
-        subtitle="Nhấn vào một node để xem chi tiết"
-        right={<span className="font-mono text-[10px] text-slate-400">4 nodes · 3 edges</span>}
+        subtitle="Chọn một bước để xem chi tiết"
+        right={
+          <span className="font-mono text-[10px] text-slate-400">
+            4 điểm dữ liệu · 3 bước chuyển
+          </span>
+        }
       >
         <ol className="flex flex-col items-stretch gap-2 lg:flex-row lg:items-center">
           {NODES.map((node, index) => (
@@ -167,11 +171,7 @@ export function LineageView() {
           </dl>
         </Card>
 
-        <Card
-          title="Các bước biến đổi"
-          subtitle="transformation_step · theo thứ tự thực hiện"
-          bodyClassName="p-0"
-        >
+        <Card title="Các bước biến đổi" subtitle="Theo thứ tự thực hiện" bodyClassName="p-0">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[520px] text-left text-xs">
               <thead className="bg-slate-50 font-mono text-[10px] uppercase tracking-wider text-slate-500">
@@ -192,7 +192,7 @@ export function LineageView() {
                     <td className="px-3 py-2.5 font-mono text-slate-700">{step.rowsIn}</td>
                     <td className="px-3 py-2.5 font-mono text-slate-700">{step.rowsOut}</td>
                     <td className="px-3 py-2.5">
-                      <Tag tone="emerald">SUCCESS</Tag>
+                      <Tag tone="emerald">Thành công</Tag>
                     </td>
                   </tr>
                 ))}

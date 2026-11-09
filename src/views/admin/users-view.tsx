@@ -9,6 +9,8 @@ import type { Tone } from '@/components/page/page-parts'
 import { ROLE_PRIORITY } from '@/config/roles'
 import type { RoleCode } from '@/types/auth'
 
+import { SessionsPanel } from './sessions-panel'
+
 const ROLE_TONE: Record<RoleCode, Tone> = {
   ADMIN: 'amber',
   DATA_ADMIN: 'emerald',
@@ -131,9 +133,9 @@ export function UsersView() {
         title="Người dùng & Phân quyền (RBAC)"
         description="Quản trị tài khoản, vai trò và phạm vi phân hệ được truy cập. Hệ thống có 3 vai trò chung và 6 vai trò phòng ban."
       />
-      <MockNotice api="GET /users" />
+      <MockNotice />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <KpiCard
           label="Tổng số tài khoản"
           value={USERS.length}
@@ -150,8 +152,9 @@ export function UsersView() {
           hint="Phân hệ hiển thị theo role phòng ban"
           tone="emerald"
         />
-        <KpiCard label="Phiên đang đăng nhập" value="5" hint="JWT · hết hạn sau 60 phút" />
       </div>
+
+      <SessionsPanel />
 
       <Card
         title="Tài khoản"
@@ -222,7 +225,7 @@ export function UsersView() {
                   <td className="px-3 py-2.5 text-slate-600">{user.unit}</td>
                   <td className="px-3 py-2.5">
                     <Tag tone={user.locked ? 'rose' : 'emerald'}>
-                      {user.locked ? 'LOCKED' : 'ACTIVE'}
+                      {user.locked ? 'Đã khóa' : 'Đang hoạt động'}
                     </Tag>
                   </td>
                   <td className="px-3 py-2.5 text-slate-600">{user.lastLogin}</td>

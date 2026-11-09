@@ -7,7 +7,6 @@
 import '../styles/globals.css'
 
 export default function GlobalError({
-  error,
   reset,
 }: {
   error: Error & { digest?: string }
@@ -28,9 +27,6 @@ export default function GlobalError({
           >
             Thử lại
           </button>
-          {error.digest && (
-            <p className="mt-4 font-mono text-xs text-slate-400">Mã tra cứu: {error.digest}</p>
-          )}
         </main>
       </body>
     </html>

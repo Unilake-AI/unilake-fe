@@ -19,7 +19,7 @@ describe('AppError', () => {
     expect(
       screen.getByRole('heading', { name: 'Đã có lỗi khi hiển thị trang' })
     ).toBeInTheDocument()
-    expect(screen.getByText('Mã tra cứu: abc123')).toBeInTheDocument()
+    expect(screen.queryByText(/abc123/)).not.toBeInTheDocument()
     expect(screen.queryByText(/TypeError/)).not.toBeInTheDocument()
 
     await userEvent.setup().click(screen.getByRole('button', { name: 'Thử lại' }))
@@ -29,9 +29,9 @@ describe('AppError', () => {
 })
 
 describe('NotFound', () => {
-  it('hiện trang 404 có đường về trang chủ', () => {
+  it('báo không tìm thấy trang và có đường về trang chủ', () => {
     render(<NotFound />)
-    expect(screen.getByText('404')).toBeInTheDocument()
+    expect(screen.queryByText('404')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Không tìm thấy trang' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Về trang chủ' })).toHaveAttribute('href', '/')
   })

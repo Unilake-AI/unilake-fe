@@ -17,21 +17,25 @@ import type { Tone } from '@/components/page/page-parts'
 import { cn } from '@/lib/utils'
 
 const DIMENSIONS = [
-  { label: 'Completeness (Đầy đủ)', value: '97,2%', hint: 'Không khuyết trường bắt buộc' },
-  { label: 'Validity (Hợp lệ)', value: '95,4%', hint: '2 cảnh báo' },
-  { label: 'Uniqueness (Duy nhất)', value: '98,9%', hint: 'Không trùng hồ sơ' },
-  { label: 'Consistency (Nhất quán)', value: '96,1%', hint: 'Khớp danh mục dùng chung' },
+  { label: 'Độ đầy đủ', value: '97,2%', hint: 'Không khuyết trường bắt buộc' },
+  { label: 'Độ hợp lệ', value: '95,4%', hint: '2 cảnh báo' },
+  { label: 'Mức độ không trùng lặp', value: '98,9%', hint: 'Không trùng hồ sơ' },
+  { label: 'Độ nhất quán', value: '96,1%', hint: 'Khớp danh mục dùng chung' },
 ]
 
-const SEVERITY_TONE: Record<string, Tone> = { CRITICAL: 'rose', HIGH: 'amber', MEDIUM: 'sky' }
+const SEVERITY_TONE: Record<string, Tone> = {
+  'Nghiêm trọng': 'rose',
+  Cao: 'amber',
+  'Trung bình': 'sky',
+}
 
 const ISSUES = [
   {
     id: 'DQ-2026-014',
-    rule: 'VALID_CITIZEN_ID_FORMAT',
-    dimension: 'Validity',
+    rule: 'Số căn cước chưa đúng định dạng',
+    dimension: 'Độ hợp lệ',
     layer: 'BRONZE',
-    severity: 'HIGH',
+    severity: 'Cao',
     failed: '14 / 4.520',
     status: 'ĐANG XỬ LÝ',
     statusTone: 'amber' as Tone,
@@ -39,14 +43,14 @@ const ISSUES = [
     field: 'applicant.national_id',
     detectedAt: '2026-09-25 04:12:00',
     rate: '14 / 4.520 (0,31%)',
-    note: 'Số CCCD không đủ 12 chữ số hợp lệ. Bản ghi mẫu đã che PII: UL-RAW-1082 · UL-RAW-1094 · UL-RAW-1102.',
+    note: 'Số CCCD không đủ 12 chữ số hợp lệ. Ví dụ đã ẩn thông tin cá nhân: UL-RAW-1082 · UL-RAW-1094 · UL-RAW-1102.',
   },
   {
     id: 'DQ-2026-018',
-    rule: 'GPA_RANGE_CHECK_0_10',
-    dimension: 'Validity',
+    rule: 'Điểm trung bình ngoài thang điểm',
+    dimension: 'Độ hợp lệ',
     layer: 'SILVER',
-    severity: 'MEDIUM',
+    severity: 'Trung bình',
     failed: '6 / 18.413',
     status: 'MỚI',
     statusTone: 'sky' as Tone,
@@ -58,10 +62,10 @@ const ISSUES = [
   },
   {
     id: 'DQ-2026-009',
-    rule: 'DEDUPLICATE_NATIONAL_REG_ID',
-    dimension: 'Uniqueness',
+    rule: 'Trùng số báo danh',
+    dimension: 'Mức độ không trùng lặp',
     layer: 'SILVER',
-    severity: 'CRITICAL',
+    severity: 'Nghiêm trọng',
     failed: '3 / 4.506',
     status: 'ĐÃ KHẮC PHỤC',
     statusTone: 'emerald' as Tone,
@@ -73,10 +77,10 @@ const ISSUES = [
   },
   {
     id: 'DQ-2026-022',
-    rule: 'PROGRAM_MAJOR_CODE_REGISTRY',
-    dimension: 'Consistency',
+    rule: 'Mã ngành chưa có trong danh mục',
+    dimension: 'Độ nhất quán',
     layer: 'GOLD',
-    severity: 'MEDIUM',
+    severity: 'Trung bình',
     failed: '2 / 9',
     status: 'MỚI',
     statusTone: 'sky' as Tone,
@@ -97,7 +101,7 @@ export function QualityView() {
       <PageHeader
         breadcrumb={['Quản trị dữ liệu', 'Data Quality']}
         title="Data Quality — Giám sát chất lượng dữ liệu"
-        description="Kiểm tra Completeness, Validity, Uniqueness, Consistency qua các tầng Bronze → Silver → Gold. Mục tiêu ≥ 90% (NFR03)."
+        description="Xem dữ liệu có đầy đủ, hợp lệ, nhất quán và bị trùng lặp hay không. Mục tiêu là đạt ít nhất 90%."
         actions={
           <Button
             variant="primary"
@@ -108,7 +112,7 @@ export function QualityView() {
           </Button>
         }
       />
-      <MockNotice api="GET /governance/quality" />
+      <MockNotice />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <KpiCard
@@ -137,7 +141,7 @@ export function QualityView() {
             <table className="w-full min-w-[680px] text-left text-xs">
               <thead className="bg-slate-50 font-mono text-[10px] uppercase tracking-wider text-slate-500">
                 <tr>
-                  {['Mã / Quy tắc', 'Chiều', 'Tầng', 'Mức độ', 'Bản ghi lỗi', 'Trạng thái'].map(
+                  {['Vấn đề', 'Nhóm kiểm tra', 'Tầng', 'Mức độ', 'Bản ghi lỗi', 'Trạng thái'].map(
                     (head) => (
                       <th key={head} scope="col" className="px-3 py-2 font-medium">
                         {head}
@@ -190,8 +194,8 @@ export function QualityView() {
         <Card title="Chi tiết vấn đề" subtitle={selected.id}>
           <dl className="space-y-2.5 text-xs">
             {[
-              ['Quy tắc vi phạm', selected.rule],
-              ['Dataset', selected.dataset],
+              ['Vấn đề', selected.rule],
+              ['Bộ dữ liệu', selected.dataset],
               ['Trường', selected.field],
               ['Phát hiện lúc', selected.detectedAt],
               ['Tỷ lệ lỗi', selected.rate],

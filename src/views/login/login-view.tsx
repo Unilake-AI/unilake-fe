@@ -2,18 +2,19 @@
 
 import { useEffect, useState } from 'react'
 
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import axios from 'axios'
-import { ArrowRight, CircleAlert, Clock, Eye, EyeOff, Layers, LoaderCircle, X } from 'lucide-react'
+import { ArrowRight, CircleAlert, Clock, Eye, EyeOff, LoaderCircle, X } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { API_SignIn } from '@/api/api_auth'
+import { getApiErrorMessage } from '@/api/http'
 import { getDefaultHomeForRoles, toRoleCode } from '@/config/roles'
 import { SESSION_EXPIRED_PARAM, storeSession } from '@/lib/session'
-import type { ApiErrorBody, LoginFormValues } from '@/types/auth'
+import type { LoginFormValues } from '@/types/auth'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -73,12 +74,13 @@ export function LoginView() {
       router.push(redirectPath)
       router.refresh()
     } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        const body = err.response?.data as ApiErrorBody | undefined
-        setServerError(body?.error?.message ?? body?.detail ?? body?.message ?? DEFAULT_LOGIN_ERROR)
-      } else {
-        setServerError('Không thể kết nối đến máy chủ. Vui lòng thử lại sau.')
-      }
+      setServerError(
+        getApiErrorMessage(
+          err,
+          'Không thể đăng nhập lúc này. Vui lòng thử lại.',
+          DEFAULT_LOGIN_ERROR
+        )
+      )
     }
   }
 
@@ -89,11 +91,17 @@ export function LoginView() {
         aria-label="Giới thiệu UniLake AI"
       >
         <div className="flex items-center gap-2.5">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-indigo-600 text-white">
-            <Layers className="size-5" />
+          <div className="flex h-16 w-56 min-w-0 items-center overflow-hidden rounded-xl bg-slate-50 sm:h-[72px] sm:w-60">
+            <Image
+              src="/logo_text.png"
+              alt="UniLake AI"
+              width={1672}
+              height={941}
+              sizes="(min-width: 640px) 240px, 224px"
+              className="h-auto w-full"
+            />
           </div>
-          <span className="text-lg font-bold text-white">UniLake AI</span>
-          <span className="rounded border border-indigo-200 bg-indigo-50 px-1.5 py-px font-mono text-[10px] font-bold text-indigo-700">
+          <span className="shrink-0 rounded border border-indigo-200 bg-indigo-50 px-1.5 py-px font-mono text-[10px] font-bold text-indigo-700">
             v1.0
           </span>
         </div>

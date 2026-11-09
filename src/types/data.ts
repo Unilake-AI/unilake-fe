@@ -70,6 +70,13 @@ export interface IngestionJobCreatePayload {
   source_table: string
 }
 
+export interface CleaningResult {
+  status: string
+  records_passed: number
+  records_quarantined: number
+  publication: Record<string, unknown> | null
+}
+
 export interface CatalogField {
   name: string
   data_type: string
