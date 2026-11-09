@@ -23,9 +23,13 @@ Frontend được xây dựng trên Next.js App Router và tổ chức giao di�
 | --- | --- | --- |
 | Quản trị hệ thống (`ADMIN`) | `/admin` | Quản lý người dùng, phân quyền, cấu hình và nhật ký hệ thống |
 | Quản trị dữ liệu (`DATA_ADMIN`) | `/data` | Quản lý nguồn dữ liệu, nạp dữ liệu, catalog, chất lượng và lineage |
-| Chuyên viên phân tích (`ANALYST`) | `/analyst` | Khám phá dữ liệu, tổng quan phân hệ, truy vấn ngôn ngữ tự nhiên và lịch sử truy vấn |
-| Trưởng đơn vị (`MANAGER`) | `/manager` | Theo dõi phân hệ, phân tích, so sánh và truy vấn AI |
-| Ban Giám hiệu (`VIEWER`) | `/viewer` | Tổng quan điều hành, dashboard theo phân hệ và truy vấn AI |
+| Nhân viên Tuyển sinh (`ADMISSIONS_STAFF`) | `/analyst` | Khám phá và truy vấn dữ liệu Tuyển sinh |
+| Nhân viên Đào tạo (`ACADEMIC_STAFF`) | `/analyst` | Khám phá và truy vấn dữ liệu Đào tạo |
+| Nhân viên Nhân sự (`HR_STAFF`) | `/analyst` | Khám phá và truy vấn dữ liệu Nhân sự |
+| Trưởng phòng Tuyển sinh (`ADMISSIONS_MANAGER`) | `/manager` | Theo dõi và phân tích dữ liệu Tuyển sinh |
+| Trưởng phòng Đào tạo (`ACADEMIC_MANAGER`) | `/manager` | Theo dõi và phân tích dữ liệu Đào tạo |
+| Trưởng phòng Nhân sự (`HR_MANAGER`) | `/manager` | Theo dõi và phân tích dữ liệu Nhân sự |
+| Ban Giám hiệu (`VIEWER`) | `/viewer` | Tổng quan điều hành và dashboard |
 
 Bảng trên mô tả phạm vi giao diện. Mức độ kết nối backend của từng nhóm chức năng được trình bày tại [Trạng thái tích hợp](#trạng-thái-tích-hợp).
 
@@ -78,6 +82,15 @@ Các biến môi trường được khai báo trong `.env.local`, dựa trên [.
 
 - **Axios:** trình duyệt gửi yêu cầu trực tiếp đến backend qua các hàm trong `src/api/`. Backend cần cấu hình `CORS_ORIGINS` cho phép origin của frontend, bao gồm protocol, hostname và cổng.
 - **OpenAPI client:** yêu cầu được gửi đến `/api/proxy/*`, sau đó route handler của Next.js chuyển tiếp đến backend theo `API_BASE_URL`.
+
+### Vai trò đăng nhập
+
+Frontend nhận 9 role từ backend: `ADMIN`, `DATA_ADMIN`, `VIEWER` và 6 role phòng ban
+`ADMISSIONS_MANAGER/STAFF`, `ACADEMIC_MANAGER/STAFF`, `HR_MANAGER/STAFF`.
+Ba role `*_MANAGER` dùng nhóm trang `/manager`; ba role `*_STAFF` dùng nhóm trang
+`/analyst`. Giao diện chọn phân hệ được cố định theo phòng ban. `VIEWER` chỉ có
+dashboard theo quyền seed hiện tại. Việc cố định phân hệ trên giao diện không thay
+thế kiểm tra quyền và phạm vi dữ liệu ở backend.
 
 Khởi động lại dev server sau khi cập nhật `.env.local`. Các biến `NEXT_PUBLIC_*` được đưa vào bundle tại thời điểm build; thay đổi các giá trị này trong môi trường production yêu cầu build lại ứng dụng.
 

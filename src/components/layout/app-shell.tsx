@@ -20,7 +20,7 @@ export function AppShell({ role, children }: AppShellProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <DomainProvider>
+    <DomainProvider role={role}>
       <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 antialiased">
         <Topbar role={role} onOpenMobile={() => setMobileMenuOpen(true)} />
 

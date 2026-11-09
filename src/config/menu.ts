@@ -1,7 +1,8 @@
-import type { MenuGroup, MenuItem, RoleCode } from '@/types/auth'
+import { getWorkspaceForRole } from '@/config/roles'
+import type { MenuGroup, MenuItem, RoleCode, RoleWorkspace } from '@/types/auth'
 
-/** Menu sidebar theo bản thiết kế Figma "UniLake AI – Frontend" (mỗi vai trò một nhóm). */
-export const ROLE_MENUS: Record<RoleCode, MenuGroup[]> = {
+/** Sáu role phòng ban dùng hai không gian làm việc theo chức năng. */
+export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
   ADMIN: [
     {
       groupTitle: 'Quản trị hệ thống',
@@ -27,7 +28,7 @@ export const ROLE_MENUS: Record<RoleCode, MenuGroup[]> = {
     },
   ],
 
-  ANALYST: [
+  STAFF: [
     {
       groupTitle: 'Phân tích & Khai phá',
       items: [
@@ -57,22 +58,19 @@ export const ROLE_MENUS: Record<RoleCode, MenuGroup[]> = {
       items: [
         { title: 'Tổng quan điều hành', href: '/viewer', iconName: 'LayoutDashboard' },
         { title: 'Dashboard theo phân hệ', href: '/viewer/dashboards', iconName: 'BarChart3' },
-        { title: 'Hỏi AI (NLQ)', href: '/viewer/ask', iconName: 'Sparkles', badge: 'AI' },
-        { title: 'Lịch sử truy vấn', href: '/viewer/history', iconName: 'History' },
       ],
     },
   ],
 }
 
-/** Trang Hỏi AI của từng vai trò; ADMIN không có (nút Ask AI trên header bị ẩn). */
-export const ASK_AI_PATHS: Partial<Record<RoleCode, string>> = {
+/** VIEWER chỉ có dashboard theo quyền backend. */
+export const ASK_AI_PATHS: Partial<Record<RoleWorkspace, string>> = {
   DATA_ADMIN: '/data/ask',
-  ANALYST: '/analyst/ask',
+  STAFF: '/analyst/ask',
   MANAGER: '/manager/ask',
-  VIEWER: '/viewer/ask',
 }
 
 export function getMenuItemsForRole(role: RoleCode): MenuItem[] {
-  const groups = ROLE_MENUS[role] ?? []
+  const groups = ROLE_MENUS[getWorkspaceForRole(role)]
   return groups.flatMap((group) => group.items)
 }

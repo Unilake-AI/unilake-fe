@@ -124,13 +124,30 @@ describe('LoginView', () => {
     expect(refresh).toHaveBeenCalled()
   })
 
-  it('chuyển vai trò lạ về trang mặc định', async () => {
+  it('từ chối vai trò không có trong backend seed', async () => {
     signIn.mockResolvedValueOnce(loginResponse('unknown_role'))
     render(<LoginView />)
     await fillAndSubmit('someone', 'Password@123')
 
-    await waitFor(() => expect(push).toHaveBeenCalledTimes(1))
-    expect(push.mock.calls[0]?.[0]).toMatch(/^\//)
+    expect(await screen.findByRole('alert')).toHaveTextContent('chưa được gán vai trò phù hợp')
+    expect(push).not.toHaveBeenCalled()
+    expect(Cookies.get('access_token')).toBeUndefined()
+  })
+
+  it.each([
+    ['admissions_manager', '/manager'],
+    ['academic_manager', '/manager'],
+    ['hr_manager', '/manager'],
+    ['admissions_staff', '/analyst'],
+    ['academic_staff', '/analyst'],
+    ['hr_staff', '/analyst'],
+    ['viewer', '/viewer'],
+  ])('đưa %s vào đúng không gian làm việc', async (role, home) => {
+    signIn.mockResolvedValueOnce(loginResponse(role))
+    render(<LoginView />)
+    await fillAndSubmit(role, 'Password@123')
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith(home))
   })
 
   it('hiện thông báo lỗi do backend trả về', async () => {
