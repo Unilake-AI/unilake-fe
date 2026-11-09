@@ -1,13 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import type { FormEvent } from 'react'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CircleAlert, Play, RefreshCw, X } from 'lucide-react'
 
-import { API_CreateIngestionJob, API_ListDataSources, API_ListIngestionJobs } from '@/api/api_data'
-import { getApiErrorMessage, getApiRequestId } from '@/api/http'
+import {
+  API_CreateIngestionJob,
+  API_GetIngestionJob,
+  API_ListDataSources,
+  API_ListIngestionJobs,
+  API_RunCleaning,
+} from '@/api/api_data'
+import { getApiErrorMessage, getErrorMessageForCode } from '@/api/http'
 import {
   Button,
   Card,
@@ -19,18 +25,90 @@ import {
   Tag,
   formatDateTime,
   formatNumber,
+  statusLabel,
   statusTone,
 } from '@/components/page/page-parts'
 import type { IngestionJob } from '@/types/data'
 
 const ACTIVE_STATUSES = new Set(['QUEUED', 'RUNNING'])
 const POLL_INTERVAL_MS = 5000
+const INGESTION_FAILURE = 'Không thể nạp dữ liệu. Vui lòng kiểm tra nguồn và thử lại.'
 
 const inputClass =
   'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30'
 
 export function isJobActive(job: IngestionJob): boolean {
   return ACTIVE_STATUSES.has(job.status.toUpperCase())
+}
+
+function JobDetails({ jobId }: { jobId: number }) {
+  const job = useQuery({
+    queryKey: ['ingestion-jobs', jobId],
+    queryFn: () => API_GetIngestionJob(jobId),
+    refetchInterval: (query) =>
+      query.state.data && isJobActive(query.state.data) ? POLL_INTERVAL_MS : false,
+  })
+  const cleaningKey = ['ingestion-cleaning', jobId]
+  const cleaning = useMutation({
+    mutationKey: cleaningKey,
+    mutationFn: () => API_RunCleaning(jobId),
+  })
+  const isCleaning = useIsMutating({ mutationKey: cleaningKey }) > 0
+
+  if (job.isPending) return <LoadingState />
+  if (job.isError) {
+    return (
+      <ErrorState
+        message={getApiErrorMessage(job.error, 'Không tải được thông tin lần nạp dữ liệu.')}
+        onRetry={() => void job.refetch()}
+      />
+    )
+  }
+
+  return (
+    <div className="space-y-2" id={`ingestion-job-${jobId}`}>
+      <p className="font-semibold text-slate-900">Chi tiết lần nạp #{jobId}</p>
+      <p className="text-slate-700">
+        <Tag tone={statusTone(job.data.status)}>{statusLabel(job.data.status)}</Tag> · Giai đoạn{' '}
+        {job.data.stage ? statusLabel(job.data.stage) : '—'} · Người yêu cầu{' '}
+        {job.data.requested_by ?? '—'}
+      </p>
+      <p className="text-slate-700">
+        Đã ghi {formatNumber(job.data.rows_written)} dòng · Đã loại{' '}
+        {formatNumber(job.data.rows_rejected)} dòng
+      </p>
+      {job.data.error_message && (
+        <p className="text-rose-700">
+          {getErrorMessageForCode(job.data.error_message) ?? INGESTION_FAILURE}
+        </p>
+      )}
+      {job.data.status.toUpperCase() === 'SUCCESS' && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="primary" disabled={isCleaning} onClick={() => cleaning.mutate()}>
+            {isCleaning ? 'Đang làm sạch…' : 'Làm sạch dữ liệu'}
+          </Button>
+          <span className="text-slate-600">
+            Tính năng này hiện chỉ hỗ trợ một số bộ dữ liệu thử nghiệm.
+          </span>
+        </div>
+      )}
+      {cleaning.isError && (
+        <ErrorState
+          message={getApiErrorMessage(cleaning.error, 'Không chạy được tác vụ làm sạch.')}
+        />
+      )}
+      {cleaning.data && (
+        <p role="status" className="text-slate-700">
+          <Tag tone={statusTone(cleaning.data.status)}>{statusLabel(cleaning.data.status)}</Tag> ·{' '}
+          {formatNumber(cleaning.data.records_passed)} dòng đạt ·{' '}
+          {formatNumber(cleaning.data.records_quarantined)} dòng cần kiểm tra ·{' '}
+          {cleaning.data.publication
+            ? 'Đã lưu kết quả thử nghiệm'
+            : 'Chưa lưu kết quả vào bộ dữ liệu đã làm sạch'}
+        </p>
+      )}
+    </div>
+  )
 }
 
 function RunJobPanel({ onClose }: { onClose: () => void }) {
@@ -58,7 +136,7 @@ function RunJobPanel({ onClose }: { onClose: () => void }) {
     const dataset = Number(datasetId)
     if (!dataSourceId || !Number.isInteger(dataset) || dataset <= 0 || !sourceTable.trim()) {
       setFormError(
-        'Chọn nguồn dữ liệu, nhập dataset_id (số nguyên dương) và tên file / bảng nguồn.'
+        'Vui lòng chọn nguồn dữ liệu, nhập mã bộ dữ liệu lớn hơn 0 và điền tên tệp hoặc bảng nguồn.'
       )
       return
     }
@@ -73,7 +151,7 @@ function RunJobPanel({ onClose }: { onClose: () => void }) {
   return (
     <Card
       title="Chạy nạp dữ liệu"
-      subtitle="POST /api/v1/ingestion/jobs · API trả 202 ngay, job chạy nền và cập nhật trạng thái"
+      subtitle="Bạn có thể theo dõi tiến độ sau khi bắt đầu nạp."
       right={
         <Button variant="ghost" onClick={onClose} aria-label="Đóng form chạy nạp dữ liệu">
           <X className="size-4" aria-hidden="true" />
@@ -103,7 +181,7 @@ function RunJobPanel({ onClose }: { onClose: () => void }) {
         </div>
         <div className="space-y-1.5">
           <label htmlFor="job-dataset" className="block text-xs font-semibold text-slate-700">
-            Dataset đích (dataset_id) *
+            Mã bộ dữ liệu đích *
           </label>
           <input
             id="job-dataset"
@@ -114,7 +192,7 @@ function RunJobPanel({ onClose }: { onClose: () => void }) {
             onChange={(event) => setDatasetId(event.target.value)}
           />
           <p className="text-[11px] text-slate-400">
-            Dataset BRONZE cùng hệ thống nguồn với nguồn đã chọn.
+            Nhập mã của bộ dữ liệu thô thuộc hệ thống nguồn đã chọn.
           </p>
         </div>
         <div className="space-y-1.5">
@@ -131,7 +209,8 @@ function RunJobPanel({ onClose }: { onClose: () => void }) {
         </div>
         {(formError || run.isError) && (
           <p role="alert" className="text-xs text-rose-600 md:col-span-3">
-            {formError ?? getApiErrorMessage(run.error, 'Không tạo được job nạp dữ liệu.')}
+            {formError ??
+              getApiErrorMessage(run.error, 'Không thể bắt đầu nạp dữ liệu. Vui lòng thử lại.')}
           </p>
         )}
         <div className="flex justify-end md:col-span-3">
@@ -151,6 +230,7 @@ function RunJobPanel({ onClose }: { onClose: () => void }) {
 
 export function IngestionView() {
   const [showRun, setShowRun] = useState(false)
+  const [selectedJobId, setSelectedJobId] = useState<number | null>(null)
 
   const jobs = useQuery({
     queryKey: ['ingestion-jobs'],
@@ -174,7 +254,7 @@ export function IngestionView() {
       <PageHeader
         breadcrumb={['Quản trị dữ liệu', 'Nạp dữ liệu']}
         title="Giám sát nạp dữ liệu"
-        description="Theo dõi từng lần nạp từ nguồn vào Bronze. Tác vụ dài: tạo job trả về mã job, giao diện tự hỏi lại trạng thái."
+        description="Theo dõi tiến độ và kết quả của từng lần nạp dữ liệu. Tiến độ được cập nhật tự động."
         actions={
           <>
             <Button
@@ -203,21 +283,21 @@ export function IngestionView() {
       {showRun && <RunJobPanel onClose={() => setShowRun(false)} />}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Job gần đây" value={show(list.length)} hint="50 job mới nhất" />
+        <KpiCard label="Lần nạp gần đây" value={show(list.length)} hint="50 lần nạp gần nhất" />
         <KpiCard
           label="Thành công"
           value={show(success.length)}
           hint={
             finished.length
-              ? `${((success.length / finished.length) * 100).toLocaleString('vi-VN', { maximumFractionDigits: 1 })}% job đã kết thúc`
-              : 'Chưa có job kết thúc'
+              ? `${((success.length / finished.length) * 100).toLocaleString('vi-VN', { maximumFractionDigits: 1 })}% lần nạp đã kết thúc`
+              : 'Chưa có lần nạp nào kết thúc'
           }
           tone="emerald"
         />
         <KpiCard
           label="Đang chạy"
           value={show(running.length)}
-          hint={running.length ? 'Tự cập nhật mỗi 5 giây' : 'Không có job đang chạy'}
+          hint={running.length ? 'Tự cập nhật mỗi 5 giây' : 'Hiện không có lần nạp nào đang chạy'}
           tone="amber"
         />
         <KpiCard
@@ -229,9 +309,9 @@ export function IngestionView() {
       </div>
 
       <Card
-        title="Lịch sử job nạp dữ liệu"
-        subtitle="ingestion_job · mới nhất trước"
-        right={<Tag tone="amber">Bronze · MinIO</Tag>}
+        title="Lịch sử nạp dữ liệu"
+        subtitle="Mới nhất trước"
+        right={<Tag tone="amber">Dữ liệu thô</Tag>}
         bodyClassName="p-0"
       >
         {jobs.isPending ? (
@@ -239,15 +319,14 @@ export function IngestionView() {
         ) : jobs.isError ? (
           <div className="p-4">
             <ErrorState
-              requestId={getApiRequestId(jobs.error)}
               message={getApiErrorMessage(jobs.error, 'Không tải được lịch sử nạp dữ liệu.')}
               onRetry={() => void jobs.refetch()}
             />
           </div>
         ) : list.length === 0 ? (
           <EmptyState
-            title="Chưa có job nạp dữ liệu"
-            description="Bấm “Chạy nạp dữ liệu” để tạo job đầu tiên."
+            title="Chưa có lần nạp dữ liệu nào"
+            description="Bấm “Chạy nạp dữ liệu” để bắt đầu."
           />
         ) : (
           <div className="overflow-x-auto">
@@ -255,9 +334,9 @@ export function IngestionView() {
               <thead className="bg-slate-50 font-mono text-[10px] uppercase tracking-wider text-slate-500">
                 <tr>
                   {[
-                    'Job',
+                    'Lần nạp',
                     'Nguồn',
-                    'Dataset',
+                    'Bộ dữ liệu',
                     'File / bảng',
                     'Bắt đầu',
                     'Kết thúc',
@@ -274,39 +353,63 @@ export function IngestionView() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {list.map((job) => (
-                  <tr key={job.ingestion_job_id}>
-                    <td className="px-3 py-2.5 font-mono font-semibold text-slate-900">
-                      #{job.ingestion_job_id}
-                    </td>
-                    <td className="px-3 py-2.5 font-mono text-slate-600">#{job.data_source_id}</td>
-                    <td className="px-3 py-2.5 font-mono text-slate-600">#{job.dataset_id}</td>
-                    <td className="max-w-[200px] truncate px-3 py-2.5 font-mono text-[11px] text-slate-600">
-                      {job.source_table ?? '—'}
-                    </td>
-                    <td className="px-3 py-2.5 font-mono text-[11px] text-slate-600">
-                      {formatDateTime(job.started_at ?? job.created_at)}
-                    </td>
-                    <td className="px-3 py-2.5 font-mono text-[11px] text-slate-600">
-                      {formatDateTime(job.finished_at)}
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <div className="flex flex-col items-start gap-0.5">
-                        <Tag tone={statusTone(job.status)}>{job.status}</Tag>
-                        {job.stage && (
-                          <span className="font-mono text-[10px] text-slate-400">{job.stage}</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2.5 font-mono text-slate-700">
-                      {formatNumber(job.rows_read)}
-                    </td>
-                    <td className="px-3 py-2.5 font-mono text-slate-700">
-                      {formatNumber(job.rows_written)}
-                    </td>
-                    <td className="px-3 py-2.5 font-mono text-slate-700">
-                      {formatNumber(job.rows_rejected)}
-                    </td>
-                  </tr>
+                  <Fragment key={job.ingestion_job_id}>
+                    <tr>
+                      <td className="px-3 py-2.5 font-mono font-semibold text-slate-900">
+                        <Button
+                          variant="ghost"
+                          aria-label={`Chi tiết lần nạp #${job.ingestion_job_id}`}
+                          aria-expanded={selectedJobId === job.ingestion_job_id}
+                          onClick={() =>
+                            setSelectedJobId(
+                              selectedJobId === job.ingestion_job_id ? null : job.ingestion_job_id
+                            )
+                          }
+                        >
+                          #{job.ingestion_job_id}
+                        </Button>
+                      </td>
+                      <td className="px-3 py-2.5 font-mono text-slate-600">
+                        #{job.data_source_id}
+                      </td>
+                      <td className="px-3 py-2.5 font-mono text-slate-600">#{job.dataset_id}</td>
+                      <td className="max-w-[200px] truncate px-3 py-2.5 font-mono text-[11px] text-slate-600">
+                        {job.source_table ?? '—'}
+                      </td>
+                      <td className="px-3 py-2.5 font-mono text-[11px] text-slate-600">
+                        {formatDateTime(job.started_at ?? job.created_at)}
+                      </td>
+                      <td className="px-3 py-2.5 font-mono text-[11px] text-slate-600">
+                        {formatDateTime(job.finished_at)}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <div className="flex flex-col items-start gap-0.5">
+                          <Tag tone={statusTone(job.status)}>{statusLabel(job.status)}</Tag>
+                          {job.stage && (
+                            <span className="font-mono text-[10px] text-slate-400">
+                              {statusLabel(job.stage)}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2.5 font-mono text-slate-700">
+                        {formatNumber(job.rows_read)}
+                      </td>
+                      <td className="px-3 py-2.5 font-mono text-slate-700">
+                        {formatNumber(job.rows_written)}
+                      </td>
+                      <td className="px-3 py-2.5 font-mono text-slate-700">
+                        {formatNumber(job.rows_rejected)}
+                      </td>
+                    </tr>
+                    {selectedJobId === job.ingestion_job_id && (
+                      <tr>
+                        <td colSpan={10} className="bg-slate-50 px-4 py-3">
+                          <JobDetails jobId={job.ingestion_job_id} />
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
@@ -322,13 +425,9 @@ export function IngestionView() {
           <CircleAlert className="mt-px size-4 shrink-0 text-rose-600" aria-hidden="true" />
           <div className="text-rose-700">
             <p className="font-semibold">
-              Job #{latestFailed.ingestion_job_id} thất bại — nguồn #{latestFailed.data_source_id}
+              Lần nạp #{latestFailed.ingestion_job_id} không thành công
             </p>
-            <p className="font-mono text-[11px]">
-              {latestFailed.stage ?? 'FAILED'}
-              {latestFailed.error_message ? ` · ${latestFailed.error_message}` : ''}. Kiểm tra nguồn
-              rồi chạy lại.
-            </p>
+            <p>{getErrorMessageForCode(latestFailed.error_message) ?? INGESTION_FAILURE}</p>
           </div>
         </div>
       )}

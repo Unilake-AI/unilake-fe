@@ -1,7 +1,19 @@
+'use client'
+
+// import { useQuery } from '@tanstack/react-query'
+// import axios from 'axios'
 import { KeyRound } from 'lucide-react'
 
-import { Card, MockNotice, PageHeader, Tag } from '@/components/page/page-parts'
-import type { Tone } from '@/components/page/page-parts'
+// import { API_TIMEOUT, API_URL } from '@/api/api'
+// import { getApiErrorMessage } from '@/api/http'
+import {
+  Card,
+  // ErrorState,
+  // LoadingState,
+  MockNotice,
+  PageHeader,
+  Tag,
+} from '@/components/page/page-parts'
 
 const LLM_SETTINGS = [
   ['Nhà cung cấp (LLM_PROVIDER)', 'anthropic'],
@@ -37,18 +49,6 @@ const PROMPTS = [
   },
 ]
 
-const SERVICES: { name: string; detail: string; status: string; tone: Tone }[] = [
-  {
-    name: 'PostgreSQL',
-    detail: 'Schema app + gold · cổng 5434',
-    status: 'HEALTHY',
-    tone: 'emerald',
-  },
-  { name: 'MinIO', detail: 'Bucket bronze / silver / gold', status: 'HEALTHY', tone: 'emerald' },
-  { name: 'DuckDB', detail: 'Nhúng trong backend', status: 'HEALTHY', tone: 'emerald' },
-  { name: 'LLM API', detail: 'Độ trễ trung bình 1,2 giây', status: 'DEGRADED', tone: 'amber' },
-]
-
 function ReadonlyField({ label, value }: { label: string; value: string }) {
   return (
     <div className="space-y-1.5">
@@ -61,6 +61,21 @@ function ReadonlyField({ label, value }: { label: string; value: string }) {
 }
 
 export function SettingsView() {
+  // Tạm đóng gọi API GET /health theo yêu cầu
+  /*
+  const health = useQuery({
+    queryKey: ['backend-health'],
+    queryFn: async ({ signal }) => {
+      const res = await axios.get<{ status: string }>(`${API_URL}/health`, {
+        signal,
+        timeout: API_TIMEOUT,
+      })
+      return res.data
+    },
+    refetchInterval: 30_000,
+  })
+  */
+
   return (
     <div className="space-y-5">
       <PageHeader
@@ -68,13 +83,13 @@ export function SettingsView() {
         title="Cấu hình hệ thống & AI"
         description="Thiết lập mô hình ngôn ngữ dùng cho Hỏi AI, phiên đăng nhập và theo dõi trạng thái các dịch vụ nền."
       />
-      <MockNotice api="GET /admin/settings" />
+      <MockNotice />
 
       <div className="grid gap-4 xl:grid-cols-2">
         <Card
           title="Mô hình AI (LLM)"
-          subtitle="Dùng cho Text-to-SQL · chỉ module Hỏi AI gọi tới"
-          right={<Tag tone="emerald">ACTIVE</Tag>}
+          subtitle="Dùng để trả lời câu hỏi về dữ liệu"
+          right={<Tag tone="emerald">Đang dùng</Tag>}
           bodyClassName="space-y-4"
         >
           <div className="grid gap-4 sm:grid-cols-2">
@@ -84,16 +99,12 @@ export function SettingsView() {
           </div>
           <div className="flex gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
             <KeyRound className="mt-px size-4 shrink-0 text-slate-500" aria-hidden="true" />
-            <p>
-              <span className="font-semibold text-slate-800">Khoá API không hiển thị ở đây.</span>{' '}
-              LLM_API_KEY chỉ đọc từ biến môi trường của máy chủ, không lưu trong cơ sở dữ liệu và
-              không trả về giao diện.
-            </p>
+            <p>Thông tin kết nối được bảo mật. Hãy liên hệ quản trị viên nếu bạn cần cập nhật.</p>
           </div>
         </Card>
         <Card
           title="Bảo mật & phiên đăng nhập"
-          subtitle="JWT · áp dụng cho mọi người dùng"
+          subtitle="Áp dụng cho mọi người dùng"
           bodyClassName="space-y-4"
         >
           <div className="grid gap-4 sm:grid-cols-2">
@@ -142,19 +153,20 @@ export function SettingsView() {
             </table>
           </div>
         </Card>
-        <Card title="Trạng thái dịch vụ" subtitle="Kiểm tra định kỳ">
-          <ul className="divide-y divide-slate-100">
-            {SERVICES.map((service) => (
-              <li key={service.name} className="flex items-center justify-between gap-3 py-2.5">
-                <div>
-                  <p className="text-xs font-semibold text-slate-900">{service.name}</p>
-                  <p className="text-[11px] text-slate-500">{service.detail}</p>
-                </div>
-                <Tag tone={service.tone}>{service.status}</Tag>
-              </li>
-            ))}
-          </ul>
+        {/* Tạm đóng Card kiểm tra trạng thái /health
+        <Card title="Trạng thái backend" subtitle="Kiểm tra mỗi 30 giây">
+          {health.isPending ? (
+            <LoadingState />
+          ) : health.isError ? (
+            <ErrorState
+              message={getApiErrorMessage(health.error, 'Không kiểm tra được trạng thái backend.')}
+              onRetry={() => void health.refetch()}
+            />
+          ) : (
+            <Tag tone={health.data.status === 'ok' ? 'emerald' : 'amber'}>{health.data.status}</Tag>
+          )}
         </Card>
+        */}
       </div>
     </div>
   )

@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
 
 import { API_GetCatalog } from '@/api/api_data'
-import { getApiErrorMessage, getApiRequestId } from '@/api/http'
+import { getApiErrorMessage } from '@/api/http'
 import {
   Card,
   EmptyState,
@@ -52,15 +52,14 @@ export function CatalogView() {
       <PageHeader
         breadcrumb={['Quản trị dữ liệu', 'Data Catalog']}
         title="Data Catalog — Từ điển dữ liệu & Schema"
-        description="Metadata của dataset, bảng và cột: tên, kiểu dữ liệu, mô tả, nguồn. Nguồn: GET /api/v1/governance/catalog."
+        description="Xem các bộ dữ liệu, nội dung và nguồn của từng bộ."
       />
 
       {catalog.isPending ? (
         <LoadingState />
       ) : catalog.isError ? (
         <ErrorState
-          requestId={getApiRequestId(catalog.error)}
-          message={getApiErrorMessage(catalog.error, 'Không tải được Data Catalog.')}
+          message={getApiErrorMessage(catalog.error, 'Không tải được danh mục dữ liệu.')}
           onRetry={() => void catalog.refetch()}
         />
       ) : (
@@ -84,7 +83,7 @@ export function CatalogView() {
               />
             </label>
             {entries.length === 0 ? (
-              <EmptyState title="Không có dataset khớp" />
+              <EmptyState title="Không tìm thấy bộ dữ liệu phù hợp" />
             ) : (
               <ul className="space-y-1.5">
                 {entries.map((entry) => {
@@ -174,7 +173,7 @@ export function CatalogView() {
             <Card>
               <EmptyState
                 title="Catalog chưa có dataset"
-                description="Backend chưa đăng ký dataset nào cho domain này."
+                description="Phân hệ này chưa có bộ dữ liệu."
               />
             </Card>
           )}

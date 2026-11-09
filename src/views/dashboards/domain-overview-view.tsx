@@ -228,27 +228,21 @@ function HrDashboard() {
   )
 }
 
-const DOMAIN_META: Record<
-  BusinessDomain,
-  { title: string; description: string; mart: string; api: string }
-> = {
+const DOMAIN_META: Record<BusinessDomain, { title: string; description: string; mart: string }> = {
   admissions: {
     title: 'Tổng quan Tuyển sinh',
     description: 'Giám sát chỉ số tuyển sinh trọng yếu và xu hướng nhập học.',
     mart: 'admissions_mart_v1',
-    api: 'GET /dashboard/admissions/overview',
   },
   academic: {
     title: 'Tổng quan Đào tạo',
     description: 'Quy mô sinh viên, kết quả học tập và tình hình mở lớp theo học kỳ.',
     mart: 'academic_mart_v1',
-    api: 'GET /dashboard/academic/overview',
   },
   hr: {
     title: 'Tổng quan Nhân sự',
     description: 'Đội ngũ nhân viên, giảng viên, trình độ chuyên môn và phân công theo đơn vị.',
     mart: 'hr_mart_v1',
-    api: 'GET /dashboard/hr/overview',
   },
 }
 
@@ -278,7 +272,7 @@ export function DomainOverviewView({ askHref }: { askHref: string }) {
         <DomainTabs value={current} onChange={setDomain} domains={availableDomains} />
         <Tag tone="amber">Gold Layer · {meta.mart}</Tag>
       </div>
-      <MockNotice api={meta.api} />
+      <MockNotice />
       {current === 'admissions' && <AdmissionsDashboard />}
       {current === 'academic' && <AcademicDashboard />}
       {current === 'hr' && <HrDashboard />}

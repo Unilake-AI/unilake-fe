@@ -23,7 +23,7 @@
     "lighthouse": "lhci autorun",
     "lighthouse:ci": "lhci autorun",
     "check-all": "pnpm type-check && pnpm lint && pnpm format:check && pnpm build",
-    "gen:api": "openapi-typescript docs/api/openapi.json -o src/lib/api/schema.d.ts"
+    "gen:api": "openapi-typescript docs/api/openapi.json -o src/api/schema.d.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

@@ -19,7 +19,7 @@ describe('buildConfiguration', () => {
       encoding: 'utf-8',
       has_header: 'false',
     })
-    expect(result.errors).toEqual({ delimiter: 'delimiter là bắt buộc với CSV.' })
+    expect(result.errors).toEqual({ delimiter: 'Vui lòng điền mục này.' })
     expect(result.configuration).not.toHaveProperty('quote_char')
   })
 
@@ -29,7 +29,7 @@ describe('buildConfiguration', () => {
       header_row: '0',
       skip_rows: '1.5',
     })
-    expect(result.errors.header_row).toMatch(/header_row/)
+    expect(result.errors.header_row).toBe('Vui lòng nhập số từ 1 trở lên.')
     expect(result.errors.skip_rows).toMatch(/số nguyên/)
 
     const ok = buildConfiguration('EXCEL', { sheet_name: 'Data', header_row: '2', skip_rows: '0' })

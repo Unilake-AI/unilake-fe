@@ -150,37 +150,37 @@ describe('LoginView', () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith(home))
   })
 
-  it('hiện thông báo lỗi do backend trả về', async () => {
+  it('báo kiểm tra lại tên đăng nhập hoặc mật khẩu', async () => {
     signIn.mockRejectedValueOnce(
       axiosError(401, {
         success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Sai tên đăng nhập hoặc mật khẩu.' },
+        error: { code: 'UNAUTHORIZED', message: 'AUTH_FAILED_INTERNAL' },
       })
     )
     render(<LoginView />)
     await fillAndSubmit('admin', 'wrong')
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Sai tên đăng nhập hoặc mật khẩu.')
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Tên đăng nhập hoặc mật khẩu chưa đúng'
+    )
     expect(push).not.toHaveBeenCalled()
     expect(Cookies.get('access_token')).toBeUndefined()
   })
 
-  it('dùng thông báo mặc định khi backend không gửi nội dung lỗi', async () => {
+  it('báo sự cố hệ thống khi dịch vụ đăng nhập gặp lỗi', async () => {
     signIn.mockRejectedValueOnce(axiosError(500, {}))
     render(<LoginView />)
     await fillAndSubmit('admin', 'Password@123')
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Tên đăng nhập hoặc mật khẩu chưa đúng'
-    )
+    expect(await screen.findByRole('alert')).toHaveTextContent('Hệ thống đang gặp sự cố')
   })
 
-  it('báo không kết nối được khi lỗi không đến từ HTTP', async () => {
+  it('báo không thể đăng nhập khi có sự cố bất ngờ', async () => {
     signIn.mockRejectedValueOnce(new Error('boom'))
     render(<LoginView />)
     await fillAndSubmit('admin', 'Password@123')
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Không thể kết nối đến máy chủ')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Không thể đăng nhập lúc này')
   })
 
   it('khoá nút và hiện trạng thái đang xác thực khi đang gửi', async () => {

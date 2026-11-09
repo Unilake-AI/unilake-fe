@@ -6,13 +6,13 @@ export function normalizeApiUrl(
   environment = process.env.NODE_ENV
 ): string {
   const trimmed = value?.trim()
-  if (!trimmed && environment !== 'development' && environment !== 'test') {
-    throw new Error('Cần cấu hình NEXT_PUBLIC_API_URL bằng URL HTTPS của backend.')
+  if (!trimmed) {
+    return DEFAULT_API_URL
   }
 
   let url: URL
   try {
-    url = new URL(trimmed || DEFAULT_API_URL)
+    url = new URL(trimmed)
   } catch {
     throw new Error('NEXT_PUBLIC_API_URL phải là URL tuyệt đối hợp lệ.')
   }

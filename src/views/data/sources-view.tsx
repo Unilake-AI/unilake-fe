@@ -9,7 +9,7 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { API_ListDataSources, API_UpdateDataSource } from '@/api/api_data'
-import { getApiErrorMessage, getApiRequestId } from '@/api/http'
+import { getApiErrorMessage } from '@/api/http'
 import {
   Button,
   Card,
@@ -21,6 +21,7 @@ import {
   Tag,
   formatDateTime,
   formatNumber,
+  statusLabel,
   statusTone,
 } from '@/components/page/page-parts'
 import { SOURCE_SYSTEMS, SOURCE_TYPES } from '@/config/data-sources'
@@ -91,7 +92,7 @@ export function SourcesView() {
       <PageHeader
         breadcrumb={['Quản trị dữ liệu', 'Nguồn dữ liệu']}
         title="Quản lý nguồn dữ liệu"
-        description="Đăng ký và cấu hình các nguồn dữ liệu đầu vào của Data Lake. Không xoá cứng, chỉ bật/tắt để giữ Lineage."
+        description="Thêm, chỉnh sửa hoặc bật tắt các nguồn dùng để nạp dữ liệu."
         actions={
           <Link
             href="/data/sources/new"
@@ -178,7 +179,7 @@ export function SourcesView() {
         subtitle={
           list.data
             ? `Hiển thị ${list.data.items.length} / ${list.data.total} nguồn`
-            : 'GET /api/v1/datasources'
+            : 'Danh sách nguồn dữ liệu'
         }
         right={
           <span className="font-mono text-[10px] text-slate-400">
@@ -192,7 +193,6 @@ export function SourcesView() {
         ) : list.isError ? (
           <div className="p-4">
             <ErrorState
-              requestId={getApiRequestId(list.error)}
               message={getApiErrorMessage(list.error, 'Không tải được danh sách nguồn dữ liệu.')}
               onRetry={() => void list.refetch()}
             />
@@ -254,7 +254,7 @@ export function SourcesView() {
                     <td className="px-3 py-2.5">
                       {source.last_ingestion_status ? (
                         <Tag tone={statusTone(source.last_ingestion_status)}>
-                          {source.last_ingestion_status}
+                          {statusLabel(source.last_ingestion_status)}
                         </Tag>
                       ) : (
                         <span className="text-slate-400">—</span>
@@ -265,7 +265,7 @@ export function SourcesView() {
                     </td>
                     <td className="px-3 py-2.5">
                       <Tag tone={source.is_active ? 'emerald' : 'slate'}>
-                        {source.is_active ? 'ACTIVE' : 'INACTIVE'}
+                        {source.is_active ? 'Đang hoạt động' : 'Đã tắt'}
                       </Tag>
                     </td>
                     <td className="whitespace-nowrap px-3 py-2.5 text-right">

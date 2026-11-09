@@ -42,10 +42,10 @@ export async function POST(request: Request) {
     })
 
     return response
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
-        detail: error instanceof Error ? error.message : 'Lỗi kết nối máy chủ xác thực',
+        detail: 'Không thể đăng nhập lúc này. Vui lòng thử lại sau.',
       },
       { status: 500 }
     )

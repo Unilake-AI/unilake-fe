@@ -22,7 +22,7 @@ const KPIS = [
   {
     label: 'Chất lượng dữ liệu',
     value: '96,8%',
-    hint: 'Đạt ngưỡng tin cậy ≥ 90% (NFR03)',
+    hint: 'Đạt ngưỡng tin cậy từ 90%',
     tone: 'emerald' as Tone,
   },
 ]
@@ -58,7 +58,7 @@ const TARGETS = [
     tone: 'amber' as const,
   },
   {
-    label: 'Dataset đạt ngưỡng Data Quality',
+    label: 'Bộ dữ liệu đạt yêu cầu chất lượng',
     value: '14 / 15',
     percent: 93.3,
     tone: 'indigo' as const,
@@ -131,7 +131,7 @@ export function ExecutiveView() {
         description="Bức tranh liên kết ba phân hệ Tuyển sinh – Đào tạo – Nhân sự phục vụ Ban Giám hiệu ra quyết định."
         actions={<Tag tone="amber">Gold Layer · executive_mart_v1</Tag>}
       />
-      <MockNotice api="GET /dashboard/executive" />
+      <MockNotice />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {KPIS.map((kpi) => (
@@ -142,7 +142,7 @@ export function ExecutiveView() {
       <div className="grid gap-4 xl:grid-cols-2">
         <Card
           title="Cảnh báo điều hành trọng tâm"
-          subtitle="Tự động tổng hợp từ Gold Layer"
+          subtitle="Các vấn đề cần theo dõi"
           right={<Tag tone="rose">{ALERTS.length} điểm cần chỉ đạo</Tag>}
         >
           <ul className="space-y-3">

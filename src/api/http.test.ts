@@ -5,13 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { API_RefreshToken } from '@/api/api_auth'
 import { readRefreshToken, redirectToLoginExpired, storeSession } from '@/lib/session'
 
-import {
-  getApiErrorDetails,
-  getApiErrorMessage,
-  getApiRequestId,
-  http,
-  shouldRetryRequest,
-} from './http'
+import { getApiErrorMessage, http, shouldRetryRequest } from './http'
 
 import type { AxiosAdapter, InternalAxiosRequestConfig } from 'axios'
 
@@ -22,23 +16,27 @@ vi.mock('@/lib/session', () => ({
 }))
 vi.mock('@/api/api_auth', () => ({ API_RefreshToken: vi.fn() }))
 
-function errorWith(status: number, data: unknown, headers: Record<string, string> = {}) {
+function errorWith(status: number, data: unknown) {
   const config = { headers: new AxiosHeaders() } as InternalAxiosRequestConfig
   return new AxiosError('fail', 'ERR_BAD_RESPONSE', config, undefined, {
     status,
     statusText: '',
-    headers: new AxiosHeaders(headers),
+    headers: new AxiosHeaders(),
     config,
     data,
   })
 }
 
 describe('getApiErrorMessage', () => {
-  it('ưu tiên thông báo backend trả về', () => {
-    const error = errorWith(422, { error: { code: 'X', message: 'Tên nguồn đã tồn tại' } })
-    expect(getApiErrorMessage(error, 'mặc định')).toBe('Tên nguồn đã tồn tại')
-    expect(getApiErrorMessage(errorWith(400, { detail: 'Sai dữ liệu' }), 'mặc định')).toBe(
-      'Sai dữ liệu'
+  it('dùng câu đã soạn theo loại lỗi và bỏ nội dung thô', () => {
+    const error = errorWith(409, {
+      error: { code: 'SOURCE_NAME_EXIST', message: 'unique key violation' },
+    })
+    expect(getApiErrorMessage(error, 'mặc định')).toBe(
+      'Tên nguồn dữ liệu đã được sử dụng. Vui lòng chọn tên khác.'
+    )
+    expect(getApiErrorMessage(errorWith(400, { detail: 'SQLSTATE 22000' }), 'mặc định')).toBe(
+      'mặc định'
     )
   })
 
@@ -53,40 +51,28 @@ describe('getApiErrorMessage', () => {
 
   it('không hiện chi tiết kỹ thuật của lỗi máy chủ', () => {
     const error = errorWith(500, { error: { message: 'Traceback (most recent call last) ...' } })
-    expect(getApiErrorMessage(error, 'x')).toBe('Máy chủ đang gặp sự cố. Vui lòng thử lại sau.')
+    expect(getApiErrorMessage(error, 'x')).toBe('Hệ thống đang gặp sự cố. Vui lòng thử lại sau.')
   })
 
   it('báo mất kết nối và quá thời gian chờ', () => {
     expect(getApiErrorMessage(new AxiosError('net', 'ERR_NETWORK'), 'x')).toMatch(
       /Không thể kết nối/
     )
-    expect(getApiErrorMessage(new AxiosError('slow', 'ECONNABORTED'), 'x')).toMatch(/quá lâu/)
+    expect(getApiErrorMessage(new AxiosError('slow', 'ECONNABORTED'), 'x')).toMatch(
+      /quá nhiều thời gian/
+    )
     expect(getApiErrorMessage(new Error('khác'), 'mặc định')).toBe('mặc định')
   })
 })
 
-describe('lỗi kiểm tra dữ liệu của FastAPI (422)', () => {
-  const error = errorWith(422, {
-    detail: [
-      { type: 'missing', loc: ['body', 'username'], msg: 'Field required' },
-      { type: 'missing', loc: ['body', 'password'], msg: 'Field required' },
-    ],
-  })
-
-  it('hiện câu chung và liệt kê từng trường lỗi', () => {
-    expect(getApiErrorMessage(error, 'x')).toMatch(/không hợp lệ/)
-    expect(getApiErrorDetails(error)).toEqual([
-      'username: Field required',
-      'password: Field required',
-    ])
-  })
-
-  it('vẫn đọc details.errors của envelope chuẩn', () => {
-    const envelope = errorWith(422, {
-      error: { details: { errors: ['Missing required configuration: encoding'] } },
+describe('lỗi kiểm tra dữ liệu', () => {
+  it('báo kiểm tra lại thông tin mà không đưa tên trường hoặc chi tiết nội bộ ra giao diện', () => {
+    const validation = errorWith(422, {
+      detail: [{ type: 'missing', loc: ['body', 'username'], msg: 'Field required' }],
     })
-    expect(getApiErrorDetails(envelope)).toEqual(['Missing required configuration: encoding'])
-    expect(getApiErrorDetails(new Error('x'))).toEqual([])
+    expect(getApiErrorMessage(validation, 'x')).toBe(
+      'Thông tin chưa hợp lệ. Vui lòng kiểm tra lại.'
+    )
   })
 })
 
@@ -98,15 +84,6 @@ describe('shouldRetryRequest', () => {
     expect(shouldRetryRequest(errorWith(403, {}))).toBe(false)
     expect(shouldRetryRequest(errorWith(422, {}))).toBe(false)
     expect(shouldRetryRequest(new Error('x'))).toBe(false)
-  })
-})
-
-describe('getApiRequestId', () => {
-  it('lấy request_id từ envelope lỗi hoặc header', () => {
-    expect(getApiRequestId(errorWith(500, { error: { request_id: 'req_01' } }))).toBe('req_01')
-    expect(getApiRequestId(errorWith(500, {}, { 'x-request-id': 'req_02' }))).toBe('req_02')
-    expect(getApiRequestId(errorWith(500, {}))).toBeUndefined()
-    expect(getApiRequestId(new Error('x'))).toBeUndefined()
   })
 })
 

@@ -11,7 +11,7 @@ import { CircleAlert, LoaderCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { API_CreateDataSource, API_GetDataSource, API_UpdateDataSource } from '@/api/api_data'
-import { getApiErrorDetails, getApiErrorMessage, getApiRequestId } from '@/api/http'
+import { getApiErrorMessage } from '@/api/http'
 import { Card, ErrorState, LoadingState, PageHeader } from '@/components/page/page-parts'
 import {
   SOURCE_SYSTEMS,
@@ -149,7 +149,6 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
   }
 
   const errorCount = Object.keys(errors).length
-  const serverDetails = save.isError ? getApiErrorDetails(save.error) : []
 
   return (
     <form className="space-y-5" onSubmit={onSubmit} noValidate>
@@ -159,7 +158,7 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
         description={
           isEdit
             ? 'Cập nhật thông tin nguồn. Loại nguồn không đổi được; cấu hình chỉ gửi đi khi chọn nhập lại.'
-            : 'Chỉ đăng ký nguồn, không chạy Ingestion. Trường cấu hình thay đổi theo Loại nguồn.'
+            : 'Thêm thông tin về nguồn để dùng khi nạp dữ liệu.'
         }
         actions={
           <>
@@ -195,11 +194,6 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
                 ? getApiErrorMessage(save.error, 'Không lưu được nguồn dữ liệu.')
                 : `${errorCount} trường chưa hợp lệ`}
             </p>
-            {serverDetails.map((detail) => (
-              <p key={detail} className="font-mono text-[11px]">
-                {detail}
-              </p>
-            ))}
           </div>
         </div>
       )}
@@ -262,11 +256,7 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
                 />
               </Field>
               <div className="md:col-span-2">
-                <Field
-                  id="location"
-                  label="Vị trí (đường dẫn / bucket / endpoint) *"
-                  error={errors.location}
-                >
+                <Field id="location" label="Địa chỉ nguồn dữ liệu *" error={errors.location}>
                   <input
                     id="location"
                     className={cn(inputClass, 'font-mono', errors.location ? badClass : okClass)}
@@ -303,14 +293,8 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
           </Card>
 
           <Card
-            title={`Cấu hình theo loại nguồn: ${typeConfig.label}`}
-            subtitle={`Khoá bắt buộc: ${typeConfig.fields
-              .filter((f) => f.required)
-              .map((f) => f.key)
-              .join(', ')}`}
-            right={
-              <span className="font-mono text-[10px] text-slate-400">configuration (JSONB)</span>
-            }
+            title={`Cài đặt cho nguồn ${typeConfig.label}`}
+            subtitle="Vui lòng điền các mục có dấu *"
           >
             {isEdit && (
               <label className="mb-4 flex items-center gap-2 text-xs text-slate-700">
@@ -353,8 +337,8 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
                       >
                         {field.kind === 'boolean' ? (
                           <select {...common} className={className}>
-                            <option value="true">true</option>
-                            <option value="false">false</option>
+                            <option value="true">Có</option>
+                            <option value="false">Không</option>
                           </select>
                         ) : field.kind === 'select' ? (
                           <select {...common} className={className}>
@@ -383,19 +367,18 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
         </div>
 
         <div className="space-y-4">
-          <Card title="Kiểm tra trước khi lưu" subtitle="Backend trả lỗi kèm trường không hợp lệ">
+          <Card title="Kiểm tra trước khi lưu">
             <ul className="list-disc space-y-1.5 pl-4 text-xs leading-5 text-slate-600">
               <li>Hệ thống nguồn phải tồn tại và đang hoạt động</li>
               <li>Tên nguồn không rỗng, tối đa 200 ký tự</li>
               <li>Loại nguồn thuộc danh sách hỗ trợ</li>
-              <li>configuration đủ khoá bắt buộc theo loại nguồn</li>
-              <li>Không lưu mật khẩu dạng chữ thường, dùng secret reference</li>
+              <li>Điền các mục bắt buộc theo loại nguồn</li>
+              <li>Hỏi quản trị viên nếu nguồn yêu cầu thông tin đăng nhập</li>
             </ul>
           </Card>
           <Card title="Phân quyền">
             <p className="text-xs leading-5 text-slate-600">
-              Chỉ DATA_ADMIN và ADMIN được thêm / sửa. Các vai trò khác không có quyền quản lý
-              nguồn.
+              Quản trị viên hệ thống và quản trị viên dữ liệu có quyền thêm và chỉnh sửa nguồn.
             </p>
           </Card>
         </div>
@@ -420,7 +403,6 @@ export function SourceEditView({ id }: { id: number }) {
   if (detail.isError) {
     return (
       <ErrorState
-        requestId={getApiRequestId(detail.error)}
         message={getApiErrorMessage(detail.error, 'Không tải được nguồn dữ liệu.')}
         onRetry={() => void detail.refetch()}
       />

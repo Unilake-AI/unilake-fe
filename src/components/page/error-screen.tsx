@@ -4,12 +4,10 @@ import { Layers } from 'lucide-react'
 
 /** Khung toàn màn hình cho trang lỗi và trang 404 (không dùng app shell vì có thể chưa đăng nhập). */
 export function ErrorScreen({
-  code,
   title,
   description,
   children,
 }: {
-  code: string
   title: string
   description: string
   children: ReactNode
@@ -22,8 +20,7 @@ export function ErrorScreen({
         </div>
         <span className="text-lg font-bold text-slate-900">UniLake AI</span>
       </div>
-      <p className="mt-8 font-mono text-5xl font-bold text-indigo-600">{code}</p>
-      <h1 className="mt-3 text-xl font-bold text-slate-900">{title}</h1>
+      <h1 className="mt-8 text-xl font-bold text-slate-900">{title}</h1>
       <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">{description}</p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-2">{children}</div>
     </main>

@@ -60,12 +60,12 @@ describe('SourceFormView (thêm mới)', () => {
     const user = userEvent.setup()
     renderWithClient(<SourceFormView />)
 
-    await user.clear(screen.getByLabelText('delimiter *'))
+    await user.clear(screen.getByLabelText('Ký tự ngăn cách *'))
     await user.click(screen.getByRole('button', { name: 'Lưu nguồn dữ liệu' }))
 
     expect(await screen.findByText('Vui lòng nhập tên nguồn dữ liệu.')).toBeInTheDocument()
     expect(screen.getByText('Vui lòng nhập vị trí của nguồn.')).toBeInTheDocument()
-    expect(screen.getByText('delimiter là bắt buộc với CSV.')).toBeInTheDocument()
+    expect(screen.getByText('Vui lòng điền mục này.')).toBeInTheDocument()
     expect(screen.getByText('3 trường chưa hợp lệ')).toBeInTheDocument()
     expect(createSource).not.toHaveBeenCalled()
   })
@@ -76,10 +76,7 @@ describe('SourceFormView (thêm mới)', () => {
     renderWithClient(<SourceFormView />)
 
     await user.type(screen.getByLabelText('Tên nguồn dữ liệu *'), ' Applicants CSV ')
-    await user.type(
-      screen.getByLabelText('Vị trí (đường dẫn / bucket / endpoint) *'),
-      's3://unilake-raw/a.csv'
-    )
+    await user.type(screen.getByLabelText('Địa chỉ nguồn dữ liệu *'), 's3://unilake-raw/a.csv')
     await user.click(screen.getByRole('button', { name: 'Lưu nguồn dữ liệu' }))
 
     await waitFor(() => expect(push).toHaveBeenCalledWith('/data'))
@@ -96,7 +93,7 @@ describe('SourceFormView (thêm mới)', () => {
     expect(toast.success).toHaveBeenCalledWith('Đã thêm nguồn “Applicants CSV”.')
   })
 
-  it('hiện lỗi chi tiết backend trả về', async () => {
+  it('hiện hướng xử lý dễ hiểu khi thông tin kết nối chưa hợp lệ', async () => {
     const user = userEvent.setup()
     const headers = new AxiosHeaders()
     createSource.mockRejectedValue(
@@ -118,12 +115,12 @@ describe('SourceFormView (thêm mới)', () => {
     renderWithClient(<SourceFormView />)
 
     await user.type(screen.getByLabelText('Tên nguồn dữ liệu *'), 'A')
-    await user.type(screen.getByLabelText('Vị trí (đường dẫn / bucket / endpoint) *'), 's3://a')
+    await user.type(screen.getByLabelText('Địa chỉ nguồn dữ liệu *'), 's3://a')
     await user.click(screen.getByRole('button', { name: 'Lưu nguồn dữ liệu' }))
 
     const alert = await screen.findByRole('alert')
-    expect(alert).toHaveTextContent('Configuration không hợp lệ')
-    expect(alert).toHaveTextContent("Configuration 'encoding' must not be empty")
+    expect(alert).toHaveTextContent('Thông tin kết nối chưa hợp lệ. Vui lòng kiểm tra lại.')
+    expect(alert).not.toHaveTextContent(/Configuration|encoding/)
     expect(push).not.toHaveBeenCalled()
   })
 })
@@ -170,8 +167,8 @@ describe('SourceEditView (chỉnh sửa)', () => {
     renderWithClient(<SourceEditView id={7} />)
 
     await user.click(await screen.findByLabelText(/Nhập lại cấu hình/))
-    await user.clear(screen.getByLabelText('timeout_seconds *'))
-    await user.type(screen.getByLabelText('timeout_seconds *'), '60')
+    await user.clear(screen.getByLabelText('Thời gian chờ (giây) *'))
+    await user.type(screen.getByLabelText('Thời gian chờ (giây) *'), '60')
     await user.click(screen.getByRole('button', { name: 'Lưu thay đổi' }))
 
     await waitFor(() => expect(updateSource).toHaveBeenCalled())

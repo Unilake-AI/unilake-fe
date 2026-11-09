@@ -24,9 +24,7 @@ describe('chính sách giao thức backend', () => {
     }
   )
 
-  it('production bắt buộc cấu hình và chấp nhận HTTPS', () => {
-    expect(() => normalizeApiUrl(undefined, 'production')).toThrow(/NEXT_PUBLIC_API_URL/)
-    expect(() => normalizeApiUrl('  ', 'production')).toThrow(/NEXT_PUBLIC_API_URL/)
+  it('production chấp nhận URL HTTPS được cấu hình', () => {
     expect(normalizeApiUrl('https://backend.example/api/v1/', 'production')).toBe(
       'https://backend.example'
     )
@@ -43,6 +41,21 @@ describe('chính sách giao thức backend', () => {
     'https://backend.example#fragment',
   ])('từ chối URL không phù hợp: %s', (url) => {
     expect(() => normalizeApiUrl(url, 'development')).toThrow(/NEXT_PUBLIC_API_URL/)
+  })
+
+  it.each([undefined, ''])('module dùng localhost khi cấu hình production là %j', async (value) => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('NEXT_PUBLIC_API_URL', value)
+    vi.resetModules()
+    try {
+      await expect(import('./api')).resolves.toMatchObject({
+        API_URL: 'http://localhost:8000',
+        API_BASE_URL: 'http://localhost:8000/api/v1',
+      })
+    } finally {
+      vi.unstubAllEnvs()
+      vi.resetModules()
+    }
   })
 
   it('module cấu hình từ chối HTTP ngay khi khởi tạo production', async () => {
