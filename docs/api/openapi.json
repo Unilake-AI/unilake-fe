@@ -333,22 +333,22 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
           "500": {
             "description": "Internal server error.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -421,22 +421,22 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
           "500": {
             "description": "Internal server error.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -517,22 +517,22 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
           "500": {
             "description": "Internal server error.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -599,22 +599,22 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
           "500": {
             "description": "Internal server error.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -625,6 +625,232 @@
             "HTTPBearer": []
           }
         ]
+      }
+    },
+    "/api/v1/source-systems": {
+      "get": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Chọn hệ thống nguồn",
+        "operationId": "list_source_systems_api_v1_source_systems_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SourceSystemRead"
+                  },
+                  "type": "array",
+                  "title": "Response List Source Systems Api V1 Source Systems Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/datasets": {
+      "get": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Chọn bộ dữ liệu để tải file",
+        "operationId": "list_datasets_api_v1_datasets_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "name": "domain",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "hr",
+                    "academic",
+                    "admissions"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Domain"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DatasetRead"
+                  },
+                  "title": "Response List Datasets Api V1 Datasets Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Đăng ký bộ dữ liệu Bronze",
+        "operationId": "create_dataset_api_v1_datasets_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatasetCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}": {
+      "get": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Chi tiết bộ dữ liệu được phép tải file",
+        "operationId": "get_dataset_api_v1_datasets__dataset_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/ingestion/jobs": {
@@ -722,6 +948,57 @@
               "minimum": 0,
               "default": 0,
               "title": "Offset"
+            }
+          },
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "exclusiveMinimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "QUEUED",
+                    "RETRY_WAIT",
+                    "RUNNING",
+                    "SUCCESS",
+                    "FAILED",
+                    "REJECTED"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "mine_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Mine Only"
             }
           }
         ],
@@ -986,6 +1263,7 @@
           "ingestion"
         ],
         "summary": "Tải file lên để kiểm tra và lưu vào Bronze",
+        "description": "Chọn bộ dữ liệu đã có bằng dataset_id, hoặc tạo bộ mới bằng dataset_name. Với bộ mới, nhân viên có một lĩnh vực không cần nhập domain; hệ thống lấy từ quyền. Quản trị hoặc tài khoản nhiều lĩnh vực cần chọn domain hợp lệ. Không gửi thông tin tạo bộ mới khi đã chọn dataset_id.",
         "operationId": "upload_ingestion_api_v1_ingestion_uploads_post",
         "requestBody": {
           "content": {
@@ -1024,6 +1302,80 @@
             "HTTPBearer": []
           }
         ]
+      }
+    },
+    "/api/v1/pipeline/cleaning/ingestion-jobs/{ingestion_job_id}/preview": {
+      "post": {
+        "tags": [
+          "pipeline",
+          "silver-preview"
+        ],
+        "summary": "Xem trước làm sạch và chuẩn hóa từ Bronze",
+        "description": "Kiểm tra toàn bộ file và trả mẫu tối đa 100 dòng. Không lưu bản ghi lỗi, không ghi Silver, không thay đổi phiên bản hiện hành.",
+        "operationId": "preview_cleaning_for_job_api_v1_pipeline_cleaning_ingestion_jobs__ingestion_job_id__preview_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ingestion_job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "title": "Ingestion Job Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CleaningPreviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Preview Cleaning For Job Api V1 Pipeline Cleaning Ingestion Jobs  Ingestion Job Id  Preview Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/pipeline/cleaning/ingestion-jobs/{ingestion_job_id}": {
@@ -1068,6 +1420,570 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ManualCleaningResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pipeline/profiles": {
+      "get": {
+        "tags": [
+          "silver-profiles"
+        ],
+        "summary": "Danh sách cấu hình nguồn Silver",
+        "operationId": "list_profiles_api_v1_pipeline_profiles_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProfileRead"
+                  },
+                  "title": "Response List Profiles Api V1 Pipeline Profiles Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "silver-profiles"
+        ],
+        "summary": "Tạo cấu hình nguồn Silver",
+        "operationId": "create_profile_api_v1_pipeline_profiles_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pipeline/profiles/{profile_id}": {
+      "get": {
+        "tags": [
+          "silver-profiles"
+        ],
+        "summary": "Xem quy tắc làm sạch và chuẩn hóa",
+        "operationId": "get_profile_api_v1_pipeline_profiles__profile_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "silver-profiles"
+        ],
+        "summary": "Sửa cấu hình nguồn Silver",
+        "operationId": "update_profile_api_v1_pipeline_profiles__profile_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pipeline/silver/snapshots": {
+      "get": {
+        "tags": [
+          "silver-snapshots"
+        ],
+        "summary": "Danh sách phiên bản Silver theo cấu hình nguồn",
+        "operationId": "list_snapshots_api_v1_pipeline_silver_snapshots_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "title": "Profile Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response List Snapshots Api V1 Pipeline Silver Snapshots Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pipeline/silver/snapshots/active": {
+      "get": {
+        "tags": [
+          "silver-snapshots"
+        ],
+        "summary": "Xem phiên bản Silver đang sử dụng",
+        "operationId": "active_snapshot_api_v1_pipeline_silver_snapshots_active_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Active Snapshot Api V1 Pipeline Silver Snapshots Active Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pipeline/silver/snapshots/{snapshot_id}": {
+      "get": {
+        "tags": [
+          "silver-snapshots"
+        ],
+        "summary": "Xem thông tin và nguồn gốc phiên bản Silver",
+        "operationId": "describe_snapshot_api_v1_pipeline_silver_snapshots__snapshot_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "snapshot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Snapshot Id"
+            }
+          },
+          {
+            "name": "profile_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Describe Snapshot Api V1 Pipeline Silver Snapshots  Snapshot Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pipeline/silver/snapshots/{snapshot_id}/data": {
+      "get": {
+        "tags": [
+          "silver-snapshots"
+        ],
+        "summary": "Xem dữ liệu trong một bảng Silver",
+        "operationId": "snapshot_data_api_v1_pipeline_silver_snapshots__snapshot_id__data_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "snapshot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Snapshot Id"
+            }
+          },
+          {
+            "name": "profile_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "title": "Profile Id"
+            }
+          },
+          {
+            "name": "entity",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "title": "Entity"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Snapshot Data Api V1 Pipeline Silver Snapshots  Snapshot Id  Data Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pipeline/silver/snapshots/{snapshot_id}/activate": {
+      "post": {
+        "tags": [
+          "silver-snapshots"
+        ],
+        "summary": "Chọn phiên bản Silver đang sử dụng",
+        "operationId": "activate_snapshot_api_v1_pipeline_silver_snapshots__snapshot_id__activate_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "snapshot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Snapshot Id"
+            }
+          },
+          {
+            "name": "profile_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivateSnapshot"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Activate Snapshot Api V1 Pipeline Silver Snapshots  Snapshot Id  Activate Post"
                 }
               }
             }
@@ -1848,6 +2764,16 @@
             }
           },
           {
+            "name": "mine_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Mine Only"
+            }
+          },
+          {
             "name": "limit",
             "in": "query",
             "required": false,
@@ -1882,6 +2808,251 @@
                     "$ref": "#/components/schemas/IssueRead"
                   },
                   "title": "Response List Issues Api V1 Data Quality Issues Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data-quality-issues/stats": {
+      "get": {
+        "tags": [
+          "data-quality-issues"
+        ],
+        "summary": "Thống kê yêu cầu trong phạm vi được xem",
+        "operationId": "issue_stats_api_v1_data_quality_issues_stats_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "department_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "exclusiveMinimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Department Id"
+            }
+          },
+          {
+            "name": "assignee_user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "exclusiveMinimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Assignee User Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "ASSIGNED",
+                    "PENDING_VERIFICATION",
+                    "VERIFIED"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "mine_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Mine Only"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueStats"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data-quality-issues/departments": {
+      "get": {
+        "tags": [
+          "data-quality-issues"
+        ],
+        "summary": "Các phòng ban quản trị có thể giao xử lý",
+        "operationId": "issue_departments_api_v1_data_quality_issues_departments_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/IssueDepartmentChoice"
+                  },
+                  "type": "array",
+                  "title": "Response Issue Departments Api V1 Data Quality Issues Departments Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/data-quality-issues/assignees": {
+      "get": {
+        "tags": [
+          "data-quality-issues"
+        ],
+        "summary": "Chọn người phụ trách đủ quyền và còn phân công",
+        "operationId": "issue_assignees_api_v1_data_quality_issues_assignees_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "department_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "title": "Department Id"
+            }
+          },
+          {
+            "name": "domain",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "hr",
+                "academic",
+                "admissions"
+              ],
+              "type": "string",
+              "title": "Domain"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssigneeChoice"
+                  },
+                  "title": "Response Issue Assignees Api V1 Data Quality Issues Assignees Get"
                 }
               }
             }
@@ -1988,6 +3159,64 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/IssueDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data-quality-issues/{issue_id}/uploads": {
+      "post": {
+        "tags": [
+          "data-quality-issues"
+        ],
+        "summary": "Người phụ trách tải bản đã sửa vào đúng bộ dữ liệu của yêu cầu",
+        "operationId": "upload_resolution_file_api_v1_data_quality_issues__issue_id__uploads_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "issue_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Issue Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_resolution_file_api_v1_data_quality_issues__issue_id__uploads_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestionJobRead"
                 }
               }
             }
@@ -2197,6 +3426,16 @@
               }
             }
           },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "409": {
             "description": "Bộ dữ liệu đã có trong danh mục.",
             "content": {
@@ -2213,16 +3452,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2292,6 +3521,16 @@
               }
             }
           },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "409": {
             "description": "Bộ dữ liệu đã có trong danh mục.",
             "content": {
@@ -2308,16 +3547,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2399,6 +3628,16 @@
               }
             }
           },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "409": {
             "description": "Bộ dữ liệu đã có trong danh mục.",
             "content": {
@@ -2415,16 +3654,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2514,6 +3743,16 @@
               }
             }
           },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "409": {
             "description": "Bộ dữ liệu đã có trong danh mục.",
             "content": {
@@ -2530,16 +3769,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2612,6 +3841,16 @@
               }
             }
           },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "409": {
             "description": "Bộ dữ liệu đã có trong danh mục.",
             "content": {
@@ -2628,16 +3867,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2749,6 +3978,16 @@
               }
             }
           },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "409": {
             "description": "Bộ dữ liệu đã có trong danh mục.",
             "content": {
@@ -2765,16 +4004,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2824,6 +4053,32 @@
         }
       }
     },
+    "/api/v1/staff/context": {
+      "get": {
+        "tags": [
+          "staff"
+        ],
+        "summary": "Quyền và lựa chọn cho màn hình STAFF",
+        "operationId": "staff_context_api_v1_staff_context_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffContext"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/": {
       "get": {
         "summary": "Read Root",
@@ -2871,11 +4126,33 @@
   },
   "components": {
     "schemas": {
+      "ActivateSnapshot": {
+        "properties": {
+          "expected_current_snapshot": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Current Snapshot"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "expected_current_snapshot"
+        ],
+        "title": "ActivateSnapshot"
+      },
       "AssignIssue": {
         "properties": {
           "assignee_user_id": {
             "type": "integer",
-            "exclusiveMinimum": 0,
+            "exclusiveMinimum": 0.0,
             "title": "Assignee User Id"
           }
         },
@@ -2886,6 +4163,29 @@
         ],
         "title": "AssignIssue"
       },
+      "AssigneeChoice": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "username",
+          "full_name"
+        ],
+        "title": "AssigneeChoice"
+      },
       "Body_upload_ingestion_api_v1_ingestion_uploads_post": {
         "properties": {
           "file": {
@@ -2895,23 +4195,101 @@
             "description": "File CSV, XLSX hoặc XLSM"
           },
           "dataset_id": {
-            "type": "integer",
-            "exclusiveMinimum": 0,
-            "title": "Dataset Id"
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id",
+            "description": "Bộ dữ liệu đã chọn trên giao diện; bỏ trống khi tạo mới"
           },
           "parser_options": {
             "type": "string",
             "title": "Parser Options",
             "description": "Tùy chọn đọc file dưới dạng JSON",
             "default": "{}"
+          },
+          "dataset_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Name",
+            "description": "Tên bộ dữ liệu mới"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Mô tả bộ dữ liệu mới"
+          },
+          "domain": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "hr",
+                  "academic",
+                  "admissions"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain",
+            "description": "Chỉ cần chọn khi tạo mới và tài khoản có nhiều lĩnh vực hoặc là quản trị"
           }
         },
         "type": "object",
         "required": [
-          "file",
-          "dataset_id"
+          "file"
         ],
         "title": "Body_upload_ingestion_api_v1_ingestion_uploads_post"
+      },
+      "Body_upload_resolution_file_api_v1_data_quality_issues__issue_id__uploads_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "description": "Bản đã sửa, giữ tên file nguồn của yêu cầu"
+          },
+          "parser_options": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parser Options",
+            "description": "Bỏ trống để dùng cách đọc đã ghi nhận của file nguồn"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_resolution_file_api_v1_data_quality_issues__issue_id__uploads_post"
       },
       "CatalogEntrySchema": {
         "properties": {
@@ -3067,6 +4445,22 @@
         "type": "object",
         "title": "CatalogUpdateSchema",
         "description": "PATCH chỉ đổi metadata; domain_id/dataset là khóa cố định trên URL."
+      },
+      "CleaningPreviewRequest": {
+        "properties": {
+          "profile_id": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Profile Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "profile_id"
+        ],
+        "title": "CleaningPreviewRequest"
       },
       "CleaningRunRead": {
         "properties": {
@@ -3270,14 +4664,14 @@
           },
           "department_id": {
             "type": "integer",
-            "exclusiveMinimum": 0,
+            "exclusiveMinimum": 0.0,
             "title": "Department Id"
           },
           "assignee_user_id": {
             "anyOf": [
               {
                 "type": "integer",
-                "exclusiveMinimum": 0
+                "exclusiveMinimum": 0.0
               },
               {
                 "type": "null"
@@ -3633,6 +5027,221 @@
         "type": "object",
         "title": "DataSourceUpdate",
         "description": "Payload cập nhật data source; tất cả field đều optional để hỗ trợ partial update."
+      },
+      "DatasetCreate": {
+        "properties": {
+          "dataset_code": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Dataset Code"
+          },
+          "dataset_name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Dataset Name"
+          },
+          "domain": {
+            "type": "string",
+            "enum": [
+              "hr",
+              "academic",
+              "admissions"
+            ],
+            "title": "Domain"
+          },
+          "source_system_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Source System Id"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dataset_code",
+          "dataset_name",
+          "domain",
+          "source_system_id"
+        ],
+        "title": "DatasetCreate"
+      },
+      "DatasetRead": {
+        "properties": {
+          "dataset_id": {
+            "type": "integer",
+            "title": "Dataset Id"
+          },
+          "dataset_code": {
+            "type": "string",
+            "title": "Dataset Code"
+          },
+          "dataset_name": {
+            "type": "string",
+            "title": "Dataset Name"
+          },
+          "domain": {
+            "type": "string",
+            "title": "Domain"
+          },
+          "source_system_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source System Id"
+          },
+          "data_layer_id": {
+            "type": "integer",
+            "title": "Data Layer Id"
+          },
+          "owner_department_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Department Id"
+          },
+          "storage_format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Storage Format"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "dataset_code",
+          "dataset_name",
+          "domain",
+          "data_layer_id",
+          "status",
+          "created_at"
+        ],
+        "title": "DatasetRead",
+        "description": "Payload trả về metadata của dataset đã đăng ký."
+      },
+      "DepartmentChoice": {
+        "properties": {
+          "department_id": {
+            "type": "integer",
+            "title": "Department Id"
+          },
+          "department_code": {
+            "type": "string",
+            "title": "Department Code"
+          },
+          "department_name": {
+            "type": "string",
+            "title": "Department Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "department_id",
+          "department_code",
+          "department_name"
+        ],
+        "title": "DepartmentChoice"
+      },
+      "DomainChoice": {
+        "properties": {
+          "domain": {
+            "type": "string",
+            "title": "Domain"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "domain",
+          "name"
+        ],
+        "title": "DomainChoice"
       },
       "ErrorBody": {
         "properties": {
@@ -4076,6 +5685,17 @@
               }
             ],
             "title": "Attempt Number"
+          },
+          "quality_issue_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quality Issue Id"
           }
         },
         "type": "object",
@@ -4120,6 +5740,11 @@
           "failed": {
             "type": "integer",
             "title": "Failed"
+          },
+          "retry_wait": {
+            "type": "integer",
+            "title": "Retry Wait",
+            "default": 0
           }
         },
         "type": "object",
@@ -4136,12 +5761,12 @@
         "properties": {
           "data_source_id": {
             "type": "integer",
-            "exclusiveMinimum": 0,
+            "exclusiveMinimum": 0.0,
             "title": "Data Source Id"
           },
           "dataset_id": {
             "type": "integer",
-            "exclusiveMinimum": 0,
+            "exclusiveMinimum": 0.0,
             "title": "Dataset Id"
           },
           "source_table": {
@@ -4207,6 +5832,29 @@
           "last_heartbeat_at"
         ],
         "title": "IngestionWorkerRead"
+      },
+      "IssueDepartmentChoice": {
+        "properties": {
+          "department_id": {
+            "type": "integer",
+            "title": "Department Id"
+          },
+          "department_code": {
+            "type": "string",
+            "title": "Department Code"
+          },
+          "department_name": {
+            "type": "string",
+            "title": "Department Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "department_id",
+          "department_code",
+          "department_name"
+        ],
+        "title": "IssueDepartmentChoice"
       },
       "IssueDetail": {
         "properties": {
@@ -4440,6 +6088,21 @@
             },
             "type": "array",
             "title": "Issues"
+          },
+          "entity": {
+            "type": "string",
+            "title": "Entity"
+          },
+          "source_table": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Table"
           }
         },
         "type": "object",
@@ -4451,7 +6114,9 @@
           "record_position",
           "bronze_version",
           "error_codes",
-          "issues"
+          "issues",
+          "entity",
+          "source_table"
         ],
         "title": "IssueQuarantineRecord"
       },
@@ -4557,6 +6222,34 @@
           "updated_at"
         ],
         "title": "IssueRead"
+      },
+      "IssueStats": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "assigned": {
+            "type": "integer",
+            "title": "Assigned"
+          },
+          "pending_verification": {
+            "type": "integer",
+            "title": "Pending Verification"
+          },
+          "verified": {
+            "type": "integer",
+            "title": "Verified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "assigned",
+          "pending_verification",
+          "verified"
+        ],
+        "title": "IssueStats"
       },
       "LineageEdge": {
         "properties": {
@@ -4926,6 +6619,76 @@
         "title": "NaturalLanguageQueryResponse",
         "description": "Dữ liệu phản hồi NLQ."
       },
+      "ProfileCreate": {
+        "properties": {
+          "profile_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$",
+            "title": "Profile Id"
+          },
+          "definition": {
+            "$ref": "#/components/schemas/SourceProfile"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "profile_id",
+          "definition"
+        ],
+        "title": "ProfileCreate"
+      },
+      "ProfileRead": {
+        "properties": {
+          "profile_id": {
+            "type": "string",
+            "title": "Profile Id"
+          },
+          "definition": {
+            "$ref": "#/components/schemas/SourceProfile"
+          },
+          "fingerprint": {
+            "type": "string",
+            "title": "Fingerprint"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "storage": {
+            "type": "string",
+            "title": "Storage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profile_id",
+          "definition",
+          "fingerprint",
+          "revision",
+          "storage"
+        ],
+        "title": "ProfileRead"
+      },
+      "ProfileUpdate": {
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Expected Revision"
+          },
+          "definition": {
+            "$ref": "#/components/schemas/SourceProfile"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "expected_revision",
+          "definition"
+        ],
+        "title": "ProfileUpdate"
+      },
       "QuarantineRecordDetail": {
         "properties": {
           "record_id": {
@@ -5207,11 +6970,338 @@
         "title": "SessionRead",
         "description": "Phiên đăng nhập đang hoạt động được trả về cho người dùng đã xác thực."
       },
+      "SourceProfile": {
+        "properties": {
+          "data_source_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Data Source Id"
+          },
+          "dataset_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Dataset Id"
+          },
+          "source_system_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Source System Id"
+          },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "CSV",
+              "EXCEL"
+            ],
+            "title": "Source Type"
+          },
+          "source_table": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Source Table"
+          },
+          "domain": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{0,62}$",
+            "title": "Domain"
+          },
+          "entity": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Entity"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Version"
+          },
+          "scope": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,40}$",
+            "title": "Scope"
+          },
+          "source_schema_version": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Source Schema Version"
+          },
+          "source_schema": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Source Schema"
+          },
+          "contracts": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Contracts"
+          },
+          "field_mapping": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Field Mapping"
+          },
+          "ignored_columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Ignored Columns"
+          },
+          "format_options": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Format Options"
+          },
+          "type_options": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Type Options"
+          },
+          "null_tokens": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Null Tokens"
+          },
+          "dictionaries": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Dictionaries"
+          },
+          "reference_namespaces": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Reference Namespaces"
+          },
+          "crosswalk_release": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Crosswalk Release"
+          },
+          "effective_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Effective At"
+          },
+          "collapse_exact_duplicates": {
+            "type": "boolean",
+            "title": "Collapse Exact Duplicates",
+            "default": false
+          },
+          "source_preview_columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Source Preview Columns"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "data_source_id",
+          "dataset_id",
+          "source_system_id",
+          "source_type",
+          "source_table",
+          "domain",
+          "entity",
+          "version",
+          "scope",
+          "source_schema_version",
+          "source_schema",
+          "contracts",
+          "field_mapping",
+          "crosswalk_release",
+          "effective_at"
+        ],
+        "title": "SourceProfile",
+        "description": "Các quy tắc của một bảng nguồn; thay đổi cấu hình được ghi nhận bằng mã nội dung mới."
+      },
+      "SourceSystemRead": {
+        "properties": {
+          "source_system_id": {
+            "type": "integer",
+            "title": "Source System Id"
+          },
+          "source_code": {
+            "type": "string",
+            "title": "Source Code"
+          },
+          "source_name": {
+            "type": "string",
+            "title": "Source Name"
+          },
+          "source_type": {
+            "type": "string",
+            "title": "Source Type"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "owner_department_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Department Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_system_id",
+          "source_code",
+          "source_name",
+          "source_type",
+          "is_active",
+          "created_at"
+        ],
+        "title": "SourceSystemRead",
+        "description": "Payload trả về thông tin hệ thống nguồn nghiệp vụ."
+      },
+      "StaffContext": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Roles"
+          },
+          "domains": {
+            "items": {
+              "$ref": "#/components/schemas/DomainChoice"
+            },
+            "type": "array",
+            "title": "Domains"
+          },
+          "default_domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Domain"
+          },
+          "departments": {
+            "items": {
+              "$ref": "#/components/schemas/DepartmentChoice"
+            },
+            "type": "array",
+            "title": "Departments"
+          },
+          "can_upload": {
+            "type": "boolean",
+            "title": "Can Upload"
+          },
+          "can_resolve_issues": {
+            "type": "boolean",
+            "title": "Can Resolve Issues"
+          },
+          "can_manage_silver": {
+            "type": "boolean",
+            "title": "Can Manage Silver"
+          },
+          "needs_department_assignment": {
+            "type": "boolean",
+            "title": "Needs Department Assignment"
+          },
+          "accepted_extensions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Accepted Extensions"
+          },
+          "max_file_bytes": {
+            "type": "integer",
+            "title": "Max File Bytes"
+          },
+          "max_records": {
+            "type": "integer",
+            "title": "Max Records"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "username",
+          "roles",
+          "domains",
+          "default_domain",
+          "departments",
+          "can_upload",
+          "can_resolve_issues",
+          "can_manage_silver",
+          "needs_department_assignment",
+          "accepted_extensions",
+          "max_file_bytes",
+          "max_records",
+          "note"
+        ],
+        "title": "StaffContext"
+      },
       "SubmitResolution": {
         "properties": {
           "ingestion_job_id": {
             "type": "integer",
-            "exclusiveMinimum": 0,
+            "exclusiveMinimum": 0.0,
             "title": "Ingestion Job Id"
           },
           "note": {

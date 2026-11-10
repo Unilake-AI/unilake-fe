@@ -14,7 +14,7 @@ export const SOURCE_SYSTEMS = [
 export interface ConfigField {
   key: string
   label: string
-  kind: 'text' | 'number' | 'boolean' | 'select' | 'json'
+  kind: 'text' | 'number' | 'boolean' | 'select' | 'json' | 'password'
   required: boolean
   options?: string[]
   defaultValue: string
@@ -141,6 +141,48 @@ export const SOURCE_TYPE_CONFIG: Record<
       },
     ],
   },
+  POSTGRESQL: {
+    label: 'PostgreSQL',
+    connectionType: 'RDBMS',
+    locationHint: 'postgres://db.uni.edu.vn:5432/unilake_source',
+    fields: [
+      {
+        key: 'host',
+        label: 'Máy chủ (Host)',
+        kind: 'text',
+        required: true,
+        defaultValue: 'localhost',
+      },
+      {
+        key: 'port',
+        label: 'Cổng (Port)',
+        kind: 'number',
+        required: true,
+        defaultValue: '5432',
+      },
+      {
+        key: 'database',
+        label: 'Tên cơ sở dữ liệu',
+        kind: 'text',
+        required: true,
+        defaultValue: '',
+      },
+      {
+        key: 'username',
+        label: 'Tên đăng nhập',
+        kind: 'text',
+        required: true,
+        defaultValue: '',
+      },
+      {
+        key: 'password',
+        label: 'Mật khẩu',
+        kind: 'password',
+        required: true,
+        defaultValue: '',
+      },
+    ],
+  },
 }
 
 export const SOURCE_TYPES = Object.keys(SOURCE_TYPE_CONFIG) as SourceType[]
@@ -171,6 +213,8 @@ export function buildConfiguration(
           errors[field.key] = 'Vui lòng nhập số nguyên.'
         } else if (field.key === 'header_row' && value < 1) {
           errors[field.key] = 'Vui lòng nhập số từ 1 trở lên.'
+        } else if (field.key === 'port' && (value < 1 || value > 65535)) {
+          errors[field.key] = 'Cổng kết nối phải từ 1 đến 65535.'
         } else if (field.key === 'timeout_seconds' && value <= 0) {
           errors[field.key] = 'Thời gian chờ phải lớn hơn 0 giây.'
         } else if (value < 0) {

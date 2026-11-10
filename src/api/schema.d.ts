@@ -153,6 +153,58 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/source-systems': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Chọn hệ thống nguồn */
+    get: operations['list_source_systems_api_v1_source_systems_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/datasets': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Chọn bộ dữ liệu để tải file */
+    get: operations['list_datasets_api_v1_datasets_get']
+    put?: never
+    /** Đăng ký bộ dữ liệu Bronze */
+    post: operations['create_dataset_api_v1_datasets_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/datasets/{dataset_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Chi tiết bộ dữ liệu được phép tải file */
+    get: operations['get_dataset_api_v1_datasets__dataset_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/ingestion/jobs': {
     parameters: {
       query?: never
@@ -282,8 +334,31 @@ export interface paths {
     }
     get?: never
     put?: never
-    /** Tải file lên để kiểm tra và lưu vào Bronze */
+    /**
+     * Tải file lên để kiểm tra và lưu vào Bronze
+     * @description Chọn bộ dữ liệu đã có bằng dataset_id, hoặc tạo bộ mới bằng dataset_name. Với bộ mới, nhân viên có một lĩnh vực không cần nhập domain; hệ thống lấy từ quyền. Quản trị hoặc tài khoản nhiều lĩnh vực cần chọn domain hợp lệ. Không gửi thông tin tạo bộ mới khi đã chọn dataset_id.
+     */
     post: operations['upload_ingestion_api_v1_ingestion_uploads_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/cleaning/ingestion-jobs/{ingestion_job_id}/preview': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Xem trước làm sạch và chuẩn hóa từ Bronze
+     * @description Kiểm tra toàn bộ file và trả mẫu tối đa 100 dòng. Không lưu bản ghi lỗi, không ghi Silver, không thay đổi phiên bản hiện hành.
+     */
+    post: operations['preview_cleaning_for_job_api_v1_pipeline_cleaning_ingestion_jobs__ingestion_job_id__preview_post']
     delete?: never
     options?: never
     head?: never
@@ -304,6 +379,127 @@ export interface paths {
      * @description Áp dụng cấu hình nguồn được khai báo trên máy chủ; kiểm tra dữ liệu trước khi công bố Silver.
      */
     post: operations['run_cleaning_for_ingestion_job_api_v1_pipeline_cleaning_ingestion_jobs__ingestion_job_id__post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/profiles': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Danh sách cấu hình nguồn Silver */
+    get: operations['list_profiles_api_v1_pipeline_profiles_get']
+    put?: never
+    /** Tạo cấu hình nguồn Silver */
+    post: operations['create_profile_api_v1_pipeline_profiles_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/profiles/{profile_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Xem quy tắc làm sạch và chuẩn hóa */
+    get: operations['get_profile_api_v1_pipeline_profiles__profile_id__get']
+    /** Sửa cấu hình nguồn Silver */
+    put: operations['update_profile_api_v1_pipeline_profiles__profile_id__put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/silver/snapshots': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Danh sách phiên bản Silver theo cấu hình nguồn */
+    get: operations['list_snapshots_api_v1_pipeline_silver_snapshots_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/silver/snapshots/active': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Xem phiên bản Silver đang sử dụng */
+    get: operations['active_snapshot_api_v1_pipeline_silver_snapshots_active_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/silver/snapshots/{snapshot_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Xem thông tin và nguồn gốc phiên bản Silver */
+    get: operations['describe_snapshot_api_v1_pipeline_silver_snapshots__snapshot_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/silver/snapshots/{snapshot_id}/data': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Xem dữ liệu trong một bảng Silver */
+    get: operations['snapshot_data_api_v1_pipeline_silver_snapshots__snapshot_id__data_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/silver/snapshots/{snapshot_id}/activate': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Chọn phiên bản Silver đang sử dụng */
+    post: operations['activate_snapshot_api_v1_pipeline_silver_snapshots__snapshot_id__activate_post']
     delete?: never
     options?: never
     head?: never
@@ -447,6 +643,57 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/data-quality-issues/stats': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Thống kê yêu cầu trong phạm vi được xem */
+    get: operations['issue_stats_api_v1_data_quality_issues_stats_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/data-quality-issues/departments': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Các phòng ban quản trị có thể giao xử lý */
+    get: operations['issue_departments_api_v1_data_quality_issues_departments_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/data-quality-issues/assignees': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Chọn người phụ trách đủ quyền và còn phân công */
+    get: operations['issue_assignees_api_v1_data_quality_issues_assignees_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/data-quality-issues/{issue_id}': {
     parameters: {
       query?: never
@@ -479,6 +726,23 @@ export interface paths {
     head?: never
     /** Assign Issue */
     patch: operations['assign_issue_api_v1_data_quality_issues__issue_id__assignment_patch']
+    trace?: never
+  }
+  '/api/v1/data-quality-issues/{issue_id}/uploads': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Người phụ trách tải bản đã sửa vào đúng bộ dữ liệu của yêu cầu */
+    post: operations['upload_resolution_file_api_v1_data_quality_issues__issue_id__uploads_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
     trace?: never
   }
   '/api/v1/data-quality-issues/{issue_id}/resolution': {
@@ -607,6 +871,23 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/staff/context': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Quyền và lựa chọn cho màn hình STAFF */
+    get: operations['staff_context_api_v1_staff_context_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/': {
     parameters: {
       query?: never
@@ -645,10 +926,24 @@ export interface paths {
 export type webhooks = Record<string, never>
 export interface components {
   schemas: {
+    /** ActivateSnapshot */
+    ActivateSnapshot: {
+      /** Expected Current Snapshot */
+      expected_current_snapshot: string | null
+    }
     /** AssignIssue */
     AssignIssue: {
       /** Assignee User Id */
       assignee_user_id: number
+    }
+    /** AssigneeChoice */
+    AssigneeChoice: {
+      /** User Id */
+      user_id: number
+      /** Username */
+      username: string
+      /** Full Name */
+      full_name: string
     }
     /** Body_upload_ingestion_api_v1_ingestion_uploads_post */
     Body_upload_ingestion_api_v1_ingestion_uploads_post: {
@@ -657,14 +952,45 @@ export interface components {
        * @description File CSV, XLSX hoặc XLSM
        */
       file: string
-      /** Dataset Id */
-      dataset_id: number
+      /**
+       * Dataset Id
+       * @description Bộ dữ liệu đã chọn trên giao diện; bỏ trống khi tạo mới
+       */
+      dataset_id?: number | null
       /**
        * Parser Options
        * @description Tùy chọn đọc file dưới dạng JSON
        * @default {}
        */
       parser_options?: string
+      /**
+       * Dataset Name
+       * @description Tên bộ dữ liệu mới
+       */
+      dataset_name?: string | null
+      /**
+       * Description
+       * @description Mô tả bộ dữ liệu mới
+       */
+      description?: string | null
+      /**
+       * Domain
+       * @description Chỉ cần chọn khi tạo mới và tài khoản có nhiều lĩnh vực hoặc là quản trị
+       */
+      domain?: ('hr' | 'academic' | 'admissions') | null
+    }
+    /** Body_upload_resolution_file_api_v1_data_quality_issues__issue_id__uploads_post */
+    Body_upload_resolution_file_api_v1_data_quality_issues__issue_id__uploads_post: {
+      /**
+       * File
+       * @description Bản đã sửa, giữ tên file nguồn của yêu cầu
+       */
+      file: string
+      /**
+       * Parser Options
+       * @description Bỏ trống để dùng cách đọc đã ghi nhận của file nguồn
+       */
+      parser_options?: string | null
     }
     /**
      * CatalogEntrySchema
@@ -714,6 +1040,11 @@ export interface components {
       fields?: components['schemas']['FieldDefinitionSchema'][] | null
       /** Tables */
       tables?: components['schemas']['CatalogTableSchema'][] | null
+    }
+    /** CleaningPreviewRequest */
+    CleaningPreviewRequest: {
+      /** Profile Id */
+      profile_id: string
     }
     /** CleaningRunRead */
     CleaningRunRead: {
@@ -902,6 +1233,75 @@ export interface components {
       /** Is Active */
       is_active?: boolean | null
     }
+    /** DatasetCreate */
+    DatasetCreate: {
+      /** Dataset Code */
+      dataset_code: string
+      /** Dataset Name */
+      dataset_name: string
+      /**
+       * Domain
+       * @enum {string}
+       */
+      domain: 'hr' | 'academic' | 'admissions'
+      /** Source System Id */
+      source_system_id: number
+      /** Description */
+      description?: string | null
+    }
+    /**
+     * DatasetRead
+     * @description Payload trả về metadata của dataset đã đăng ký.
+     */
+    DatasetRead: {
+      /** Dataset Id */
+      dataset_id: number
+      /** Dataset Code */
+      dataset_code: string
+      /** Dataset Name */
+      dataset_name: string
+      /** Domain */
+      domain: string
+      /** Source System Id */
+      source_system_id?: number | null
+      /** Data Layer Id */
+      data_layer_id: number
+      /** Owner Department Id */
+      owner_department_id?: number | null
+      /** Storage Format */
+      storage_format?: string | null
+      /** Location */
+      location?: string | null
+      /** Version */
+      version?: string | null
+      /** Status */
+      status: string
+      /** Description */
+      description?: string | null
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      /** Updated At */
+      updated_at?: string | null
+    }
+    /** DepartmentChoice */
+    DepartmentChoice: {
+      /** Department Id */
+      department_id: number
+      /** Department Code */
+      department_code: string
+      /** Department Name */
+      department_name: string
+    }
+    /** DomainChoice */
+    DomainChoice: {
+      /** Domain */
+      domain: string
+      /** Name */
+      name: string
+    }
     /**
      * ErrorBody
      * @description Đối tượng lỗi chuẩn bên trong cấu trúc lỗi API.
@@ -1035,6 +1435,8 @@ export interface components {
       root_job_id?: number | null
       /** Attempt Number */
       attempt_number?: number | null
+      /** Quality Issue Id */
+      quality_issue_id?: string | null
     }
     /** IngestionJobStats */
     IngestionJobStats: {
@@ -1048,6 +1450,11 @@ export interface components {
       success: number
       /** Failed */
       failed: number
+      /**
+       * Retry Wait
+       * @default 0
+       */
+      retry_wait?: number
     }
     /** IngestionStart */
     IngestionStart: {
@@ -1075,6 +1482,15 @@ export interface components {
        * Format: date-time
        */
       last_heartbeat_at: string
+    }
+    /** IssueDepartmentChoice */
+    IssueDepartmentChoice: {
+      /** Department Id */
+      department_id: number
+      /** Department Code */
+      department_code: string
+      /** Department Name */
+      department_name: string
     }
     /** IssueDetail */
     IssueDetail: {
@@ -1174,6 +1590,10 @@ export interface components {
       issues: {
         [key: string]: unknown
       }[]
+      /** Entity */
+      entity: string
+      /** Source Table */
+      source_table: string | null
     }
     /** IssueRead */
     IssueRead: {
@@ -1215,6 +1635,17 @@ export interface components {
        * Format: date-time
        */
       updated_at: string
+    }
+    /** IssueStats */
+    IssueStats: {
+      /** Total */
+      total: number
+      /** Assigned */
+      assigned: number
+      /** Pending Verification */
+      pending_verification: number
+      /** Verified */
+      verified: number
     }
     /**
      * LineageEdge
@@ -1384,6 +1815,30 @@ export interface components {
         [key: string]: unknown
       }[]
     }
+    /** ProfileCreate */
+    ProfileCreate: {
+      /** Profile Id */
+      profile_id: string
+      definition: components['schemas']['SourceProfile']
+    }
+    /** ProfileRead */
+    ProfileRead: {
+      /** Profile Id */
+      profile_id: string
+      definition: components['schemas']['SourceProfile']
+      /** Fingerprint */
+      fingerprint: string
+      /** Revision */
+      revision: number
+      /** Storage */
+      storage: string
+    }
+    /** ProfileUpdate */
+    ProfileUpdate: {
+      /** Expected Revision */
+      expected_revision: number
+      definition: components['schemas']['SourceProfile']
+    }
     /** QuarantineRecordDetail */
     QuarantineRecordDetail: {
       /**
@@ -1511,6 +1966,145 @@ export interface components {
       user_agent?: string | null
       /** Session Status */
       session_status: string
+    }
+    /**
+     * SourceProfile
+     * @description Các quy tắc của một bảng nguồn; thay đổi cấu hình được ghi nhận bằng mã nội dung mới.
+     */
+    SourceProfile: {
+      /** Data Source Id */
+      data_source_id: number
+      /** Dataset Id */
+      dataset_id: number
+      /** Source System Id */
+      source_system_id: number
+      /**
+       * Source Type
+       * @enum {string}
+       */
+      source_type: 'CSV' | 'EXCEL'
+      /** Source Table */
+      source_table: string
+      /** Domain */
+      domain: string
+      /** Entity */
+      entity: string
+      /** Version */
+      version: string
+      /** Scope */
+      scope: string
+      /** Source Schema Version */
+      source_schema_version: string
+      /** Source Schema */
+      source_schema: {
+        [key: string]: unknown
+      }
+      /** Contracts */
+      contracts: {
+        [key: string]: unknown
+      }
+      /** Field Mapping */
+      field_mapping: {
+        [key: string]: string
+      }
+      /** Ignored Columns */
+      ignored_columns?: string[]
+      /** Format Options */
+      format_options?: {
+        [key: string]: {
+          [key: string]: unknown
+        }
+      }
+      /** Type Options */
+      type_options?: {
+        [key: string]: {
+          [key: string]: unknown
+        }
+      }
+      /** Null Tokens */
+      null_tokens?: {
+        [key: string]: string[]
+      }
+      /** Dictionaries */
+      dictionaries?: {
+        [key: string]: {
+          [key: string]: string
+        }
+      }
+      /** Reference Namespaces */
+      reference_namespaces?: {
+        [key: string]: string
+      }
+      /** Crosswalk Release */
+      crosswalk_release: string
+      /**
+       * Effective At
+       * Format: date-time
+       */
+      effective_at: string
+      /**
+       * Collapse Exact Duplicates
+       * @default false
+       */
+      collapse_exact_duplicates?: boolean
+      /** Source Preview Columns */
+      source_preview_columns?: string[]
+    }
+    /**
+     * SourceSystemRead
+     * @description Payload trả về thông tin hệ thống nguồn nghiệp vụ.
+     */
+    SourceSystemRead: {
+      /** Source System Id */
+      source_system_id: number
+      /** Source Code */
+      source_code: string
+      /** Source Name */
+      source_name: string
+      /** Source Type */
+      source_type: string
+      /** Description */
+      description?: string | null
+      /** Owner Department Id */
+      owner_department_id?: number | null
+      /** Is Active */
+      is_active: boolean
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+    }
+    /** StaffContext */
+    StaffContext: {
+      /** User Id */
+      user_id: number
+      /** Username */
+      username: string
+      /** Roles */
+      roles: string[]
+      /** Domains */
+      domains: components['schemas']['DomainChoice'][]
+      /** Default Domain */
+      default_domain: string | null
+      /** Departments */
+      departments: components['schemas']['DepartmentChoice'][]
+      /** Can Upload */
+      can_upload: boolean
+      /** Can Resolve Issues */
+      can_resolve_issues: boolean
+      /** Can Manage Silver */
+      can_manage_silver: boolean
+      /** Needs Department Assignment */
+      needs_department_assignment: boolean
+      /** Accepted Extensions */
+      accepted_extensions: string[]
+      /** Max File Bytes */
+      max_file_bytes: number
+      /** Max Records */
+      max_records: number
+      /** Note */
+      note: string
     }
     /** SubmitResolution */
     SubmitResolution: {
@@ -1994,12 +2588,133 @@ export interface operations {
       }
     }
   }
+  list_source_systems_api_v1_source_systems_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SourceSystemRead'][]
+        }
+      }
+    }
+  }
+  list_datasets_api_v1_datasets_get: {
+    parameters: {
+      query?: {
+        limit?: number
+        offset?: number
+        search?: string | null
+        domain?: ('hr' | 'academic' | 'admissions') | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DatasetRead'][]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  create_dataset_api_v1_datasets_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DatasetCreate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DatasetRead']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_dataset_api_v1_datasets__dataset_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        dataset_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DatasetRead']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   list_jobs_api_v1_ingestion_jobs_get: {
     parameters: {
       query?: {
         data_source_id?: number | null
         limit?: number
         offset?: number
+        dataset_id?: number | null
+        status?: ('QUEUED' | 'RETRY_WAIT' | 'RUNNING' | 'SUCCESS' | 'FAILED' | 'REJECTED') | null
+        mine_only?: boolean
       }
       header?: never
       path?: never
@@ -2246,6 +2961,45 @@ export interface operations {
       }
     }
   }
+  preview_cleaning_for_job_api_v1_pipeline_cleaning_ingestion_jobs__ingestion_job_id__preview_post: {
+    parameters: {
+      query?: {
+        limit?: number
+      }
+      header?: never
+      path: {
+        ingestion_job_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CleaningPreviewRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   run_cleaning_for_ingestion_job_api_v1_pipeline_cleaning_ingestion_jobs__ingestion_job_id__post: {
     parameters: {
       query?: never
@@ -2268,6 +3022,317 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ManualCleaningResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_profiles_api_v1_pipeline_profiles_get: {
+    parameters: {
+      query?: {
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProfileRead'][]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  create_profile_api_v1_pipeline_profiles_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ProfileCreate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProfileRead']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_profile_api_v1_pipeline_profiles__profile_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        profile_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProfileRead']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  update_profile_api_v1_pipeline_profiles__profile_id__put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        profile_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ProfileUpdate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProfileRead']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_snapshots_api_v1_pipeline_silver_snapshots_get: {
+    parameters: {
+      query: {
+        profile_id: string
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  active_snapshot_api_v1_pipeline_silver_snapshots_active_get: {
+    parameters: {
+      query: {
+        profile_id: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  describe_snapshot_api_v1_pipeline_silver_snapshots__snapshot_id__get: {
+    parameters: {
+      query: {
+        profile_id: string
+      }
+      header?: never
+      path: {
+        snapshot_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  snapshot_data_api_v1_pipeline_silver_snapshots__snapshot_id__data_get: {
+    parameters: {
+      query: {
+        profile_id: string
+        entity: string
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path: {
+        snapshot_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  activate_snapshot_api_v1_pipeline_silver_snapshots__snapshot_id__activate_post: {
+    parameters: {
+      query: {
+        profile_id: string
+      }
+      header?: never
+      path: {
+        snapshot_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ActivateSnapshot']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
         }
       }
       /** @description Validation Error */
@@ -2535,6 +3600,7 @@ export interface operations {
         department_id?: number | null
         assignee_user_id?: number | null
         status?: ('ASSIGNED' | 'PENDING_VERIFICATION' | 'VERIFIED') | null
+        mine_only?: boolean
         limit?: number
         offset?: number
       }
@@ -2584,6 +3650,96 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['IssueDetail']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  issue_stats_api_v1_data_quality_issues_stats_get: {
+    parameters: {
+      query?: {
+        department_id?: number | null
+        assignee_user_id?: number | null
+        status?: ('ASSIGNED' | 'PENDING_VERIFICATION' | 'VERIFIED') | null
+        mine_only?: boolean
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['IssueStats']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  issue_departments_api_v1_data_quality_issues_departments_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['IssueDepartmentChoice'][]
+        }
+      }
+    }
+  }
+  issue_assignees_api_v1_data_quality_issues_assignees_get: {
+    parameters: {
+      query: {
+        department_id: number
+        domain: 'hr' | 'academic' | 'admissions'
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AssigneeChoice'][]
         }
       }
       /** @description Validation Error */
@@ -2650,6 +3806,41 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['IssueDetail']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  upload_resolution_file_api_v1_data_quality_issues__issue_id__uploads_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        issue_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'multipart/form-data': components['schemas']['Body_upload_resolution_file_api_v1_data_quality_issues__issue_id__uploads_post']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['IngestionJobRead']
         }
       }
       /** @description Validation Error */
@@ -3227,6 +4418,26 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  staff_context_api_v1_staff_context_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['StaffContext']
         }
       }
     }

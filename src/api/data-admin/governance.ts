@@ -21,6 +21,15 @@ export async function API_GetCatalog(domainId?: string): Promise<CatalogEntry[]>
       description: field.description ?? '',
       nullable: field.nullable ?? true,
     })),
+    tables: (entry.tables ?? []).map((table) => ({
+      name: table.name,
+      description: table.description ?? '',
+      columns: (table.columns ?? []).map((col) => ({
+        ...col,
+        description: col.description ?? '',
+        nullable: col.nullable ?? true,
+      })),
+    })),
   }))
 }
 

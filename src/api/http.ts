@@ -99,6 +99,9 @@ const STATUS_MESSAGES: Record<number, string> = {
   401: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
   403: 'Bạn không có quyền thực hiện thao tác này.',
   404: 'Không tìm thấy dữ liệu yêu cầu.',
+  409: 'Thao tác xung đột với trạng thái hiện tại của dữ liệu. Vui lòng tải lại và kiểm tra.',
+  413: 'Tệp vượt quá dung lượng tối đa cho phép.',
+  415: 'Định dạng tệp không được hỗ trợ. Chỉ chấp nhận CSV, XLSX hoặc XLSM.',
   422: 'Thông tin chưa hợp lệ. Vui lòng kiểm tra lại.',
   429: 'Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút.',
 }
@@ -106,6 +109,11 @@ const STATUS_MESSAGES: Record<number, string> = {
 const API_ERROR_MESSAGES = new Map([
   ['USER_INACTIVE', 'Tài khoản của bạn đang bị khóa. Vui lòng liên hệ quản trị viên.'],
   ['ROLE_REQUIRED', 'Tài khoản chưa được cấp quyền phù hợp. Vui lòng liên hệ quản trị viên.'],
+  ['FORBIDDEN', 'Bạn không có quyền truy cập chức năng hoặc phạm vi dữ liệu này.'],
+  [
+    'STAFF_CONTEXT_UNAVAILABLE',
+    'Không thể đọc thông tin quyền và phòng ban của tài khoản. Vui lòng thử lại sau.',
+  ],
   ['SESSION_NOT_FOUND', 'Phiên đăng nhập này đã kết thúc hoặc không còn hoạt động.'],
   ['SOURCE_NAME_EXIST', 'Tên nguồn dữ liệu đã được sử dụng. Vui lòng chọn tên khác.'],
   ['SOURCE_SYSTEM_NOT_FOUND', 'Không tìm thấy hệ thống nguồn. Vui lòng chọn lại.'],
@@ -135,7 +143,149 @@ const API_ERROR_MESSAGES = new Map([
   ['DEDICATED_DEMO_CATALOG_REQUIRED', 'Bộ dữ liệu này chưa được hỗ trợ làm sạch.'],
   ['UNSUPPORTED_BRONZE_FILE_TYPE', 'Loại tệp này chưa được hỗ trợ làm sạch.'],
   ['INVALID_SQL', 'Chưa thể trả lời câu hỏi này. Bạn có thể thử hỏi theo cách khác.'],
+  [
+    'UPLOAD_DESTINATION_INVALID',
+    'Vui lòng chọn bộ dữ liệu đã có hoặc nhập tên bộ dữ liệu mới, không gửi cả hai.',
+  ],
+  ['UPLOAD_DOMAIN_REQUIRED', 'Vui lòng chọn lĩnh vực hợp lệ cho bộ dữ liệu mới.'],
+  ['UPLOAD_DOMAIN_FORBIDDEN', 'Bạn chỉ được tạo bộ dữ liệu trong lĩnh vực được cấp quyền.'],
+  [
+    'UPLOAD_DATASET_NAME_CONFLICT',
+    'Tên bộ dữ liệu đã tồn tại trong lĩnh vực này. Hãy chọn bộ dữ liệu có sẵn để nạp tiếp hoặc đặt tên khác.',
+  ],
+  ['UPLOAD_PARSER_INVALID', 'Cấu hình đọc tệp không hợp lệ. Vui lòng kiểm tra lại.'],
+  [
+    'UPLOAD_FILENAME_INVALID',
+    'Tên tệp chỉ được chứa chữ cái không dấu, số, dấu gạch ngang, gạch dưới và dấu chấm.',
+  ],
+  [
+    'UPLOAD_FILE_TYPE_UNSUPPORTED',
+    'Định dạng tệp không được hỗ trợ. Chỉ chấp nhận .csv, .xlsx hoặc .xlsm.',
+  ],
+  ['UPLOAD_TOO_LARGE', 'Tệp vượt quá dung lượng tối đa cho phép.'],
+  ['UPLOAD_EMPTY', 'Tệp không có nội dung.'],
+  ['UPLOAD_STORAGE_UNAVAILABLE', 'Kho lưu trữ tạm thời đang gián đoạn. Vui lòng thử lại sau.'],
+  ['INGESTION_QUEUE_UNAVAILABLE', 'Hàng đợi nạp dữ liệu đang tạm gián đoạn. Vui lòng thử lại sau.'],
+  ['QUALITY_ISSUE_NOT_FOUND', 'Không tìm thấy yêu cầu xử lý dữ liệu lỗi trong phạm vi của bạn.'],
+  [
+    'QUALITY_ISSUE_STATE_CONFLICT',
+    'Trạng thái yêu cầu hiện tại không cho phép thực hiện thao tác này.',
+  ],
+  [
+    'QUALITY_ISSUE_MULTIPLE_FILES',
+    'Yêu cầu chưa xác định duy nhất một loại dữ liệu và tệp nguồn cần sửa.',
+  ],
+  [
+    'QUALITY_ISSUE_METADATA_UNAVAILABLE',
+    'Không thể truy cập dữ liệu yêu cầu xử lý. Vui lòng thử lại sau.',
+  ],
+  [
+    'RESOLUTION_FILE_MISMATCH',
+    'Tên tệp tải lên không khớp với tệp nguồn của yêu cầu. Vui lòng giữ nguyên tên tệp gốc.',
+  ],
+  [
+    'RESOLUTION_PARSER_REQUIRED',
+    'Bản nguồn chưa lưu cấu hình đọc tệp. Vui lòng mở tùy chọn đọc tệp và nhập cấu hình phù hợp trước khi tải lại.',
+  ],
+  [
+    'RESOLUTION_HEADER_REQUIRED',
+    'Nguồn dữ liệu cũ không có dòng tiêu đề; cần quản trị dữ liệu thống nhất cấu hình trước khi tải bản sửa.',
+  ],
+  [
+    'INVALID_RESOLUTION_JOB',
+    'Lần nạp này chưa đủ điều kiện làm bằng chứng sửa lỗi (cần lần nạp mới thành công vào Bronze, đúng bộ dữ liệu và tệp nguồn).',
+  ],
+  [
+    'INVALID_RESOLUTION_OWNER',
+    'Tệp sửa lỗi phải do chính người phụ trách tải lên cho yêu cầu này.',
+  ],
+  [
+    'WORKER_LEASE_EXPIRED',
+    'Quá thời gian xử lý của worker. Hệ thống sẽ xử lý lại hoặc bạn có thể kiểm tra ở lịch sử lần chạy.',
+  ],
+  ['DATASET_CONFLICT', 'Mã bộ dữ liệu đã tồn tại hoặc thông tin không hợp lệ.'],
+  ['DATASET_SOURCE_INVALID', 'Hệ thống nguồn hoặc tầng Bronze chưa sẵn sàng.'],
+  ['DATASET_NOT_FOUND', 'Không tìm thấy bộ dữ liệu Bronze.'],
+  ['INGESTION_RETRY_STATUS_INVALID', 'Chỉ có thể chạy lại lần nạp đã thất bại (FAILED).'],
+  [
+    'INGESTION_RETRY_SOURCE_NOT_PINNED',
+    'Chỉ hỗ trợ chạy lại thủ công cho các lần nạp tệp tải lên (UPLOAD_V1) đã ghim phiên bản.',
+  ],
+  ['INGESTION_RETRY_ROOT_NOT_FOUND', 'Không tìm thấy chuỗi lần nạp gốc để chạy lại.'],
+  ['INGESTION_RETRY_ALREADY_ACTIVE', 'Chuỗi lần nạp này đang có tác vụ chờ hoặc đang chạy.'],
+  ['INGESTION_RETRY_UNAVAILABLE', 'Không thể tạo lần chạy lại vào lúc này. Vui lòng thử lại sau.'],
+  ['SILVER_SOURCE_PROFILE_NOT_FOUND', 'Không tìm thấy cấu hình nguồn Silver (Profile).'],
+  [
+    'SILVER_PROFILE_REVISION_CONFLICT',
+    'Cấu hình Silver đã được thay đổi bởi thao tác khác. Vui lòng tải lại trước khi lưu.',
+  ],
+  ['SILVER_PROFILE_CONFLICT', 'Mã cấu hình Silver (profile_id) đã tồn tại.'],
+  [
+    'SILVER_ENTITY_NOT_FOUND',
+    'Không tìm thấy bảng dữ liệu (entity) này trong phiên bản Silver đã chọn.',
+  ],
+  ['SILVER_SNAPSHOT_INVALID', 'Phiên bản Silver không đạt kiểm tra hợp lệ trước khi kích hoạt.'],
+  [
+    'ACTIVE_SNAPSHOT_CHANGED',
+    'Phiên bản Silver hiện hành vừa thay đổi. Vui lòng tải lại danh sách trước khi kích hoạt.',
+  ],
+  [
+    'PIPELINE_METADATA_UNAVAILABLE',
+    'Không thể truy cập metadata của pipeline. Vui lòng thử lại sau.',
+  ],
+  [
+    'PIPELINE_OBJECT_STORAGE_UNAVAILABLE',
+    'Không thể đọc dữ liệu Bronze hoặc ghi dữ liệu Silver trên kho lưu trữ.',
+  ],
+  ['INVALID_CLEANING_RUN_RANGE', 'Khoảng thời gian lọc lịch sử làm sạch chưa hợp lệ.'],
+  ['CLEANING_RUN_NOT_FOUND', 'Không tìm thấy lượt chạy làm sạch này.'],
+  ['CLEANING_REPORT_NOT_FOUND', 'Lượt chạy làm sạch này chưa có báo cáo chi tiết.'],
+  ['CLEANING_REPORT_UNAVAILABLE', 'Không thể đọc báo cáo chi tiết từ kho lưu trữ.'],
+  [
+    'QUARANTINE_METADATA_UNAVAILABLE',
+    'Không thể truy cập danh sách hồ sơ cách ly. Vui lòng thử lại sau.',
+  ],
+  ['QUARANTINE_RECORD_NOT_FOUND', 'Không tìm thấy hồ sơ cách ly này.'],
+  ['QUARANTINE_SOURCE_FORBIDDEN', 'Bộ dữ liệu này không cho phép xem dòng dữ liệu nguồn gốc.'],
+  ['QUARANTINE_SOURCE_UNAVAILABLE', 'Không thể đọc dòng dữ liệu gốc từ kho Bronze.'],
+  ['DUPLICATE_QUARANTINE_RECORD', 'Danh sách hồ sơ được chọn có bản ghi bị trùng lặp.'],
+  ['INVALID_ISSUE_DEPARTMENT', 'Phòng ban được chọn không tồn tại hoặc đã ngừng hoạt động.'],
+  [
+    'QUALITY_ISSUE_DATASET_MISMATCH',
+    'Các hồ sơ lỗi được gộp phải thuộc cùng bộ dữ liệu, loại dữ liệu (entity) và tệp nguồn.',
+  ],
+  ['QUALITY_ISSUE_DEPARTMENT_MISMATCH', 'Phòng ban được chọn không khớp với bộ dữ liệu.'],
+  [
+    'INVALID_ISSUE_ASSIGNEE',
+    'Người phụ trách phải có quyền nghiệp vụ phù hợp và đang công tác tại phòng ban được giao.',
+  ],
+  [
+    'INVALID_VERIFICATION_RUN',
+    'Lượt chạy Cleaning chưa kết thúc hoặc không khớp với job sửa và entity của yêu cầu.',
+  ],
+  [
+    'VERIFICATION_RUN_NOT_PUBLISHED',
+    'Lượt chạy Cleaning chưa xuất bản được phiên bản Silver hợp lệ.',
+  ],
+  [
+    'VERIFICATION_RECORDS_INCOMPLETE',
+    'Cần xác nhận đầy đủ toàn bộ các hồ sơ liên quan đến yêu cầu.',
+  ],
+  [
+    'VERIFICATION_RECORDS_UNEXPECTED',
+    'Không gửi danh sách hồ sơ đã xác nhận khi từ chối xác minh.',
+  ],
+  ['CATALOG_CONFLICT', 'Bộ dữ liệu đã tồn tại trong Data Catalog.'],
+  ['CATALOG_NOT_FOUND', 'Không tìm thấy mục dữ liệu này trong Data Catalog.'],
 ])
+
+export function getApiErrorCode(error: unknown): string | undefined {
+  if (!axios.isAxiosError(error)) {
+    return undefined
+  }
+  const body = error.response?.data as { error?: { code?: unknown } } | undefined
+  return typeof body?.error?.code === 'string' ? body.error.code : undefined
+}
 
 export function getErrorMessageForCode(code: unknown): string | undefined {
   return typeof code === 'string' ? API_ERROR_MESSAGES.get(code) : undefined

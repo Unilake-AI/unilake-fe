@@ -45,6 +45,9 @@ describe('getApiErrorMessage', () => {
       'Bạn không có quyền thực hiện thao tác này.'
     )
     expect(getApiErrorMessage(errorWith(404, {}), 'x')).toBe('Không tìm thấy dữ liệu yêu cầu.')
+    expect(getApiErrorMessage(errorWith(409, {}), 'x')).toMatch(/xung đột/)
+    expect(getApiErrorMessage(errorWith(413, {}), 'x')).toMatch(/dung lượng tối đa/)
+    expect(getApiErrorMessage(errorWith(415, {}), 'x')).toMatch(/Định dạng tệp/)
     expect(getApiErrorMessage(errorWith(401, {}), 'x')).toMatch(/hết hạn/)
     expect(getApiErrorMessage(errorWith(418, {}), 'mặc định')).toBe('mặc định')
   })

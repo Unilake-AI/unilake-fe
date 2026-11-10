@@ -80,7 +80,7 @@ describe('SourceFormView (thêm mới)', () => {
     await user.type(screen.getByLabelText('Địa chỉ nguồn dữ liệu *'), 's3://unilake-raw/a.csv')
     await user.click(screen.getByRole('button', { name: 'Lưu nguồn dữ liệu' }))
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/data'))
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/data/sources'))
     expect(createSource).toHaveBeenCalledWith({
       source_system_id: 1,
       source_name: 'Applicants CSV',
@@ -149,7 +149,7 @@ describe('SourceEditView (chỉnh sửa)', () => {
     await user.type(name, 'HR API v2')
     await user.click(screen.getByRole('button', { name: 'Lưu thay đổi' }))
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/data'))
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/data/sources'))
     expect(getSource).toHaveBeenCalledWith(7)
     expect(updateSource).toHaveBeenCalledWith(7, {
       source_system_id: 3,

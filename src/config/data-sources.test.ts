@@ -62,4 +62,33 @@ describe('buildConfiguration', () => {
     })
     expect(Object.keys(bad.errors).sort()).toEqual(['headers', 'pagination', 'timeout_seconds'])
   })
+
+  it('kiểm tra cấu hình PostgreSQL (port hợp lệ và đủ trường)', () => {
+    const ok = buildConfiguration('POSTGRESQL', {
+      host: 'db.uni.edu.vn',
+      port: '5432',
+      database: 'unilake',
+      username: 'reader',
+      password: 'secret',
+    })
+    expect(ok.errors).toEqual({})
+    expect(ok.configuration).toEqual({
+      host: 'db.uni.edu.vn',
+      port: 5432,
+      database: 'unilake',
+      username: 'reader',
+      password: 'secret',
+    })
+
+    const bad = buildConfiguration('POSTGRESQL', {
+      host: 'db.uni.edu.vn',
+      port: '70000',
+      database: '',
+      username: 'reader',
+      password: '',
+    })
+    expect(bad.errors.port).toMatch(/1 đến 65535/)
+    expect(bad.errors.database).toBe('Vui lòng điền mục này.')
+    expect(bad.errors.password).toBe('Vui lòng điền mục này.')
+  })
 })

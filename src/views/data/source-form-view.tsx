@@ -11,6 +11,7 @@ import { CircleAlert, LoaderCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { API_CreateDataSource, API_UpdateDataSource } from '@/api/data-operations/data-sources'
+import { API_ListSourceSystems } from '@/api/data-operations/datasets'
 import { getApiErrorMessage } from '@/api/http'
 import { API_GetDataSource } from '@/api/shared/data-sources'
 import { Card, ErrorState, LoadingState, PageHeader } from '@/components/page/page-parts'
@@ -83,9 +84,22 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
   const [config, setConfig] = useState<Record<string, string>>(() => defaultConfig(initialType))
   const [errors, setErrors] = useState<Record<string, string>>({})
 
+  const sourceSystemsQuery = useQuery({
+    queryKey: ['source-systems'],
+    queryFn: API_ListSourceSystems,
+    retry: false,
+  })
+  const sourceSystemOptions =
+    sourceSystemsQuery.data && sourceSystemsQuery.data.length > 0
+      ? sourceSystemsQuery.data.map((sys) => ({
+          id: sys.source_system_id,
+          name: sys.source_name,
+        }))
+      : SOURCE_SYSTEMS.map((sys) => ({ id: sys.id, name: sys.name }))
+
   const typeConfig = SOURCE_TYPE_CONFIG[sourceType]
   const systemMissing =
-    initial !== undefined && !SOURCE_SYSTEMS.some((s) => s.id === initial.source_system_id)
+    initial !== undefined && !sourceSystemOptions.some((s) => s.id === initial.source_system_id)
 
   const save = useMutation({
     mutationFn: (payload: DataSourceCreatePayload) => {
@@ -105,7 +119,7 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
           ? `Đã cập nhật nguồn “${saved.source_name}”.`
           : `Đã thêm nguồn “${saved.source_name}”.`
       )
-      router.push('/data')
+      router.push('/data/sources')
     },
   })
 
@@ -164,7 +178,7 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
         actions={
           <>
             <Link
-              href="/data"
+              href="/data/sources"
               className="inline-flex h-8 items-center rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
             >
               Huỷ
@@ -215,7 +229,7 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
                       {initial.source_system_name ?? `#${initial.source_system_id}`}
                     </option>
                   )}
-                  {SOURCE_SYSTEMS.map((system) => (
+                  {sourceSystemOptions.map((system) => (
                     <option key={system.id} value={system.id}>
                       {system.name}
                     </option>
@@ -351,6 +365,13 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
                           </select>
                         ) : field.kind === 'json' ? (
                           <textarea {...common} rows={3} className={cn(className, 'h-auto py-2')} />
+                        ) : field.kind === 'password' ? (
+                          <input
+                            {...common}
+                            type="password"
+                            autoComplete="new-password"
+                            className={className}
+                          />
                         ) : (
                           <input
                             {...common}
