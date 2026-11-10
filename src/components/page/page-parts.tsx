@@ -135,14 +135,23 @@ export function statusTone(status: string | null | undefined): Tone {
     case 'ACTIVE':
     case 'PUBLISHED':
     case 'PASSED':
+    case 'VERIFIED':
+    case 'HEALTHY':
       return 'emerald'
     case 'RUNNING':
     case 'QUEUED':
+    case 'RETRY_WAIT':
     case 'PROCESSING':
     case 'BRONZE':
+    case 'ASSIGNED':
+    case 'PUBLISHED_WITH_QUARANTINE':
       return 'amber'
+    case 'PENDING_VERIFICATION':
+      return 'sky'
     case 'FAILED':
     case 'REJECTED':
+    case 'OFFLINE':
+    case 'BLOCKED':
     case 'PERMISSION_DENIED':
     case 'VALIDATION_FAILED':
       return 'rose'
@@ -163,10 +172,11 @@ const STATUS_LABELS = new Map([
   ['PUBLISHED', 'Đã xuất bản'],
   ['PUBLISHED_WITH_QUARANTINE', 'Đã xuất bản một phần'],
   ['QUEUED', 'Đang chờ'],
+  ['RETRY_WAIT', 'Chờ thử lại'],
   ['RUNNING', 'Đang chạy'],
   ['PROCESSING', 'Đang xử lý'],
   ['FAILED', 'Không thành công'],
-  ['REJECTED', 'Chưa thể bắt đầu'],
+  ['REJECTED', 'Bị từ chối'],
   ['CANCELLED', 'Đã hủy'],
   ['NO_DATA', 'Không có kết quả'],
   ['EMPTY', 'Không còn dữ liệu'],
@@ -177,6 +187,14 @@ const STATUS_LABELS = new Map([
   ['READING', 'Đang đọc dữ liệu'],
   ['WRITING', 'Đang lưu dữ liệu'],
   ['COMMITTING', 'Đang hoàn tất'],
+  ['ASSIGNED', 'Cần xử lý'],
+  ['PENDING_VERIFICATION', 'Chờ xác minh'],
+  ['VERIFIED', 'Đã xác minh'],
+  ['HEALTHY', 'Hoạt động'],
+  ['OFFLINE', 'Ngoại tuyến'],
+  ['BLOCKED', 'Bị chặn xuất bản'],
+  ['SKIPPED', 'Bỏ qua xuất bản'],
+  ['NOT_STARTED', 'Chưa bắt đầu'],
 ])
 
 export function statusLabel(status: string): string {

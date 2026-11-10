@@ -2,6 +2,13 @@ import { IngestionView } from '@/views/data/ingestion-view'
 
 export const metadata = { title: 'Nạp dữ liệu | UniLake AI' }
 
-export default function IngestionPage() {
-  return <IngestionView />
+export default async function IngestionPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ jobId?: string }>
+}) {
+  const params = await searchParams
+  const parsed = params.jobId ? Number(params.jobId) : NaN
+  const initialJobId = Number.isInteger(parsed) && parsed > 0 ? parsed : undefined
+  return <IngestionView initialJobId={initialJobId} />
 }

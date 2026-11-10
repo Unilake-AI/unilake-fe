@@ -35,9 +35,10 @@ describe('ROLE_MENUS', () => {
     }
   })
 
-  it('nút Ask AI trỏ tới trang có trong menu; VIEWER chỉ có dashboard', () => {
+  it('nút Ask AI trỏ tới trang có trong menu; VIEWER chỉ có dashboard và STAFF tập trung nạp/sửa dữ liệu', () => {
     expect(ASK_AI_PATHS.ADMIN).toBeUndefined()
     expect(ASK_AI_PATHS.VIEWER).toBeUndefined()
+    expect(ASK_AI_PATHS.STAFF).toBeUndefined()
     for (const [workspace, href] of Object.entries(ASK_AI_PATHS)) {
       const hrefs = ROLE_MENUS[workspace as keyof typeof ROLE_MENUS].flatMap((g) =>
         g.items.map((i) => i.href)
@@ -48,5 +49,28 @@ describe('ROLE_MENUS', () => {
       '/viewer',
       '/viewer/dashboards',
     ])
+    expect(ROLE_MENUS.STAFF[0]?.items.map((item) => item.href)).toEqual([
+      '/analyst',
+      '/analyst/upload',
+      '/analyst/ingestion',
+      '/analyst/quality-issues',
+      '/analyst/profile',
+    ])
+    expect(ROLE_MENUS.ADMIN[0]?.items.map((item) => item.href)).toContain('/admin')
+    expect(ROLE_MENUS.DATA_ADMIN.flatMap((g) => g.items.map((item) => item.href))).toEqual([
+      '/data',
+      '/data/sources',
+      '/data/datasets',
+      '/data/ingestion',
+      '/data/workers',
+      '/data/profiles',
+      '/data/cleaning',
+      '/data/quarantine',
+      '/data/quality',
+      '/data/silver',
+      '/data/catalog',
+      '/data/lineage',
+    ])
+    expect(ROLE_MENUS.MANAGER[0]?.items.map((item) => item.href)).toContain('/manager')
   })
 })

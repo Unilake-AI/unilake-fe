@@ -1,8 +1,24 @@
 import { http } from '@/api/http'
-import type { components } from '@/api/schema'
+import type { components, paths } from '@/api/schema'
 
 type Schemas = components['schemas']
 type Issue = Schemas['IssueDetail']
+export type IssueDepartmentChoice = Schemas['IssueDepartmentChoice']
+export type IssueAssigneeChoice = Schemas['AssigneeChoice']
+export type IssueAssigneeFilters =
+  paths['/api/v1/data-quality-issues/assignees']['get']['parameters']['query']
+
+export async function API_ListIssueDepartments(): Promise<IssueDepartmentChoice[]> {
+  const res = await http.get<IssueDepartmentChoice[]>('/data-quality-issues/departments')
+  return res.data
+}
+
+export async function API_ListIssueAssignees(
+  params: IssueAssigneeFilters
+): Promise<IssueAssigneeChoice[]> {
+  const res = await http.get<IssueAssigneeChoice[]>('/data-quality-issues/assignees', { params })
+  return res.data
+}
 
 export async function API_CreateQualityIssue(payload: Schemas['CreateIssue']): Promise<Issue> {
   const res = await http.post<Issue>('/data-quality-issues', payload)

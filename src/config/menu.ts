@@ -16,26 +16,54 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
 
   DATA_ADMIN: [
     {
-      groupTitle: 'Quản trị dữ liệu',
+      groupTitle: 'Tổng quan',
+      items: [{ title: 'Tổng quan hệ thống', href: '/data', iconName: 'LayoutDashboard' }],
+    },
+    {
+      groupTitle: 'Quản lý dữ liệu',
       items: [
-        { title: 'Nguồn dữ liệu', href: '/data', iconName: 'Database' },
+        { title: 'Nguồn dữ liệu', href: '/data/sources', iconName: 'Database' },
+        { title: 'Bộ dữ liệu (Datasets)', href: '/data/datasets', iconName: 'Layers' },
         { title: 'Nạp dữ liệu (Ingestion)', href: '/data/ingestion', iconName: 'Upload' },
+        { title: 'Giám sát Worker', href: '/data/workers', iconName: 'HardDrive' },
+      ],
+    },
+    {
+      groupTitle: 'Xử lý & Chất lượng',
+      items: [
+        { title: 'Cấu hình Silver (Profiles)', href: '/data/profiles', iconName: 'Settings' },
+        { title: 'Làm sạch & Kiểm tra', href: '/data/cleaning', iconName: 'Play' },
+        { title: 'Hồ sơ cách ly (Quarantine)', href: '/data/quarantine', iconName: 'FileWarning' },
+        { title: 'Yêu cầu xử lý dữ liệu lỗi', href: '/data/quality', iconName: 'ShieldCheck' },
+        { title: 'Phiên bản Silver (Snapshots)', href: '/data/silver', iconName: 'CheckCircle2' },
+      ],
+    },
+    {
+      groupTitle: 'Quản trị siêu dữ liệu',
+      items: [
         { title: 'Data Catalog', href: '/data/catalog', iconName: 'BookOpen' },
-        { title: 'Data Quality', href: '/data/quality', iconName: 'ShieldCheck' },
         { title: 'Data Lineage', href: '/data/lineage', iconName: 'Workflow' },
-        { title: 'Hỏi AI (NLQ)', href: '/data/ask', iconName: 'Sparkles', badge: 'AI' },
       ],
     },
   ],
 
   STAFF: [
     {
-      groupTitle: 'Phân tích & Khai phá',
+      groupTitle: 'Vận hành dữ liệu',
       items: [
-        { title: 'Tổng quan phân hệ', href: '/analyst', iconName: 'LayoutDashboard' },
-        { title: 'Hỏi AI (NLQ)', href: '/analyst/ask', iconName: 'Sparkles', badge: 'AI' },
-        { title: 'Khám phá dữ liệu', href: '/analyst/explore', iconName: 'Table' },
-        { title: 'Lịch sử truy vấn', href: '/analyst/history', iconName: 'History' },
+        { title: 'Tổng quan', href: '/analyst', iconName: 'LayoutDashboard' },
+        { title: 'Nạp dữ liệu', href: '/analyst/upload', iconName: 'Upload' },
+        { title: 'Lịch sử nạp dữ liệu', href: '/analyst/ingestion', iconName: 'History' },
+        {
+          title: 'Yêu cầu xử lý dữ liệu lỗi',
+          href: '/analyst/quality-issues',
+          iconName: 'ShieldCheck',
+        },
+        {
+          title: 'Hồ sơ cá nhân / Phiên đăng nhập',
+          href: '/analyst/profile',
+          iconName: 'User',
+        },
       ],
     },
   ],
@@ -63,10 +91,8 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
   ],
 }
 
-/** VIEWER chỉ có dashboard theo quyền backend. */
+/** Chỉ mở Ask AI cho MANAGER khi còn trong menu; DATA_ADMIN và STAFF tập trung vào vận hành dữ liệu. */
 export const ASK_AI_PATHS: Partial<Record<RoleWorkspace, string>> = {
-  DATA_ADMIN: '/data/ask',
-  STAFF: '/analyst/ask',
   MANAGER: '/manager/ask',
 }
 

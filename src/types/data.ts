@@ -2,7 +2,7 @@
 
 import type { components } from '@/api/schema'
 
-export type SourceType = 'CSV' | 'EXCEL' | 'JSON' | 'REST_API'
+export type SourceType = 'CSV' | 'EXCEL' | 'JSON' | 'REST_API' | 'POSTGRESQL'
 
 export interface DataSourceItem {
   data_source_id: number
@@ -57,6 +57,12 @@ export interface CatalogField {
   description: string
 }
 
+export interface CatalogTable {
+  name: string
+  description: string
+  columns: CatalogField[]
+}
+
 export interface CatalogEntry {
   domain_id: string
   dataset: string
@@ -64,6 +70,7 @@ export interface CatalogEntry {
   schema_version: string
   description: string
   fields: CatalogField[]
+  tables?: CatalogTable[]
 }
 
 export interface NlqResponse {

@@ -1,7 +1,7 @@
-import { DomainOverviewView } from '@/views/dashboards/domain-overview-view'
+import { StaffOverviewView } from '@/views/staff/staff-overview-view'
 
-export const metadata = { title: 'Tổng quan phân hệ | UniLake AI' }
+export const metadata = { title: 'Tổng quan | UniLake AI' }
 
-export default function DomainOverviewPage() {
-  return <DomainOverviewView askHref="/analyst/ask" />
+export default function StaffOverviewPage() {
+  return <StaffOverviewView />
 }

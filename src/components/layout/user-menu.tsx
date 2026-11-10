@@ -12,7 +12,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ROLE_DEFINITIONS, ROLE_PRIORITY, ROLE_ROUTE_PREFIXES } from '@/config/roles'
+import {
+  ROLE_DEFINITIONS,
+  ROLE_PRIORITY,
+  ROLE_ROUTE_PREFIXES,
+  getWorkspaceForRole,
+} from '@/config/roles'
 import { useAuth } from '@/hooks/use-auth'
 import type { RoleCode } from '@/types/auth'
 
@@ -102,10 +107,19 @@ export function UserMenu({ role }: UserMenuProps) {
           </>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem disabled className="text-slate-700">
-          <User className="text-slate-500" />
-          Hồ sơ cá nhân
-        </DropdownMenuItem>
+        {getWorkspaceForRole(role) === 'STAFF' ? (
+          <DropdownMenuItem asChild className="text-slate-700">
+            <Link href="/analyst/profile">
+              <User className="text-slate-500" />
+              Hồ sơ cá nhân / Phiên đăng nhập
+            </Link>
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem disabled className="text-slate-700">
+            <User className="text-slate-500" />
+            Hồ sơ cá nhân
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem disabled className="text-slate-700">
           <Settings className="text-slate-500" />
           Cài đặt
