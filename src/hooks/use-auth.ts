@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { API_Logout } from '@/api/api_auth'
+import { API_Logout } from '@/api/shared/auth'
 import { ROLE_PRIORITY } from '@/config/roles'
 import { clearStoredSession, readRefreshToken } from '@/lib/session'
 import type { AuthMeResponse, AuthUser, RoleCode } from '@/types/auth'

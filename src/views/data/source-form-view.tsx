@@ -10,8 +10,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CircleAlert, LoaderCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { API_CreateDataSource, API_GetDataSource, API_UpdateDataSource } from '@/api/api_data'
+import { API_CreateDataSource, API_UpdateDataSource } from '@/api/data-operations/data-sources'
 import { getApiErrorMessage } from '@/api/http'
+import { API_GetDataSource } from '@/api/shared/data-sources'
 import { Card, ErrorState, LoadingState, PageHeader } from '@/components/page/page-parts'
 import {
   SOURCE_SYSTEMS,

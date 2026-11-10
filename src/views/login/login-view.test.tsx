@@ -4,7 +4,7 @@ import { AxiosError, AxiosHeaders } from 'axios'
 import Cookies from 'js-cookie'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { API_SignIn } from '@/api/api_auth'
+import { API_SignIn } from '@/api/shared/auth'
 import type { LoginResponse } from '@/types/auth'
 
 import { LoginView, loginSchema } from './login-view'
@@ -16,7 +16,7 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push, refresh }),
 }))
 
-vi.mock('@/api/api_auth', () => ({
+vi.mock('@/api/shared/auth', () => ({
   API_SignIn: vi.fn(),
 }))
 

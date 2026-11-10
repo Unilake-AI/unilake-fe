@@ -5,7 +5,8 @@ import { AxiosError, AxiosHeaders } from 'axios'
 import { toast } from 'sonner'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { API_CreateDataSource, API_GetDataSource, API_UpdateDataSource } from '@/api/api_data'
+import { API_CreateDataSource, API_UpdateDataSource } from '@/api/data-operations/data-sources'
+import { API_GetDataSource } from '@/api/shared/data-sources'
 import type { DataSourceItem } from '@/types/data'
 
 import { SourceEditView, SourceFormView } from './source-form-view'
@@ -14,11 +15,11 @@ const push = vi.fn()
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn() } }))
-vi.mock('@/api/api_data', () => ({
+vi.mock('@/api/data-operations/data-sources', () => ({
   API_CreateDataSource: vi.fn(),
-  API_GetDataSource: vi.fn(),
   API_UpdateDataSource: vi.fn(),
 }))
+vi.mock('@/api/shared/data-sources', () => ({ API_GetDataSource: vi.fn() }))
 
 const createSource = vi.mocked(API_CreateDataSource)
 const getSource = vi.mocked(API_GetDataSource)

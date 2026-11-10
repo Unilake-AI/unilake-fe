@@ -133,6 +133,9 @@ Workflow [Frontend CI/CD](.github/workflows/ci-frontend.yml) áp dụng cho sự
 │   ├── app/          # Định tuyến, layout và provider
 │   │   └── api/      # Route handler của Next.js
 │   ├── api/          # Cấu hình backend, Axios client và kiểu OpenAPI
+│   │   ├── shared/   # Lệnh gọi được nhiều nhóm vai trò sử dụng
+│   │   ├── data-admin/ # Danh mục và nguồn gốc dữ liệu dành riêng cho DATA_ADMIN
+│   │   └── data-operations/ # Tác vụ quản trị dữ liệu dùng bởi ADMIN và DATA_ADMIN
 │   ├── views/        # Màn hình theo nhóm chức năng nghiệp vụ
 │   ├── components/   # Thành phần giao diện, bố cục và biểu đồ
 │   ├── lib/          # Session, lịch sử truy vấn và tiện ích
@@ -146,7 +149,7 @@ Workflow [Frontend CI/CD](.github/workflows/ci-frontend.yml) áp dụng cho sự
 └── Dockerfile        # Cấu hình build và chạy container
 ```
 
-Các file kiểm thử `*.test.ts` và `*.test.tsx` được đặt cạnh mã nguồn tương ứng. Proxy backend nằm tại `src/app/api/proxy/[...path]/route.ts`; khai báo OpenAPI được sinh tại `src/api/schema.d.ts`.
+Các file kiểm thử `*.test.ts` và `*.test.tsx` được đặt cạnh mã nguồn tương ứng. `src/api/api.ts`, `src/api/http.ts` và kiểu OpenAPI ở gốc `src/api/` được dùng chung. Thư mục lệnh gọi phản ánh quyền backend. Các API trong `shared/` vẫn có thể giới hạn theo vai trò, phân hệ hoặc người được giao. Proxy backend nằm tại `src/app/api/proxy/[...path]/route.ts`.
 
 ## Quản lý API contract
 

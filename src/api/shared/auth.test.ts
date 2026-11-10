@@ -2,12 +2,12 @@ import { AxiosError, AxiosHeaders } from 'axios'
 import Cookies from 'js-cookie'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { API_BASE_URL, API_TIMEOUT } from '@/api/api'
+import { http } from '@/api/http'
 import { redirectToLoginExpired } from '@/lib/session'
 import type * as SessionModule from '@/lib/session'
 
-import { API_BASE_URL, API_TIMEOUT } from './api'
-import { API_Logout, API_RefreshToken, API_SignIn } from './api_auth'
-import { http } from './http'
+import { API_Logout, API_RefreshToken, API_SignIn } from './auth'
 
 vi.mock('@/lib/session', async (importOriginal) => ({
   ...(await importOriginal<typeof SessionModule>()),
