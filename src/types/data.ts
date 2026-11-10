@@ -1,6 +1,8 @@
 /** Kiểu dữ liệu khớp với các schema Pydantic của backend (thư mục backend/app/modules). */
 
-export type SourceType = 'CSV' | 'EXCEL' | 'JSON' | 'REST_API'
+import type { components } from '@/api/schema'
+
+export type SourceType = 'CSV' | 'EXCEL' | 'JSON' | 'REST_API' | 'POSTGRESQL'
 
 export interface DataSourceItem {
   data_source_id: number
@@ -46,35 +48,19 @@ export interface DataSourceCreatePayload {
   is_active: boolean
 }
 
-export interface IngestionJob {
-  ingestion_job_id: number
-  data_source_id: number
-  dataset_id: number
-  status: string
-  stage: string | null
-  source_table: string | null
-  created_at: string | null
-  started_at: string | null
-  finished_at: string | null
-  requested_by: string | null
-  rows_read: number | null
-  rows_written: number | null
-  rows_rejected: number | null
-  error_message: string | null
-  output: Record<string, unknown> | null
-}
-
-export interface IngestionJobCreatePayload {
-  data_source_id: number
-  dataset_id: number
-  source_table: string
-}
+export type IngestionJob = components['schemas']['IngestionJobRead']
 
 export interface CatalogField {
   name: string
   data_type: string
   nullable: boolean
   description: string
+}
+
+export interface CatalogTable {
+  name: string
+  description: string
+  columns: CatalogField[]
 }
 
 export interface CatalogEntry {
@@ -84,6 +70,7 @@ export interface CatalogEntry {
   schema_version: string
   description: string
   fields: CatalogField[]
+  tables?: CatalogTable[]
 }
 
 export interface NlqResponse {

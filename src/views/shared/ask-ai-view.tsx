@@ -8,20 +8,32 @@ import Link from 'next/link'
 import { useMutation } from '@tanstack/react-query'
 import { Check, CircleAlert, Copy, LoaderCircle, SearchX, Send, Sparkles } from 'lucide-react'
 
-import { API_AskNlq } from '@/api/api_data'
 import { getApiErrorMessage } from '@/api/http'
+import { API_AskNlq } from '@/api/shared/nlq'
 import { Card, PageHeader, Tag } from '@/components/page/page-parts'
 import { getDomain } from '@/config/domains'
+import type { DomainCode } from '@/config/domains'
 import { useDomain } from '@/hooks/use-domain'
 import { addQueryHistory } from '@/lib/query-history'
 import type { NlqResponse } from '@/types/data'
 
-const SUGGESTIONS = [
-  'Tỷ lệ nhập học theo từng phương thức năm 2026?',
-  'Khoa CNTT có bao nhiêu giảng viên?',
-  'Điểm trung bình của sinh viên theo từng ngành?',
-  'So sánh số nhập học theo ngành 2025 và 2026',
-]
+const SUGGESTIONS: Record<DomainCode, string[]> = {
+  all: [
+    'Tỷ lệ nhập học theo từng phương thức năm 2026?',
+    'Khoa CNTT có bao nhiêu giảng viên?',
+    'Điểm trung bình của sinh viên theo từng ngành?',
+    'So sánh số nhập học theo ngành 2025 và 2026',
+  ],
+  admissions: [
+    'Tỷ lệ nhập học theo từng phương thức năm 2026?',
+    'So sánh số nhập học theo ngành 2025 và 2026',
+  ],
+  academic: [
+    'Điểm trung bình của sinh viên theo từng ngành?',
+    'Số sinh viên đang học theo từng khoa?',
+  ],
+  hr: ['Khoa CNTT có bao nhiêu giảng viên?', 'Số giảng viên theo từng khoa?'],
+}
 
 interface Turn {
   id: number
@@ -142,7 +154,10 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
       })
     },
     onError: (error, { id, text }) => {
-      const message = getApiErrorMessage(error, 'Dịch vụ AI tạm thời không khả dụng.')
+      const message = getApiErrorMessage(
+        error,
+        'Chưa thể trả lời câu hỏi lúc này. Vui lòng thử lại.'
+      )
       setTurns((prev) =>
         prev.map((t) => (t.id === id ? { ...t, state: 'error', error: message } : t))
       )
@@ -180,7 +195,7 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
       <PageHeader
         breadcrumb={[getDomain(domain.code).shortLabel, 'Hỏi AI']}
         title="Hỏi AI — Truy vấn bằng ngôn ngữ tự nhiên"
-        description="Đặt câu hỏi bằng tiếng Việt, hệ thống sinh SQL, kiểm tra an toàn rồi truy vấn dữ liệu. Nguồn: POST /api/v1/nlq/ask."
+        description="Đặt câu hỏi bằng tiếng Việt để tìm thông tin trong dữ liệu."
         actions={
           <Link
             href={historyHref}
@@ -193,7 +208,7 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
 
       <Card title="Gợi ý câu hỏi thường gặp" subtitle="Nhấn để hỏi nhanh">
         <div className="flex flex-wrap gap-2">
-          {SUGGESTIONS.map((item) => (
+          {SUGGESTIONS[domain.code].map((item) => (
             <button
               key={item}
               type="button"
@@ -229,13 +244,13 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
               }
               right={
                 turn.state === 'processing' ? (
-                  <Tag tone="amber">PROCESSING</Tag>
+                  <Tag tone="amber">Đang tìm câu trả lời</Tag>
                 ) : turn.state === 'error' ? (
-                  <Tag tone="rose">FAILED</Tag>
+                  <Tag tone="rose">Chưa trả lời được</Tag>
                 ) : turn.result?.rows.length ? (
-                  <Tag tone="emerald">COMPLETED</Tag>
+                  <Tag tone="emerald">Đã có kết quả</Tag>
                 ) : (
-                  <Tag tone="slate">NO_DATA</Tag>
+                  <Tag tone="slate">Không có kết quả</Tag>
                 )
               }
               bodyClassName="space-y-3"
@@ -246,7 +261,7 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
                     className="size-4 animate-spin text-indigo-600"
                     aria-hidden="true"
                   />
-                  Đang phân tích câu hỏi… Đang xác định ý định, lấy schema và sinh SQL.
+                  Đang tìm dữ liệu để trả lời câu hỏi của bạn…
                 </p>
               )}
               {turn.state === 'error' && (
@@ -277,7 +292,8 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
                   ) : (
                     <p className="flex items-center gap-2 text-sm text-slate-600">
                       <SearchX className="size-4 text-slate-400" aria-hidden="true" />
-                      Không tìm thấy dữ liệu phù hợp. Thử nới bộ lọc năm hoặc ngành.
+                      Không tìm thấy dữ liệu phù hợp. Hãy thử hỏi về một khoảng thời gian hoặc nhóm
+                      ngành rộng hơn.
                     </p>
                   )}
                   {turn.result.sql && <SqlBlock sql={turn.result.sql} />}
@@ -298,7 +314,7 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
         <input
           id="ask-input"
           className="h-9 min-w-0 flex-1 rounded-md px-2 text-sm focus-visible:outline-none"
-          placeholder="Nhập câu hỏi về dữ liệu Tuyển sinh, Đào tạo hoặc Nhân sự…"
+          placeholder={`Nhập câu hỏi về dữ liệu ${domain.code === 'all' ? 'Tuyển sinh, Đào tạo hoặc Nhân sự' : domain.shortLabel}…`}
           value={question}
           maxLength={500}
           onChange={(event) => setQuestion(event.target.value)}

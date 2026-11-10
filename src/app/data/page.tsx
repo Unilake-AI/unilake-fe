@@ -1,7 +1,7 @@
-import { SourcesView } from '@/views/data/sources-view'
+import { DataDashboardView } from '@/views/data/dashboard-view'
 
-export const metadata = { title: 'Nguồn dữ liệu | UniLake AI' }
+export const metadata = { title: 'Tổng quan Data Lake | UniLake AI' }
 
-export default function SourcesPage() {
-  return <SourcesView />
+export default function DataDashboardPage() {
+  return <DataDashboardView />
 }

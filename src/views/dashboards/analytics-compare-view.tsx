@@ -16,7 +16,8 @@ import {
   YAxis,
 } from 'recharts'
 
-import { Card, MockNotice, PageHeader, Tag } from '@/components/page/page-parts'
+import { Card, EmptyState, MockNotice, PageHeader, Tag } from '@/components/page/page-parts'
+import { useDomain } from '@/hooks/use-domain'
 import { cn } from '@/lib/utils'
 
 import { MAJOR_COMPARISON, formatGrowth, growthPercent } from './dashboard-data'
@@ -25,6 +26,7 @@ type SortKey = 'current' | 'growth'
 
 export function AnalyticsCompareView({ askHref }: { askHref: string }) {
   const [sortKey, setSortKey] = useState<SortKey>('current')
+  const { domain } = useDomain()
 
   const rows = MAJOR_COMPARISON.map((row) => ({
     ...row,
@@ -33,6 +35,23 @@ export function AnalyticsCompareView({ askHref }: { askHref: string }) {
   })).sort((a, b) =>
     sortKey === 'current' ? b.current - a.current : (b.growth ?? 0) - (a.growth ?? 0)
   )
+
+  if (domain.code !== 'all' && domain.code !== 'admissions') {
+    return (
+      <div className="space-y-5">
+        <PageHeader
+          breadcrumb={[domain.shortLabel, 'Phân tích & So sánh']}
+          title={`Phân tích & So sánh — ${domain.shortLabel}`}
+        />
+        <Card>
+          <EmptyState
+            title="Chưa có báo cáo so sánh cho phân hệ này"
+            description="Báo cáo so sánh đang được chuẩn bị cho phân hệ của bạn."
+          />
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-5">
@@ -50,7 +69,7 @@ export function AnalyticsCompareView({ askHref }: { askHref: string }) {
           </Link>
         }
       />
-      <MockNotice api="GET /dashboard/admissions/breakdown" />
+      <MockNotice />
 
       <Card
         title="So sánh số nhập học theo ngành"

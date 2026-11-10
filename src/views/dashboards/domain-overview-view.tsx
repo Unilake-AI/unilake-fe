@@ -22,8 +22,7 @@ import {
   ProgressRow,
   Tag,
 } from '@/components/page/page-parts'
-import { DOMAINS } from '@/config/domains'
-import type { DomainCode } from '@/config/domains'
+import type { DomainCode, DomainDefinition } from '@/config/domains'
 import { useDomain } from '@/hooks/use-domain'
 import { cn } from '@/lib/utils'
 
@@ -36,9 +35,11 @@ const CHART_COLORS = { primary: '#4f46e5', secondary: '#0ea5e9', tertiary: '#f59
 function DomainTabs({
   value,
   onChange,
+  domains,
 }: {
   value: BusinessDomain
   onChange: (code: BusinessDomain) => void
+  domains: DomainDefinition[]
 }) {
   return (
     <div
@@ -46,21 +47,23 @@ function DomainTabs({
       aria-label="Phân hệ"
       className="inline-flex rounded-md border border-slate-200 bg-white p-0.5"
     >
-      {DOMAINS.filter((d) => d.code !== 'all').map((d) => (
-        <button
-          key={d.code}
-          type="button"
-          role="tab"
-          aria-selected={value === d.code}
-          onClick={() => onChange(d.code as BusinessDomain)}
-          className={cn(
-            'rounded px-3 py-1 text-xs font-medium',
-            value === d.code ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'
-          )}
-        >
-          {d.shortLabel}
-        </button>
-      ))}
+      {domains
+        .filter((d) => d.code !== 'all')
+        .map((d) => (
+          <button
+            key={d.code}
+            type="button"
+            role="tab"
+            aria-selected={value === d.code}
+            onClick={() => onChange(d.code as BusinessDomain)}
+            className={cn(
+              'rounded px-3 py-1 text-xs font-medium',
+              value === d.code ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+            )}
+          >
+            {d.shortLabel}
+          </button>
+        ))}
     </div>
   )
 }
@@ -225,33 +228,27 @@ function HrDashboard() {
   )
 }
 
-const DOMAIN_META: Record<
-  BusinessDomain,
-  { title: string; description: string; mart: string; api: string }
-> = {
+const DOMAIN_META: Record<BusinessDomain, { title: string; description: string; mart: string }> = {
   admissions: {
     title: 'Tổng quan Tuyển sinh',
     description: 'Giám sát chỉ số tuyển sinh trọng yếu và xu hướng nhập học.',
     mart: 'admissions_mart_v1',
-    api: 'GET /dashboard/admissions/overview',
   },
   academic: {
     title: 'Tổng quan Đào tạo',
     description: 'Quy mô sinh viên, kết quả học tập và tình hình mở lớp theo học kỳ.',
     mart: 'academic_mart_v1',
-    api: 'GET /dashboard/academic/overview',
   },
   hr: {
     title: 'Tổng quan Nhân sự',
     description: 'Đội ngũ nhân viên, giảng viên, trình độ chuyên môn và phân công theo đơn vị.',
     mart: 'hr_mart_v1',
-    api: 'GET /dashboard/hr/overview',
   },
 }
 
 /** Dashboard một phân hệ, đi theo Domain Selector trên header ("Tất cả" thì mở Tuyển sinh). */
 export function DomainOverviewView({ askHref }: { askHref: string }) {
-  const { domain, setDomain } = useDomain()
+  const { domain, availableDomains, setDomain } = useDomain()
   const current: BusinessDomain = domain.code === 'all' ? 'admissions' : domain.code
   const meta = DOMAIN_META[current]
 
@@ -272,10 +269,10 @@ export function DomainOverviewView({ askHref }: { askHref: string }) {
         }
       />
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <DomainTabs value={current} onChange={setDomain} />
+        <DomainTabs value={current} onChange={setDomain} domains={availableDomains} />
         <Tag tone="amber">Gold Layer · {meta.mart}</Tag>
       </div>
-      <MockNotice api={meta.api} />
+      <MockNotice />
       {current === 'admissions' && <AdmissionsDashboard />}
       {current === 'academic' && <AcademicDashboard />}
       {current === 'hr' && <HrDashboard />}

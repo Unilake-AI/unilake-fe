@@ -1,10 +1,12 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 
-import { Bell, Building2, ChevronDown, Layers, Menu, Sparkles } from 'lucide-react'
+import { Bell, Building2, ChevronDown, Menu, Sparkles } from 'lucide-react'
 
 import { ASK_AI_PATHS } from '@/config/menu'
+import { getWorkspaceForRole } from '@/config/roles'
 import type { RoleCode } from '@/types/auth'
 
 import { DomainSelector } from './domain-selector'
@@ -16,7 +18,7 @@ interface TopbarProps {
 }
 
 export function Topbar({ role, onOpenMobile }: TopbarProps) {
-  const askAiPath = ASK_AI_PATHS[role]
+  const askAiPath = ASK_AI_PATHS[getWorkspaceForRole(role)]
 
   return (
     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-3 sm:gap-3 md:px-4">
@@ -29,21 +31,29 @@ export function Topbar({ role, onOpenMobile }: TopbarProps) {
         <Menu className="size-4" />
       </button>
 
-      <div className="flex shrink-0 items-center gap-2.5">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
-          <Layers className="size-[18px]" />
+      <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex size-10 items-center justify-center overflow-hidden rounded-lg bg-slate-50 sm:hidden">
+          <Image
+            src="/logo.png"
+            alt="UniLake AI"
+            width={68}
+            height={68}
+            className="max-w-none shrink-0"
+          />
         </div>
-        <div className="hidden flex-col sm:flex">
-          <span className="flex items-center gap-1.5">
-            <span className="text-sm font-bold text-slate-900">UniLake AI</span>
-            <span className="rounded border border-indigo-200 bg-indigo-50 px-1.5 py-px font-mono text-[10px] font-bold text-indigo-700">
-              v1.0
-            </span>
-          </span>
-          <span className="font-mono text-[9px] font-medium uppercase tracking-wider text-slate-400">
-            Hồ dữ liệu & phân tích AI
-          </span>
+        <div className="hidden h-10 w-36 items-center overflow-hidden sm:flex">
+          <Image
+            src="/logo_text.png"
+            alt="UniLake AI"
+            width={1672}
+            height={941}
+            sizes="144px"
+            className="h-auto w-full"
+          />
         </div>
+        <span className="hidden rounded border border-indigo-200 bg-indigo-50 px-1.5 py-px font-mono text-[10px] font-bold text-indigo-700 sm:inline">
+          v1.0
+        </span>
       </div>
 
       <div className="hidden h-6 w-px shrink-0 bg-slate-200 sm:block" />

@@ -135,14 +135,23 @@ export function statusTone(status: string | null | undefined): Tone {
     case 'ACTIVE':
     case 'PUBLISHED':
     case 'PASSED':
+    case 'VERIFIED':
+    case 'HEALTHY':
       return 'emerald'
     case 'RUNNING':
     case 'QUEUED':
+    case 'RETRY_WAIT':
     case 'PROCESSING':
     case 'BRONZE':
+    case 'ASSIGNED':
+    case 'PUBLISHED_WITH_QUARANTINE':
       return 'amber'
+    case 'PENDING_VERIFICATION':
+      return 'sky'
     case 'FAILED':
     case 'REJECTED':
+    case 'OFFLINE':
+    case 'BLOCKED':
     case 'PERMISSION_DENIED':
     case 'VALIDATION_FAILED':
       return 'rose'
@@ -153,6 +162,43 @@ export function statusTone(status: string | null | undefined): Tone {
     default:
       return 'slate'
   }
+}
+
+const STATUS_LABELS = new Map([
+  ['ACTIVE', 'Đang hoạt động'],
+  ['COMPLETED', 'Hoàn tất'],
+  ['SUCCESS', 'Thành công'],
+  ['CLEANED', 'Đã làm sạch'],
+  ['PUBLISHED', 'Đã xuất bản'],
+  ['PUBLISHED_WITH_QUARANTINE', 'Đã xuất bản một phần'],
+  ['QUEUED', 'Đang chờ'],
+  ['RETRY_WAIT', 'Chờ thử lại'],
+  ['RUNNING', 'Đang chạy'],
+  ['PROCESSING', 'Đang xử lý'],
+  ['FAILED', 'Không thành công'],
+  ['REJECTED', 'Bị từ chối'],
+  ['CANCELLED', 'Đã hủy'],
+  ['NO_DATA', 'Không có kết quả'],
+  ['EMPTY', 'Không còn dữ liệu'],
+  ['QUARANTINED', 'Có dữ liệu cần kiểm tra'],
+  ['VALIDATION', 'Kiểm tra thông tin'],
+  ['VALIDATING', 'Đang kiểm tra dữ liệu'],
+  ['VALIDATION_FAILED', 'Dữ liệu chưa hợp lệ'],
+  ['READING', 'Đang đọc dữ liệu'],
+  ['WRITING', 'Đang lưu dữ liệu'],
+  ['COMMITTING', 'Đang hoàn tất'],
+  ['ASSIGNED', 'Cần xử lý'],
+  ['PENDING_VERIFICATION', 'Chờ xác minh'],
+  ['VERIFIED', 'Đã xác minh'],
+  ['HEALTHY', 'Hoạt động'],
+  ['OFFLINE', 'Ngoại tuyến'],
+  ['BLOCKED', 'Bị chặn xuất bản'],
+  ['SKIPPED', 'Bỏ qua xuất bản'],
+  ['NOT_STARTED', 'Chưa bắt đầu'],
+])
+
+export function statusLabel(status: string): string {
+  return STATUS_LABELS.get(status.toUpperCase()) ?? 'Chưa rõ'
 }
 
 export function ProgressRow({
@@ -241,16 +287,7 @@ export function LoadingState({ label = 'Đang tải dữ liệu…' }: { label?:
   )
 }
 
-export function ErrorState({
-  message,
-  onRetry,
-  requestId,
-}: {
-  message: string
-  onRetry?: () => void
-  /** Mã request_id backend trả về, hiển thị để người dùng báo lại khi cần tra log. */
-  requestId?: string
-}) {
+export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
     <div
       role="alert"
@@ -260,7 +297,6 @@ export function ErrorState({
         <CircleAlert className="size-4" aria-hidden="true" />
         {message}
       </div>
-      {requestId && <p className="font-mono text-[11px] text-rose-600">Mã tra cứu: {requestId}</p>}
       {onRetry && (
         <Button onClick={onRetry} icon={<RefreshCw className="size-3.5" aria-hidden="true" />}>
           Thử lại
@@ -280,12 +316,10 @@ export function EmptyState({ title, description }: { title: string; description?
   )
 }
 
-/** Ghi chú nhỏ cho biết số liệu đang là dữ liệu mẫu vì backend chưa có API tương ứng. */
-export function MockNotice({ api }: { api: string }) {
+export function MockNotice() {
   return (
     <p className="rounded-md border border-dashed border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-800">
-      Đang hiển thị dữ liệu mẫu theo thiết kế. Backend chưa có{' '}
-      <code className="font-mono">{api}</code>; sẽ nối khi API sẵn sàng.
+      Trang này đang hiển thị dữ liệu minh họa.
     </p>
   )
 }

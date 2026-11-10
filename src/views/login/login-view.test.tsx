@@ -4,7 +4,7 @@ import { AxiosError, AxiosHeaders } from 'axios'
 import Cookies from 'js-cookie'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { API_SignIn } from '@/api/api_auth'
+import { API_SignIn } from '@/api/shared/auth'
 import type { LoginResponse } from '@/types/auth'
 
 import { LoginView, loginSchema } from './login-view'
@@ -16,7 +16,7 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push, refresh }),
 }))
 
-vi.mock('@/api/api_auth', () => ({
+vi.mock('@/api/shared/auth', () => ({
   API_SignIn: vi.fn(),
 }))
 
@@ -124,46 +124,63 @@ describe('LoginView', () => {
     expect(refresh).toHaveBeenCalled()
   })
 
-  it('chuyển vai trò lạ về trang mặc định', async () => {
+  it('từ chối vai trò không có trong backend seed', async () => {
     signIn.mockResolvedValueOnce(loginResponse('unknown_role'))
     render(<LoginView />)
     await fillAndSubmit('someone', 'Password@123')
 
-    await waitFor(() => expect(push).toHaveBeenCalledTimes(1))
-    expect(push.mock.calls[0]?.[0]).toMatch(/^\//)
+    expect(await screen.findByRole('alert')).toHaveTextContent('chưa được gán vai trò phù hợp')
+    expect(push).not.toHaveBeenCalled()
+    expect(Cookies.get('access_token')).toBeUndefined()
   })
 
-  it('hiện thông báo lỗi do backend trả về', async () => {
+  it.each([
+    ['admissions_manager', '/manager'],
+    ['academic_manager', '/manager'],
+    ['hr_manager', '/manager'],
+    ['admissions_staff', '/analyst'],
+    ['academic_staff', '/analyst'],
+    ['hr_staff', '/analyst'],
+    ['viewer', '/viewer'],
+  ])('đưa %s vào đúng không gian làm việc', async (role, home) => {
+    signIn.mockResolvedValueOnce(loginResponse(role))
+    render(<LoginView />)
+    await fillAndSubmit(role, 'Password@123')
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith(home))
+  })
+
+  it('báo kiểm tra lại tên đăng nhập hoặc mật khẩu', async () => {
     signIn.mockRejectedValueOnce(
       axiosError(401, {
         success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Sai tên đăng nhập hoặc mật khẩu.' },
+        error: { code: 'UNAUTHORIZED', message: 'AUTH_FAILED_INTERNAL' },
       })
     )
     render(<LoginView />)
     await fillAndSubmit('admin', 'wrong')
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Sai tên đăng nhập hoặc mật khẩu.')
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Tên đăng nhập hoặc mật khẩu chưa đúng'
+    )
     expect(push).not.toHaveBeenCalled()
     expect(Cookies.get('access_token')).toBeUndefined()
   })
 
-  it('dùng thông báo mặc định khi backend không gửi nội dung lỗi', async () => {
+  it('báo sự cố hệ thống khi dịch vụ đăng nhập gặp lỗi', async () => {
     signIn.mockRejectedValueOnce(axiosError(500, {}))
     render(<LoginView />)
     await fillAndSubmit('admin', 'Password@123')
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Tên đăng nhập hoặc mật khẩu chưa đúng'
-    )
+    expect(await screen.findByRole('alert')).toHaveTextContent('Hệ thống đang gặp sự cố')
   })
 
-  it('báo không kết nối được khi lỗi không đến từ HTTP', async () => {
+  it('báo không thể đăng nhập khi có sự cố bất ngờ', async () => {
     signIn.mockRejectedValueOnce(new Error('boom'))
     render(<LoginView />)
     await fillAndSubmit('admin', 'Password@123')
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Không thể kết nối đến máy chủ')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Không thể đăng nhập lúc này')
   })
 
   it('khoá nút và hiện trạng thái đang xác thực khi đang gửi', async () => {

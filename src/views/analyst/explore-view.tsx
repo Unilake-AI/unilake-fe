@@ -4,8 +4,8 @@ import { useState } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
 
-import { API_GetCatalog } from '@/api/api_data'
-import { getApiErrorMessage, getApiRequestId } from '@/api/http'
+import { API_GetCatalog } from '@/api/data-admin/governance'
+import { getApiErrorMessage } from '@/api/http'
 import {
   Card,
   EmptyState,
@@ -15,6 +15,8 @@ import {
   Tag,
   statusTone,
 } from '@/components/page/page-parts'
+import { useAuth } from '@/hooks/use-auth'
+import { useDomain } from '@/hooks/use-domain'
 import { cn } from '@/lib/utils'
 
 const LAYERS = ['all', 'gold', 'silver', 'bronze'] as const
@@ -22,10 +24,19 @@ const LAYERS = ['all', 'gold', 'silver', 'bronze'] as const
 export function ExploreView() {
   const [layer, setLayer] = useState<(typeof LAYERS)[number]>('all')
   const [selected, setSelected] = useState<string | null>(null)
+  const { domain } = useDomain()
+  const { isLoading, hasRole } = useAuth()
+  const canReadCatalog = hasRole('DATA_ADMIN')
 
-  const catalog = useQuery({ queryKey: ['catalog'], queryFn: () => API_GetCatalog() })
+  const catalog = useQuery({
+    queryKey: ['catalog'],
+    queryFn: () => API_GetCatalog(),
+    enabled: canReadCatalog,
+  })
   const entries = (catalog.data ?? []).filter(
-    (entry) => layer === 'all' || entry.layer.toLowerCase() === layer
+    (entry) =>
+      (domain.code === 'all' || entry.domain_id === domain.code) &&
+      (layer === 'all' || entry.layer.toLowerCase() === layer)
   )
   const current =
     entries.find((entry) => `${entry.layer}.${entry.dataset}` === selected) ?? entries[0]
@@ -35,7 +46,7 @@ export function ExploreView() {
       <PageHeader
         breadcrumb={['Phân tích', 'Khám phá dữ liệu']}
         title="Khám phá dữ liệu"
-        description="Xem danh sách dataset trong Data Lake và cấu trúc cột (chỉ đọc). Nguồn: GET /api/v1/governance/catalog."
+        description="Xem danh sách bộ dữ liệu và thông tin trong từng cột."
       />
 
       <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
@@ -58,17 +69,23 @@ export function ExploreView() {
         ))}
       </div>
 
-      {catalog.isPending ? (
+      {isLoading ? (
+        <LoadingState />
+      ) : !canReadCatalog ? (
+        <EmptyState
+          title="Tài khoản của bạn chưa có quyền xem danh mục dữ liệu"
+          description="Hãy liên hệ quản trị viên dữ liệu nếu bạn cần tra cứu."
+        />
+      ) : catalog.isPending ? (
         <LoadingState />
       ) : catalog.isError ? (
         <ErrorState
-          requestId={getApiRequestId(catalog.error)}
-          message={getApiErrorMessage(catalog.error, 'Không tải được danh sách dataset.')}
+          message={getApiErrorMessage(catalog.error, 'Không tải được danh sách bộ dữ liệu.')}
           onRetry={() => void catalog.refetch()}
         />
       ) : entries.length === 0 ? (
         <Card>
-          <EmptyState title="Không có dataset khớp bộ lọc" />
+          <EmptyState title="Không tìm thấy bộ dữ liệu phù hợp với bộ lọc" />
         </Card>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
@@ -104,7 +121,7 @@ export function ExploreView() {
             <Card
               title={current.dataset}
               subtitle={current.description || 'Cấu trúc cột của dataset'}
-              right={<Tag tone="slate">READ-ONLY</Tag>}
+              right={<Tag tone="slate">Chỉ xem</Tag>}
               bodyClassName="p-0"
             >
               <div className="overflow-x-auto">
@@ -132,7 +149,7 @@ export function ExploreView() {
                 </table>
               </div>
               <p className="border-t border-slate-200 px-4 py-2 text-[11px] text-slate-500">
-                Xem trước bản ghi (đã che PII) sẽ có khi backend mở API preview dataset.
+                Chưa thể xem trước dữ liệu ở trang này.
               </p>
             </Card>
           )}

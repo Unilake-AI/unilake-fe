@@ -9,12 +9,18 @@ import type { Tone } from '@/components/page/page-parts'
 import { ROLE_PRIORITY } from '@/config/roles'
 import type { RoleCode } from '@/types/auth'
 
+import { SessionsPanel } from './sessions-panel'
+
 const ROLE_TONE: Record<RoleCode, Tone> = {
   ADMIN: 'amber',
   DATA_ADMIN: 'emerald',
-  ANALYST: 'sky',
-  MANAGER: 'indigo',
   VIEWER: 'slate',
+  ADMISSIONS_MANAGER: 'indigo',
+  ADMISSIONS_STAFF: 'sky',
+  ACADEMIC_MANAGER: 'indigo',
+  ACADEMIC_STAFF: 'sky',
+  HR_MANAGER: 'indigo',
+  HR_STAFF: 'sky',
 }
 
 const USERS: {
@@ -38,7 +44,7 @@ const USERS: {
   {
     name: 'TS. Nguyễn Văn Hùng',
     email: 'hung.nv@unilake.edu.vn',
-    role: 'MANAGER',
+    role: 'ADMISSIONS_MANAGER',
     domains: 'Tuyển sinh',
     unit: 'Phòng Tuyển sinh',
     locked: false,
@@ -47,8 +53,8 @@ const USERS: {
   {
     name: 'ThS. Trần Thị Mai Phương',
     email: 'phuong.ttm@unilake.edu.vn',
-    role: 'ANALYST',
-    domains: 'Tuyển sinh · Đào tạo',
+    role: 'ACADEMIC_STAFF',
+    domains: 'Đào tạo',
     unit: 'Phòng Đào tạo',
     locked: false,
     lastLogin: '25 phút trước',
@@ -74,11 +80,38 @@ const USERS: {
   {
     name: 'TS. Vũ Thị Mai Liên',
     email: 'lien.vtm@unilake.edu.vn',
-    role: 'VIEWER',
+    role: 'HR_STAFF',
     domains: 'Nhân sự',
     unit: 'Phòng Nhân sự',
     locked: true,
     lastLogin: '1 tuần trước',
+  },
+  {
+    name: 'Nguyễn Thị Minh Anh',
+    email: 'anh.ntm@unilake.edu.vn',
+    role: 'ADMISSIONS_STAFF',
+    domains: 'Tuyển sinh',
+    unit: 'Phòng Tuyển sinh',
+    locked: false,
+    lastLogin: '2 giờ trước',
+  },
+  {
+    name: 'Phạm Quốc Bảo',
+    email: 'bao.pq@unilake.edu.vn',
+    role: 'ACADEMIC_MANAGER',
+    domains: 'Đào tạo',
+    unit: 'Phòng Đào tạo',
+    locked: false,
+    lastLogin: 'Hôm qua',
+  },
+  {
+    name: 'Lê Thu Hà',
+    email: 'ha.lt@unilake.edu.vn',
+    role: 'HR_MANAGER',
+    domains: 'Nhân sự',
+    unit: 'Phòng Nhân sự',
+    locked: false,
+    lastLogin: '3 giờ trước',
   },
 ]
 
@@ -98,11 +131,11 @@ export function UsersView() {
       <PageHeader
         breadcrumb={['Quản trị hệ thống', 'Người dùng & Phân quyền']}
         title="Người dùng & Phân quyền (RBAC)"
-        description="Quản trị tài khoản, vai trò và phạm vi phân hệ được truy cập. Vai trò theo thiết kế DB: ADMIN · DATA_ADMIN · ANALYST · MANAGER · VIEWER."
+        description="Quản trị tài khoản, vai trò và phạm vi phân hệ được truy cập. Hệ thống có 3 vai trò chung và 6 vai trò phòng ban."
       />
-      <MockNotice api="GET /users" />
+      <MockNotice />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <KpiCard
           label="Tổng số tài khoản"
           value={USERS.length}
@@ -110,17 +143,18 @@ export function UsersView() {
         />
         <KpiCard
           label="Vai trò (RBAC)"
-          value="5"
-          hint="ADMIN · DATA_ADMIN · ANALYST · MANAGER · VIEWER"
+          value={ROLE_PRIORITY.length}
+          hint="3 vai trò chung · 6 vai trò phòng ban"
         />
         <KpiCard
           label="Phạm vi theo phân hệ"
           value="BẬT"
-          hint="domain_access áp dụng ở backend"
+          hint="Phân hệ hiển thị theo role phòng ban"
           tone="emerald"
         />
-        <KpiCard label="Phiên đang đăng nhập" value="5" hint="JWT · hết hạn sau 60 phút" />
       </div>
+
+      <SessionsPanel />
 
       <Card
         title="Tài khoản"
@@ -191,7 +225,7 @@ export function UsersView() {
                   <td className="px-3 py-2.5 text-slate-600">{user.unit}</td>
                   <td className="px-3 py-2.5">
                     <Tag tone={user.locked ? 'rose' : 'emerald'}>
-                      {user.locked ? 'LOCKED' : 'ACTIVE'}
+                      {user.locked ? 'Đã khóa' : 'Đang hoạt động'}
                     </Tag>
                   </td>
                   <td className="px-3 py-2.5 text-slate-600">{user.lastLogin}</td>

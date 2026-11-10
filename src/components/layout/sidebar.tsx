@@ -13,6 +13,7 @@ import {
   Database,
   FileBarChart,
   FileText,
+  FileWarning,
   GitBranch,
   GraduationCap,
   HardDrive,
@@ -21,6 +22,7 @@ import {
   KeyRound,
   Layers,
   LayoutDashboard,
+  Play,
   ScrollText,
   Search,
   Settings,
@@ -29,13 +31,14 @@ import {
   Sparkles,
   Table,
   Upload,
+  User,
   UserPlus,
   Users,
   Workflow,
 } from 'lucide-react'
 
 import { ROLE_MENUS } from '@/config/menu'
-import { ROLE_DEFINITIONS } from '@/config/roles'
+import { ROLE_DEFINITIONS, getWorkspaceForRole } from '@/config/roles'
 import type { RoleCode } from '@/types/auth'
 
 const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
@@ -60,10 +63,13 @@ const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
   UserPlus,
   Home,
   FileBarChart,
+  FileWarning,
+  Play,
   Search,
   ScrollText,
   Sparkles,
   Upload,
+  User,
   Workflow,
 }
 
@@ -75,7 +81,7 @@ interface SidebarProps {
 export function Sidebar({ role, onCloseMobile }: SidebarProps) {
   const pathname = usePathname()
   const roleDef = ROLE_DEFINITIONS[role]
-  const menuGroups = ROLE_MENUS[role] ?? []
+  const menuGroups = ROLE_MENUS[getWorkspaceForRole(role)]
   // Mục đang mở là mục có đường dẫn dài nhất khớp với URL (vd. /data/sources/new → Nguồn dữ liệu).
   const activeHref = menuGroups
     .flatMap((group) => group.items.map((item) => item.href))
@@ -100,7 +106,14 @@ export function Sidebar({ role, onCloseMobile }: SidebarProps) {
       <nav className="flex-1 space-y-4 overflow-y-auto" aria-label="Điều hướng chính">
         {menuGroups.map((group, groupIdx) => (
           <div key={group.groupTitle ?? groupIdx}>
-            {group.groupTitle && <h3 className="sr-only">{group.groupTitle}</h3>}
+            {group.groupTitle &&
+              (menuGroups.length > 1 ? (
+                <h3 className="px-2 pb-1.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                  {group.groupTitle}
+                </h3>
+              ) : (
+                <h3 className="sr-only">{group.groupTitle}</h3>
+              ))}
             <ul className="space-y-1">
               {group.items.map((item) => {
                 const IconComponent = ICON_MAP[item.iconName] ?? LayoutDashboard

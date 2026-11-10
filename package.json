@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "packageManager": "pnpm@10.0.0",
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -20,7 +23,7 @@
     "lighthouse": "lhci autorun",
     "lighthouse:ci": "lhci autorun",
     "check-all": "pnpm type-check && pnpm lint && pnpm format:check && pnpm build",
-    "gen:api": "openapi-typescript docs/api/openapi.json -o src/lib/api/schema.d.ts"
+    "gen:api": "openapi-typescript docs/api/openapi.json --default-non-nullable false -o src/api/schema.d.ts && prettier --write src/api/schema.d.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

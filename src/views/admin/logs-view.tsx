@@ -7,6 +7,8 @@ import type { Tone } from '@/components/page/page-parts'
 
 type Level = 'INFO' | 'WARN' | 'ERROR'
 
+const LEVEL_LABEL: Record<Level, string> = { INFO: 'Thông tin', WARN: 'Cảnh báo', ERROR: 'Lỗi' }
+
 const LEVEL_TONE: Record<Level, Tone> = { INFO: 'sky', WARN: 'amber', ERROR: 'rose' }
 
 const LOGS: {
@@ -20,49 +22,49 @@ const LOGS: {
   {
     time: '2026-10-06 07:05:12',
     level: 'INFO',
-    module: 'nlq',
+    module: 'Hỏi AI',
     user: 'phuong.ttm',
-    message: 'POST /nlq/ask → completed (1.420 ms)',
+    message: 'Đã trả lời câu hỏi.',
     requestId: 'req_01J8AI01',
   },
   {
     time: '2026-10-06 07:04:58',
     level: 'INFO',
-    module: 'auth',
+    module: 'Đăng nhập',
     user: 'phuong.ttm',
-    message: 'POST /auth/login → 200',
+    message: 'Đăng nhập thành công.',
     requestId: 'req_01J8AUTH01',
   },
   {
     time: '2026-10-06 06:48:03',
     level: 'WARN',
-    module: 'nlq',
+    module: 'Hỏi AI',
     user: 'hung.nv',
-    message: 'SQL validation failed: non-SELECT statement blocked',
+    message: 'Yêu cầu bị chặn vì có thể thay đổi dữ liệu.',
     requestId: 'req_01J8AI03',
   },
   {
     time: '2026-10-06 02:01:10',
     level: 'ERROR',
-    module: 'ingestion',
-    user: 'system',
-    message: 'Job #147 failed: upstream timeout after 30s',
+    module: 'Nạp dữ liệu',
+    user: 'Hệ thống',
+    message: 'Không nạp được dữ liệu vì nguồn phản hồi quá chậm.',
     requestId: 'req_01J8ING47',
   },
   {
     time: '2026-10-06 01:00:00',
     level: 'INFO',
-    module: 'ingestion',
-    user: 'system',
-    message: 'Job #148 started: Admissions DB (PostgreSQL)',
+    module: 'Nạp dữ liệu',
+    user: 'Hệ thống',
+    message: 'Đã bắt đầu nạp dữ liệu tuyển sinh.',
     requestId: 'req_01J8ING48',
   },
   {
     time: '2026-10-05 22:15:41',
     level: 'WARN',
-    module: 'auth',
+    module: 'Đăng nhập',
     user: 'lien.vtm',
-    message: 'POST /auth/login → 403 (account locked)',
+    message: 'Không thể đăng nhập vì tài khoản đã bị khóa.',
     requestId: 'req_01J8AUTH03',
   },
 ]
@@ -76,14 +78,14 @@ export function LogsView() {
       <PageHeader
         breadcrumb={['Quản trị hệ thống', 'Nhật ký hệ thống']}
         title="Nhật ký hệ thống & Kiểm toán"
-        description="Ghi nhận hoạt động và lỗi quan trọng để giám sát, kiểm tra và xử lý sự cố (FR24, NFR08). Tra theo request_id."
+        description="Xem các hoạt động, cảnh báo và sự cố đã được ghi lại."
       />
-      <MockNotice api="GET /admin/logs" />
+      <MockNotice />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard label="Sự kiện 24 giờ" value="1.284" />
-        <KpiCard label="Lỗi (ERROR)" value="0,5%" tone="rose" hint="6 sự kiện" />
-        <KpiCard label="Cảnh báo (WARN)" value="1,8%" tone="amber" hint="23 sự kiện" />
+        <KpiCard label="Lỗi" value="0,5%" tone="rose" hint="6 sự kiện" />
+        <KpiCard label="Cảnh báo" value="1,8%" tone="amber" hint="23 sự kiện" />
         <KpiCard
           label="Thời gian phản hồi TB"
           value="412 ms"
@@ -93,7 +95,7 @@ export function LogsView() {
       </div>
 
       <Card
-        title="Dòng log"
+        title="Các sự kiện đã ghi"
         subtitle="Mới nhất trước"
         right={
           <label className="flex items-center gap-1.5 text-xs text-slate-500">
@@ -104,9 +106,9 @@ export function LogsView() {
               onChange={(event) => setLevel(event.target.value as Level | '')}
             >
               <option value="">Tất cả</option>
-              <option value="INFO">INFO</option>
-              <option value="WARN">WARN</option>
-              <option value="ERROR">ERROR</option>
+              <option value="INFO">{LEVEL_LABEL.INFO}</option>
+              <option value="WARN">{LEVEL_LABEL.WARN}</option>
+              <option value="ERROR">{LEVEL_LABEL.ERROR}</option>
             </select>
           </label>
         }
@@ -119,10 +121,10 @@ export function LogsView() {
                 {[
                   'Thời gian',
                   'Mức',
-                  'Module',
+                  'Khu vực',
                   'Người dùng',
                   'Hành động / Thông báo',
-                  'request_id',
+                  'Mã sự kiện',
                 ].map((h) => (
                   <th key={h} scope="col" className="px-3 py-2 font-medium">
                     {h}
@@ -135,7 +137,7 @@ export function LogsView() {
                 <tr key={log.requestId}>
                   <td className="px-3 py-2.5 font-mono text-[11px] text-slate-600">{log.time}</td>
                   <td className="px-3 py-2.5">
-                    <Tag tone={LEVEL_TONE[log.level]}>{log.level}</Tag>
+                    <Tag tone={LEVEL_TONE[log.level]}>{LEVEL_LABEL[log.level]}</Tag>
                   </td>
                   <td className="px-3 py-2.5 font-mono text-slate-600">{log.module}</td>
                   <td className="px-3 py-2.5 font-mono text-slate-600">{log.user}</td>

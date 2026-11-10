@@ -5,7 +5,8 @@ import { AxiosError, AxiosHeaders } from 'axios'
 import { toast } from 'sonner'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { API_CreateDataSource, API_GetDataSource, API_UpdateDataSource } from '@/api/api_data'
+import { API_CreateDataSource, API_UpdateDataSource } from '@/api/data-operations/data-sources'
+import { API_GetDataSource } from '@/api/shared/data-sources'
 import type { DataSourceItem } from '@/types/data'
 
 import { SourceEditView, SourceFormView } from './source-form-view'
@@ -14,11 +15,11 @@ const push = vi.fn()
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn() } }))
-vi.mock('@/api/api_data', () => ({
+vi.mock('@/api/data-operations/data-sources', () => ({
   API_CreateDataSource: vi.fn(),
-  API_GetDataSource: vi.fn(),
   API_UpdateDataSource: vi.fn(),
 }))
+vi.mock('@/api/shared/data-sources', () => ({ API_GetDataSource: vi.fn() }))
 
 const createSource = vi.mocked(API_CreateDataSource)
 const getSource = vi.mocked(API_GetDataSource)
@@ -60,12 +61,12 @@ describe('SourceFormView (thêm mới)', () => {
     const user = userEvent.setup()
     renderWithClient(<SourceFormView />)
 
-    await user.clear(screen.getByLabelText('delimiter *'))
+    await user.clear(screen.getByLabelText('Ký tự ngăn cách *'))
     await user.click(screen.getByRole('button', { name: 'Lưu nguồn dữ liệu' }))
 
     expect(await screen.findByText('Vui lòng nhập tên nguồn dữ liệu.')).toBeInTheDocument()
     expect(screen.getByText('Vui lòng nhập vị trí của nguồn.')).toBeInTheDocument()
-    expect(screen.getByText('delimiter là bắt buộc với CSV.')).toBeInTheDocument()
+    expect(screen.getByText('Vui lòng điền mục này.')).toBeInTheDocument()
     expect(screen.getByText('3 trường chưa hợp lệ')).toBeInTheDocument()
     expect(createSource).not.toHaveBeenCalled()
   })
@@ -76,13 +77,10 @@ describe('SourceFormView (thêm mới)', () => {
     renderWithClient(<SourceFormView />)
 
     await user.type(screen.getByLabelText('Tên nguồn dữ liệu *'), ' Applicants CSV ')
-    await user.type(
-      screen.getByLabelText('Vị trí (đường dẫn / bucket / endpoint) *'),
-      's3://unilake-raw/a.csv'
-    )
+    await user.type(screen.getByLabelText('Địa chỉ nguồn dữ liệu *'), 's3://unilake-raw/a.csv')
     await user.click(screen.getByRole('button', { name: 'Lưu nguồn dữ liệu' }))
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/data'))
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/data/sources'))
     expect(createSource).toHaveBeenCalledWith({
       source_system_id: 1,
       source_name: 'Applicants CSV',
@@ -96,7 +94,7 @@ describe('SourceFormView (thêm mới)', () => {
     expect(toast.success).toHaveBeenCalledWith('Đã thêm nguồn “Applicants CSV”.')
   })
 
-  it('hiện lỗi chi tiết backend trả về', async () => {
+  it('hiện hướng xử lý dễ hiểu khi thông tin kết nối chưa hợp lệ', async () => {
     const user = userEvent.setup()
     const headers = new AxiosHeaders()
     createSource.mockRejectedValue(
@@ -118,12 +116,12 @@ describe('SourceFormView (thêm mới)', () => {
     renderWithClient(<SourceFormView />)
 
     await user.type(screen.getByLabelText('Tên nguồn dữ liệu *'), 'A')
-    await user.type(screen.getByLabelText('Vị trí (đường dẫn / bucket / endpoint) *'), 's3://a')
+    await user.type(screen.getByLabelText('Địa chỉ nguồn dữ liệu *'), 's3://a')
     await user.click(screen.getByRole('button', { name: 'Lưu nguồn dữ liệu' }))
 
     const alert = await screen.findByRole('alert')
-    expect(alert).toHaveTextContent('Configuration không hợp lệ')
-    expect(alert).toHaveTextContent("Configuration 'encoding' must not be empty")
+    expect(alert).toHaveTextContent('Thông tin kết nối chưa hợp lệ. Vui lòng kiểm tra lại.')
+    expect(alert).not.toHaveTextContent(/Configuration|encoding/)
     expect(push).not.toHaveBeenCalled()
   })
 })
@@ -151,7 +149,7 @@ describe('SourceEditView (chỉnh sửa)', () => {
     await user.type(name, 'HR API v2')
     await user.click(screen.getByRole('button', { name: 'Lưu thay đổi' }))
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/data'))
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/data/sources'))
     expect(getSource).toHaveBeenCalledWith(7)
     expect(updateSource).toHaveBeenCalledWith(7, {
       source_system_id: 3,
@@ -170,8 +168,8 @@ describe('SourceEditView (chỉnh sửa)', () => {
     renderWithClient(<SourceEditView id={7} />)
 
     await user.click(await screen.findByLabelText(/Nhập lại cấu hình/))
-    await user.clear(screen.getByLabelText('timeout_seconds *'))
-    await user.type(screen.getByLabelText('timeout_seconds *'), '60')
+    await user.clear(screen.getByLabelText('Thời gian chờ (giây) *'))
+    await user.type(screen.getByLabelText('Thời gian chờ (giây) *'), '60')
     await user.click(screen.getByRole('button', { name: 'Lưu thay đổi' }))
 
     await waitFor(() => expect(updateSource).toHaveBeenCalled())

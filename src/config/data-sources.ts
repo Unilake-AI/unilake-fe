@@ -14,7 +14,7 @@ export const SOURCE_SYSTEMS = [
 export interface ConfigField {
   key: string
   label: string
-  kind: 'text' | 'number' | 'boolean' | 'select' | 'json'
+  kind: 'text' | 'number' | 'boolean' | 'select' | 'json' | 'password'
   required: boolean
   options?: string[]
   defaultValue: string
@@ -31,16 +31,34 @@ export const SOURCE_TYPE_CONFIG: Record<
     connectionType: 'FILE',
     locationHint: 's3://unilake-raw/admissions/2026/applicants.csv',
     fields: [
-      { key: 'delimiter', label: 'delimiter', kind: 'text', required: true, defaultValue: ',' },
-      { key: 'encoding', label: 'encoding', kind: 'text', required: true, defaultValue: 'utf-8' },
+      {
+        key: 'delimiter',
+        label: 'Ký tự ngăn cách',
+        kind: 'text',
+        required: true,
+        defaultValue: ',',
+      },
+      {
+        key: 'encoding',
+        label: 'Bảng mã văn bản',
+        kind: 'text',
+        required: true,
+        defaultValue: 'utf-8',
+      },
       {
         key: 'has_header',
-        label: 'has_header',
+        label: 'Dòng đầu là tiêu đề',
         kind: 'boolean',
         required: true,
         defaultValue: 'true',
       },
-      { key: 'quote_char', label: 'quote_char', kind: 'text', required: false, defaultValue: '"' },
+      {
+        key: 'quote_char',
+        label: 'Dấu bao quanh nội dung',
+        kind: 'text',
+        required: false,
+        defaultValue: '"',
+      },
     ],
   },
   EXCEL: {
@@ -50,20 +68,26 @@ export const SOURCE_TYPE_CONFIG: Record<
     fields: [
       {
         key: 'sheet_name',
-        label: 'sheet_name',
+        label: 'Tên trang tính',
         kind: 'text',
         required: true,
         defaultValue: 'Sheet1',
       },
       {
         key: 'header_row',
-        label: 'header_row',
+        label: 'Số thứ tự dòng tiêu đề',
         kind: 'number',
         required: true,
         defaultValue: '1',
         hint: 'Đếm từ 1',
       },
-      { key: 'skip_rows', label: 'skip_rows', kind: 'number', required: true, defaultValue: '0' },
+      {
+        key: 'skip_rows',
+        label: 'Số dòng bỏ qua',
+        kind: 'number',
+        required: true,
+        defaultValue: '0',
+      },
     ],
   },
   JSON: {
@@ -71,7 +95,13 @@ export const SOURCE_TYPE_CONFIG: Record<
     connectionType: 'FILE',
     locationHint: 's3://unilake-raw/hr/qualification.json',
     fields: [
-      { key: 'encoding', label: 'encoding', kind: 'text', required: true, defaultValue: 'utf-8' },
+      {
+        key: 'encoding',
+        label: 'Bảng mã văn bản',
+        kind: 'text',
+        required: true,
+        defaultValue: 'utf-8',
+      },
     ],
   },
   REST_API: {
@@ -81,7 +111,7 @@ export const SOURCE_TYPE_CONFIG: Record<
     fields: [
       {
         key: 'method',
-        label: 'method',
+        label: 'Cách gửi yêu cầu',
         kind: 'select',
         required: true,
         options: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
@@ -89,25 +119,67 @@ export const SOURCE_TYPE_CONFIG: Record<
       },
       {
         key: 'timeout_seconds',
-        label: 'timeout_seconds',
+        label: 'Thời gian chờ (giây)',
         kind: 'number',
         required: true,
         defaultValue: '30',
       },
       {
         key: 'headers',
-        label: 'headers (JSON)',
+        label: 'Thông tin gửi kèm',
         kind: 'json',
         required: true,
         defaultValue: '{}',
-        hint: 'Khoá và giá trị đều là chuỗi',
+        hint: 'Khoá và giá trị đều là văn bản',
       },
       {
         key: 'pagination',
-        label: 'pagination (JSON)',
+        label: 'Cách lấy dữ liệu theo từng trang',
         kind: 'json',
         required: true,
         defaultValue: '{"type": "none"}',
+      },
+    ],
+  },
+  POSTGRESQL: {
+    label: 'PostgreSQL',
+    connectionType: 'RDBMS',
+    locationHint: 'postgres://db.uni.edu.vn:5432/unilake_source',
+    fields: [
+      {
+        key: 'host',
+        label: 'Máy chủ (Host)',
+        kind: 'text',
+        required: true,
+        defaultValue: 'localhost',
+      },
+      {
+        key: 'port',
+        label: 'Cổng (Port)',
+        kind: 'number',
+        required: true,
+        defaultValue: '5432',
+      },
+      {
+        key: 'database',
+        label: 'Tên cơ sở dữ liệu',
+        kind: 'text',
+        required: true,
+        defaultValue: '',
+      },
+      {
+        key: 'username',
+        label: 'Tên đăng nhập',
+        kind: 'text',
+        required: true,
+        defaultValue: '',
+      },
+      {
+        key: 'password',
+        label: 'Mật khẩu',
+        kind: 'password',
+        required: true,
+        defaultValue: '',
       },
     ],
   },
@@ -130,7 +202,7 @@ export function buildConfiguration(
     const raw = (values[field.key] ?? '').trim()
     if (raw === '') {
       if (field.required) {
-        errors[field.key] = `${field.key} là bắt buộc với ${SOURCE_TYPE_CONFIG[type].label}.`
+        errors[field.key] = 'Vui lòng điền mục này.'
       }
       continue
     }
@@ -138,13 +210,15 @@ export function buildConfiguration(
       case 'number': {
         const value = Number(raw)
         if (!Number.isInteger(value)) {
-          errors[field.key] = `${field.key} phải là số nguyên.`
+          errors[field.key] = 'Vui lòng nhập số nguyên.'
         } else if (field.key === 'header_row' && value < 1) {
-          errors[field.key] = 'header_row phải lớn hơn hoặc bằng 1.'
+          errors[field.key] = 'Vui lòng nhập số từ 1 trở lên.'
+        } else if (field.key === 'port' && (value < 1 || value > 65535)) {
+          errors[field.key] = 'Cổng kết nối phải từ 1 đến 65535.'
         } else if (field.key === 'timeout_seconds' && value <= 0) {
-          errors[field.key] = 'timeout_seconds phải lớn hơn 0.'
+          errors[field.key] = 'Thời gian chờ phải lớn hơn 0 giây.'
         } else if (value < 0) {
-          errors[field.key] = `${field.key} không được âm.`
+          errors[field.key] = 'Vui lòng nhập số từ 0 trở lên.'
         } else {
           configuration[field.key] = value
         }
@@ -157,17 +231,17 @@ export function buildConfiguration(
         try {
           const parsed: unknown = JSON.parse(raw)
           if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-            errors[field.key] = `${field.key} phải là một object JSON.`
+            errors[field.key] = 'Vui lòng nhập thông tin theo mẫu.'
           } else if (
             field.key === 'headers' &&
             !Object.values(parsed as Record<string, unknown>).every((v) => typeof v === 'string')
           ) {
-            errors[field.key] = 'headers chỉ chứa giá trị dạng chuỗi.'
+            errors[field.key] = 'Vui lòng đặt các giá trị trong dấu ngoặc kép.'
           } else {
             configuration[field.key] = parsed
           }
         } catch {
-          errors[field.key] = `${field.key} không phải JSON hợp lệ.`
+          errors[field.key] = 'Thông tin chưa đúng định dạng. Vui lòng kiểm tra lại theo mẫu.'
         }
         break
       }

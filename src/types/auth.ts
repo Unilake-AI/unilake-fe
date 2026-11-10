@@ -1,4 +1,15 @@
-export type RoleCode = 'ADMIN' | 'DATA_ADMIN' | 'ANALYST' | 'MANAGER' | 'VIEWER'
+export type RoleCode =
+  | 'ADMIN'
+  | 'DATA_ADMIN'
+  | 'VIEWER'
+  | 'ADMISSIONS_MANAGER'
+  | 'ADMISSIONS_STAFF'
+  | 'ACADEMIC_MANAGER'
+  | 'ACADEMIC_STAFF'
+  | 'HR_MANAGER'
+  | 'HR_STAFF'
+
+export type RoleWorkspace = 'ADMIN' | 'DATA_ADMIN' | 'VIEWER' | 'MANAGER' | 'STAFF'
 
 export interface AuthUser {
   id?: string | number
@@ -57,13 +68,15 @@ export interface LogoutRequest {
   refresh_token?: string
 }
 
-export interface ApiErrorBody {
-  error?: { code?: string; message?: string }
-  detail?: string
-  message?: string
-}
-
 export interface AuthMeResponse {
   authenticated: boolean
   user: AuthUser | null
+}
+
+export interface LoginSession {
+  login_session_id: number
+  login_at: string
+  ip_address: string | null
+  user_agent: string | null
+  session_status: string
 }
