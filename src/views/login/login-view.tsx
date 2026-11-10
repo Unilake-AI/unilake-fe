@@ -10,8 +10,8 @@ import { ArrowRight, CircleAlert, Clock, Eye, EyeOff, LoaderCircle, X } from 'lu
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-import { API_SignIn } from '@/api/api_auth'
 import { getApiErrorMessage } from '@/api/http'
+import { API_SignIn } from '@/api/shared/auth'
 import { getDefaultHomeForRoles, toRoleCode } from '@/config/roles'
 import { SESSION_EXPIRED_PARAM, storeSession } from '@/lib/session'
 import type { LoginFormValues } from '@/types/auth'

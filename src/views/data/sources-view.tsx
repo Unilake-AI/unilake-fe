@@ -8,8 +8,9 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { API_ListDataSources, API_UpdateDataSource } from '@/api/api_data'
+import { API_UpdateDataSource } from '@/api/data-operations/data-sources'
 import { getApiErrorMessage } from '@/api/http'
+import { API_ListDataSources } from '@/api/shared/data-sources'
 import {
   Button,
   Card,

@@ -6,14 +6,11 @@ import type { FormEvent } from 'react'
 import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CircleAlert, Play, RefreshCw, X } from 'lucide-react'
 
-import {
-  API_CreateIngestionJob,
-  API_GetIngestionJob,
-  API_ListDataSources,
-  API_ListIngestionJobs,
-  API_RunCleaning,
-} from '@/api/api_data'
+import { API_RunCleaning } from '@/api/data-operations/cleaning'
+import { API_CreateIngestionJob } from '@/api/data-operations/ingestion'
 import { getApiErrorMessage, getErrorMessageForCode } from '@/api/http'
+import { API_ListDataSources } from '@/api/shared/data-sources'
+import { API_GetIngestionJob, API_ListIngestionJobs } from '@/api/shared/ingestion'
 import {
   Button,
   Card,
@@ -42,6 +39,7 @@ export function isJobActive(job: IngestionJob): boolean {
 }
 
 function JobDetails({ jobId }: { jobId: number }) {
+  const [profileId, setProfileId] = useState('')
   const job = useQuery({
     queryKey: ['ingestion-jobs', jobId],
     queryFn: () => API_GetIngestionJob(jobId),
@@ -51,7 +49,7 @@ function JobDetails({ jobId }: { jobId: number }) {
   const cleaningKey = ['ingestion-cleaning', jobId]
   const cleaning = useMutation({
     mutationKey: cleaningKey,
-    mutationFn: () => API_RunCleaning(jobId),
+    mutationFn: (profile: string) => API_RunCleaning(jobId, profile),
   })
   const isCleaning = useIsMutating({ mutationKey: cleaningKey }) > 0
 
@@ -84,12 +82,24 @@ function JobDetails({ jobId }: { jobId: number }) {
       )}
       {job.data.status.toUpperCase() === 'SUCCESS' && (
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="primary" disabled={isCleaning} onClick={() => cleaning.mutate()}>
+          <label className="space-y-1 text-slate-700">
+            <span className="block">Mã cấu hình làm sạch</span>
+            <input
+              className={inputClass}
+              maxLength={100}
+              value={profileId}
+              disabled={isCleaning}
+              onChange={(event) => setProfileId(event.target.value)}
+            />
+          </label>
+          <Button
+            variant="primary"
+            className="self-end"
+            disabled={isCleaning || !profileId.trim()}
+            onClick={() => cleaning.mutate(profileId.trim())}
+          >
             {isCleaning ? 'Đang làm sạch…' : 'Làm sạch dữ liệu'}
           </Button>
-          <span className="text-slate-600">
-            Tính năng này hiện chỉ hỗ trợ một số bộ dữ liệu thử nghiệm.
-          </span>
         </div>
       )}
       {cleaning.isError && (
@@ -103,7 +113,7 @@ function JobDetails({ jobId }: { jobId: number }) {
           {formatNumber(cleaning.data.records_passed)} dòng đạt ·{' '}
           {formatNumber(cleaning.data.records_quarantined)} dòng cần kiểm tra ·{' '}
           {cleaning.data.publication
-            ? 'Đã lưu kết quả thử nghiệm'
+            ? 'Đã lưu kết quả làm sạch'
             : 'Chưa lưu kết quả vào bộ dữ liệu đã làm sạch'}
         </p>
       )}

@@ -54,8 +54,8 @@ export function refreshAccessToken(): Promise<string | null> {
       return null
     }
     try {
-      // Import khi cần để tránh phụ thuộc vòng: api_auth cũng dùng instance http này.
-      const { API_RefreshToken } = await import('@/api/api_auth')
+      // Import khi cần để tránh phụ thuộc vòng: mô-đun xác thực cũng dùng instance http này.
+      const { API_RefreshToken } = await import('@/api/shared/auth')
       const data = await API_RefreshToken(refreshToken)
       storeSession(data)
       return data.access_token

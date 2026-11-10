@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
 
-import { API_GetCatalog } from '@/api/api_data'
+import { API_GetCatalog } from '@/api/data-admin/governance'
 import { getApiErrorMessage } from '@/api/http'
 import {
   Card,

@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
 
-import { API_GetCatalog } from '@/api/api_data'
+import { API_GetCatalog } from '@/api/data-admin/governance'
 import { getApiErrorMessage } from '@/api/http'
 import {
   Card,
@@ -15,6 +15,7 @@ import {
   Tag,
   statusTone,
 } from '@/components/page/page-parts'
+import { useAuth } from '@/hooks/use-auth'
 import { useDomain } from '@/hooks/use-domain'
 import { cn } from '@/lib/utils'
 
@@ -24,8 +25,14 @@ export function ExploreView() {
   const [layer, setLayer] = useState<(typeof LAYERS)[number]>('all')
   const [selected, setSelected] = useState<string | null>(null)
   const { domain } = useDomain()
+  const { isLoading, hasRole } = useAuth()
+  const canReadCatalog = hasRole('DATA_ADMIN')
 
-  const catalog = useQuery({ queryKey: ['catalog'], queryFn: () => API_GetCatalog() })
+  const catalog = useQuery({
+    queryKey: ['catalog'],
+    queryFn: () => API_GetCatalog(),
+    enabled: canReadCatalog,
+  })
   const entries = (catalog.data ?? []).filter(
     (entry) =>
       (domain.code === 'all' || entry.domain_id === domain.code) &&
@@ -62,7 +69,14 @@ export function ExploreView() {
         ))}
       </div>
 
-      {catalog.isPending ? (
+      {isLoading ? (
+        <LoadingState />
+      ) : !canReadCatalog ? (
+        <EmptyState
+          title="Tài khoản của bạn chưa có quyền xem danh mục dữ liệu"
+          description="Hãy liên hệ quản trị viên dữ liệu nếu bạn cần tra cứu."
+        />
+      ) : catalog.isPending ? (
         <LoadingState />
       ) : catalog.isError ? (
         <ErrorState

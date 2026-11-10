@@ -16,10 +16,14 @@ it('tải chi tiết khi mở job và chỉ chạy Cleaning sau khi người dù
     source_table: 'input.csv',
   }
   const trackRequest = vi.fn<(endpoint: string) => void>()
+  const trackCleaningBody = vi.fn<(body: unknown) => void>()
   const originalAdapter = http.defaults.adapter
   http.defaults.adapter = (config) => {
     const endpoint = `${config.method} ${config.url}`
     trackRequest(endpoint)
+    if (endpoint === 'post /pipeline/cleaning/ingestion-jobs/42') {
+      trackCleaningBody(JSON.parse(String(config.data)))
+    }
     const responses: Record<string, unknown> = {
       'get /ingestion/jobs': [job],
       'get /ingestion/jobs/42': { ...job, requested_by: '42' },
@@ -53,10 +57,13 @@ it('tải chi tiết khi mở job và chỉ chạy Cleaning sau khi người dù
     await user.click(detail)
     const run = await screen.findByRole('button', { name: 'Làm sạch dữ liệu' })
     expect(trackRequest.mock.calls).toEqual([['get /ingestion/jobs'], ['get /ingestion/jobs/42']])
+    expect(run).toBeDisabled()
+    await user.type(screen.getByLabelText('Mã cấu hình làm sạch'), 'admissions-cleaning')
 
     await user.click(run)
     expect(await screen.findByText(/2 dòng cần kiểm tra · Chưa lưu kết quả/)).toBeInTheDocument()
     expect(trackRequest).toHaveBeenLastCalledWith('post /pipeline/cleaning/ingestion-jobs/42')
+    expect(trackCleaningBody).toHaveBeenCalledWith({ profile_id: 'admissions-cleaning' })
   } finally {
     client.clear()
     http.defaults.adapter = originalAdapter
