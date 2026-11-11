@@ -6,14 +6,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, ChevronLeft, ChevronRight, Info, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { API_ListProfiles } from '@/api/data-operations/profiles'
+import { API_ListProfiles } from '@/api/admindata/profiles'
 import {
   API_ActivateSnapshot,
   API_GetActiveSnapshot,
   API_GetSnapshot,
   API_GetSnapshotData,
   API_ListSnapshots,
-} from '@/api/data-operations/snapshots'
+} from '@/api/admindata/snapshots'
 import { getApiErrorMessage } from '@/api/http'
 import {
   Button,

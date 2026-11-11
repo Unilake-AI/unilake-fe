@@ -10,8 +10,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CircleAlert, LoaderCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { API_CreateDataSource, API_UpdateDataSource } from '@/api/data-operations/data-sources'
-import { API_ListSourceSystems } from '@/api/data-operations/datasets'
+import { API_CreateDataSource, API_UpdateDataSource } from '@/api/admindata/data-sources'
+import { API_ListSourceSystems } from '@/api/admindata/datasets'
 import { getApiErrorMessage } from '@/api/http'
 import { API_GetDataSource } from '@/api/shared/data-sources'
 import { Card, ErrorState, LoadingState, PageHeader } from '@/components/page/page-parts'
@@ -22,7 +22,12 @@ import {
   buildConfiguration,
 } from '@/config/data-sources'
 import { cn } from '@/lib/utils'
-import type { DataSourceCreatePayload, DataSourceItem, SourceType } from '@/types/data'
+import type {
+  DataSourceCreatePayload,
+  DataSourceFormFieldProps,
+  DataSourceItem,
+  SourceType,
+} from '@/types/data-sources'
 
 const inputClass =
   'h-9 w-full rounded-md border bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2'
@@ -33,15 +38,7 @@ function defaultConfig(type: SourceType): Record<string, string> {
   return Object.fromEntries(SOURCE_TYPE_CONFIG[type].fields.map((f) => [f.key, f.defaultValue]))
 }
 
-interface FieldProps {
-  id: string
-  label: string
-  error?: string
-  hint?: string
-  children: React.ReactNode
-}
-
-function Field({ id, label, error, hint, children }: FieldProps) {
+function Field({ id, label, error, hint, children }: DataSourceFormFieldProps) {
   return (
     <div className="space-y-1.5">
       <label htmlFor={id} className="block text-xs font-semibold text-slate-700">

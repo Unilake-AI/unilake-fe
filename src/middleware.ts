@@ -35,6 +35,7 @@ export function middleware(request: NextRequest) {
     return response
   }
   const defaultHome = getDefaultHomeForRoles(userRoles)
+  const canonicalPathname = pathname.replace(/^\/analyst(?=\/|$)/, '/staff')
 
   // Nếu truy cập /login hoặc đường dẫn gốc /, chuyển đến trang chủ theo vai trò người dùng
   if (pathname === '/login' || pathname === '/') {
@@ -51,8 +52,14 @@ export function middleware(request: NextRequest) {
   ) {
     return NextResponse.redirect(new URL('/viewer', request.url))
   }
-  if (!hasAccessToRoute(pathname, userRoles)) {
+  if (!hasAccessToRoute(canonicalPathname, userRoles)) {
     return NextResponse.redirect(new URL(defaultHome, request.url))
+  }
+
+  if (canonicalPathname !== pathname) {
+    const url = request.nextUrl.clone()
+    url.pathname = canonicalPathname
+    return NextResponse.redirect(url)
   }
 
   return NextResponse.next()

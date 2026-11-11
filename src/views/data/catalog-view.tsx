@@ -13,9 +13,8 @@ import {
   API_GetCatalog,
   API_GetCatalogDetail,
   API_UpdateCatalog,
-} from '@/api/data-admin/governance'
+} from '@/api/admindata/governance'
 import { getApiErrorMessage } from '@/api/http'
-import type { components } from '@/api/schema'
 import {
   Button,
   Card,
@@ -35,9 +34,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
-import type { CatalogEntry, CatalogField, CatalogTable } from '@/types/data'
-
-type DataLayer = components['schemas']['DataLayer']
+import type { CatalogEntry, CatalogField, CatalogTable, DataLayer } from '@/types/catalog'
 
 const inputClass =
   'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30 disabled:bg-slate-50 disabled:text-slate-500'

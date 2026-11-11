@@ -1,5 +1,6 @@
 import { getWorkspaceForRole } from '@/config/roles'
-import type { MenuGroup, MenuItem, RoleCode, RoleWorkspace } from '@/types/auth'
+import type { MenuGroup, MenuItem } from '@/types/navigation'
+import type { RoleCode, RoleWorkspace } from '@/types/roles'
 
 /** Sáu role phòng ban dùng hai không gian làm việc theo chức năng. */
 export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
@@ -51,17 +52,17 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
     {
       groupTitle: 'Vận hành dữ liệu',
       items: [
-        { title: 'Tổng quan', href: '/analyst', iconName: 'LayoutDashboard' },
-        { title: 'Nạp dữ liệu', href: '/analyst/upload', iconName: 'Upload' },
-        { title: 'Lịch sử nạp dữ liệu', href: '/analyst/ingestion', iconName: 'History' },
+        { title: 'Tổng quan', href: '/staff', iconName: 'LayoutDashboard' },
+        { title: 'Nạp dữ liệu', href: '/staff/upload', iconName: 'Upload' },
+        { title: 'Lịch sử nạp dữ liệu', href: '/staff/ingestion', iconName: 'History' },
         {
           title: 'Yêu cầu xử lý dữ liệu lỗi',
-          href: '/analyst/quality-issues',
+          href: '/staff/quality-issues',
           iconName: 'ShieldCheck',
         },
         {
           title: 'Hồ sơ cá nhân / Phiên đăng nhập',
-          href: '/analyst/profile',
+          href: '/staff/profile',
           iconName: 'User',
         },
       ],

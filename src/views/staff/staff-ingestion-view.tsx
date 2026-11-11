@@ -23,7 +23,6 @@ import {
   API_ListIngestionAttempts,
   API_ListIngestionJobs,
 } from '@/api/shared/ingestion'
-import type { StaffContext } from '@/api/shared/staff'
 import {
   Button,
   Card,
@@ -38,6 +37,8 @@ import {
   statusLabel,
   statusTone,
 } from '@/components/page/page-parts'
+import type { IngestionJobStatusFilter } from '@/types/ingestion'
+import type { StaffContext } from '@/types/staff-context'
 
 import { StaffContextGate } from './staff-context-gate'
 import {
@@ -59,8 +60,6 @@ const JOB_STATUS_OPTIONS = [
   { value: 'FAILED', label: 'Không thành công (FAILED)' },
   { value: 'REJECTED', label: 'Bị từ chối (REJECTED)' },
 ] as const
-
-type JobStatusFilter = 'QUEUED' | 'RETRY_WAIT' | 'RUNNING' | 'SUCCESS' | 'FAILED' | 'REJECTED'
 
 function formatDuration(seconds: number | null | undefined): string {
   if (seconds == null || !Number.isFinite(seconds)) return '—'
@@ -165,7 +164,7 @@ function JobDetailSection({
         <div className="flex items-center justify-between rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-indigo-900">
           <span>Lần nạp này gắn với yêu cầu xử lý dữ liệu lỗi.</span>
           <Link
-            href={`/analyst/quality-issues/${job.quality_issue_id}`}
+            href={`/staff/quality-issues/${job.quality_issue_id}`}
             className="font-semibold text-indigo-700 hover:underline"
           >
             Mở yêu cầu xử lý
@@ -316,7 +315,7 @@ function IngestionContent({
       API_ListIngestionJobs({
         limit: PAGE_SIZE,
         offset,
-        status: (statusFilter as JobStatusFilter) || undefined,
+        status: (statusFilter as IngestionJobStatusFilter) || undefined,
         dataset_id: parsedDatasetId,
         mine_only: mineOnly,
       }),
@@ -362,7 +361,7 @@ function IngestionContent({
             </Button>
             {context.can_upload && (
               <Link
-                href="/analyst/upload"
+                href="/staff/upload"
                 className="inline-flex h-8 items-center gap-1.5 rounded-md bg-indigo-600 px-3 text-xs font-semibold text-white transition-colors hover:bg-indigo-700"
               >
                 <Upload className="size-3.5" aria-hidden="true" />

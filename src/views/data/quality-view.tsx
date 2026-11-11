@@ -18,15 +18,15 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { API_ListCleaningRuns } from '@/api/data-operations/cleaning'
+import { API_ListCleaningRuns } from '@/api/admindata/cleaning'
 import {
   API_AssignQualityIssue,
   API_CreateQualityIssue,
   API_ListIssueAssignees,
   API_ListIssueDepartments,
   API_VerifyQualityIssue,
-} from '@/api/data-operations/quality-issues'
-import { API_ListQuarantineRecords } from '@/api/data-operations/quarantine'
+} from '@/api/admindata/quality-issues'
+import { API_ListQuarantineRecords } from '@/api/admindata/quarantine'
 import { getApiErrorMessage } from '@/api/http'
 import { API_GetIngestionJob } from '@/api/shared/ingestion'
 import {
@@ -34,7 +34,6 @@ import {
   API_ListQualityIssues,
   API_GetQualityIssueStats,
 } from '@/api/shared/quality-issues'
-import type { QualityIssueDetail } from '@/api/shared/quality-issues'
 import {
   Button,
   Card,
@@ -57,6 +56,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import type { QualityIssueDetail } from '@/types/quality-issues'
 
 import { domainLabel } from './data-helpers'
 

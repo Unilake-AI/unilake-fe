@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowRight, RefreshCw } from 'lucide-react'
 
-import { API_ListCleaningRuns } from '@/api/data-operations/cleaning'
-import { API_ListIngestionWorkers } from '@/api/data-operations/ingestion'
+import { API_ListCleaningRuns } from '@/api/admindata/cleaning'
+import { API_ListIngestionWorkers } from '@/api/admindata/ingestion'
 import { getApiErrorMessage } from '@/api/http'
 import {
   API_GetIngestionMetrics,

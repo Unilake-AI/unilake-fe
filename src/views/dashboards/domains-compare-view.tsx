@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation'
 import { ArrowRight } from 'lucide-react'
 
 import { Card, MockNotice, PageHeader, ProgressRow, Tag } from '@/components/page/page-parts'
-import type { Tone } from '@/components/page/page-parts'
-import type { DomainCode } from '@/config/domains'
 import { useDomain } from '@/hooks/use-domain'
+import type { DomainCode } from '@/types/domains'
+import type { StatusTone } from '@/types/page/page-parts'
 
 import { ACADEMIC, ADMISSIONS, HR } from './dashboard-data'
 
@@ -48,7 +48,7 @@ const TARGETS: {
   target: string
   diff: string
   status: string
-  tone: Tone
+  tone: StatusTone
 }[] = [
   {
     domain: 'Tuyển sinh',

@@ -2,8 +2,8 @@ import { useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
+import { API_ListSessions, API_RevokeSession } from '@/api/auth/sessions'
 import { getApiErrorMessage } from '@/api/http'
-import { API_ListSessions, API_RevokeSession } from '@/api/shared/auth'
 import {
   Button,
   Card,

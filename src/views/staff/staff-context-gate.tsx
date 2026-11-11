@@ -5,10 +5,10 @@ import type { ReactNode } from 'react'
 import { AlertTriangle, ShieldAlert } from 'lucide-react'
 
 import { getApiErrorMessage } from '@/api/http'
-import type { StaffContext } from '@/api/shared/staff'
 import { ErrorState } from '@/components/page/page-parts'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useStaffContext } from '@/hooks/use-staff-context'
+import type { StaffContext } from '@/types/staff-context'
 
 export function StaffLoadingSkeleton() {
   return (

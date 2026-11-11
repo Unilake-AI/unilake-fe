@@ -54,7 +54,7 @@ describe('UserMenu', () => {
 
     expect(await screen.findByRole('menuitem', { name: /Nhân viên Đào tạo/ })).toHaveAttribute(
       'href',
-      '/analyst'
+      '/staff'
     )
     expect(screen.getByRole('menuitem', { name: /Ban Giám hiệu/ })).toHaveAttribute(
       'href',

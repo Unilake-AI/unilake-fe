@@ -6,14 +6,14 @@ import type { FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronLeft, ChevronRight, Eye, RefreshCw } from 'lucide-react'
 
-import { API_ListDatasets } from '@/api/data-operations/datasets'
-import { API_ListIssueDepartments } from '@/api/data-operations/quality-issues'
+import { API_ListDatasets } from '@/api/admindata/datasets'
+import { API_ListIssueDepartments } from '@/api/admindata/quality-issues'
 import {
   API_GetQuarantineRecord,
   API_GetQuarantineSource,
   API_GetQuarantineSummary,
   API_ListQuarantineRecords,
-} from '@/api/data-operations/quarantine'
+} from '@/api/admindata/quarantine'
 import { getApiErrorMessage } from '@/api/http'
 import {
   Button,

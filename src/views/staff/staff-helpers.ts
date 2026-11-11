@@ -1,4 +1,4 @@
-import type { StaffDomainChoice } from '@/api/shared/staff'
+import type { StaffDomainChoice } from '@/types/staff-context'
 
 export const ACTIVE_INGESTION_STATUSES = new Set(['QUEUED', 'RUNNING', 'RETRY_WAIT'])
 export const INGESTION_POLL_INTERVAL_MS = 4000

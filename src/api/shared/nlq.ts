@@ -1,5 +1,5 @@
 import { http } from '@/api/http'
-import type { NlqResponse } from '@/types/data'
+import type { NlqResponse } from '@/types/nlq'
 
 // Hỏi đáp AI bằng ngôn ngữ tự nhiên
 export async function API_AskNlq(question: string): Promise<NlqResponse> {

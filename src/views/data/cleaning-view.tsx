@@ -21,12 +21,8 @@ import {
   API_ListCleaningRuns,
   API_PreviewCleaning,
   API_RunCleaning,
-} from '@/api/data-operations/cleaning'
-import type {
-  CleaningPreviewResponse,
-  ManualCleaningResponse,
-} from '@/api/data-operations/cleaning'
-import { API_ListProfiles } from '@/api/data-operations/profiles'
+} from '@/api/admindata/cleaning'
+import { API_ListProfiles } from '@/api/admindata/profiles'
 import { getApiErrorMessage } from '@/api/http'
 import { API_ListIngestionJobs } from '@/api/shared/ingestion'
 import {
@@ -51,6 +47,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import type { CleaningPreviewResponse, ManualCleaningResponse } from '@/types/cleaning'
 
 import { domainLabel, formatCellValue } from './data-helpers'
 

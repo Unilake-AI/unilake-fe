@@ -1,10 +1,5 @@
 import { http } from '@/api/http'
-import type { components, paths } from '@/api/schema'
-
-type Schemas = components['schemas']
-
-export type DatasetItem = Schemas['DatasetRead']
-export type DatasetFilters = paths['/api/v1/datasets']['get']['parameters']['query']
+import type { DatasetFilters, DatasetItem } from '@/types/datasets'
 
 export async function API_ListDatasets(params?: DatasetFilters): Promise<DatasetItem[]> {
   const res = await http.get<DatasetItem[]>('/datasets', { params })

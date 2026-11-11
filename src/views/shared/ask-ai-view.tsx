@@ -12,10 +12,10 @@ import { getApiErrorMessage } from '@/api/http'
 import { API_AskNlq } from '@/api/shared/nlq'
 import { Card, PageHeader, Tag } from '@/components/page/page-parts'
 import { getDomain } from '@/config/domains'
-import type { DomainCode } from '@/config/domains'
 import { useDomain } from '@/hooks/use-domain'
 import { addQueryHistory } from '@/lib/query-history'
-import type { NlqResponse } from '@/types/data'
+import type { DomainCode } from '@/types/domains'
+import type { NlqConversationTurn } from '@/types/nlq'
 
 const SUGGESTIONS: Record<DomainCode, string[]> = {
   all: [
@@ -33,15 +33,6 @@ const SUGGESTIONS: Record<DomainCode, string[]> = {
     'Số sinh viên đang học theo từng khoa?',
   ],
   hr: ['Khoa CNTT có bao nhiêu giảng viên?', 'Số giảng viên theo từng khoa?'],
-}
-
-interface Turn {
-  id: number
-  question: string
-  state: 'processing' | 'done' | 'error'
-  result?: NlqResponse
-  error?: string
-  durationMs?: number
 }
 
 function formatCell(value: unknown): string {
@@ -130,7 +121,7 @@ function SqlBlock({ sql }: { sql: string }) {
 export function AskAiView({ historyHref }: { historyHref: string }) {
   const { domain } = useDomain()
   const [question, setQuestion] = useState('')
-  const [turns, setTurns] = useState<Turn[]>([])
+  const [turns, setTurns] = useState<NlqConversationTurn[]>([])
   const nextId = useRef(1)
 
   const ask = useMutation({

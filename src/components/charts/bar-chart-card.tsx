@@ -2,9 +2,9 @@
 
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
-type Row = { label: string; value: number }
+import type { BarChartRow } from '@/types/charts/bar-chart-card'
 
-export function BarChartCard({ data }: { data: Row[] }) {
+export function BarChartCard({ data }: { data: BarChartRow[] }) {
   return (
     <div className="h-72 w-full">
       <ResponsiveContainer>

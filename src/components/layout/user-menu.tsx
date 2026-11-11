@@ -19,12 +19,7 @@ import {
   getWorkspaceForRole,
 } from '@/config/roles'
 import { useAuth } from '@/hooks/use-auth'
-import type { RoleCode } from '@/types/auth'
-
-interface UserMenuProps {
-  /** Vai trò của không gian làm việc đang mở */
-  role: RoleCode
-}
+import type { UserMenuProps } from '@/types/layout/user-menu'
 
 export function getInitials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean)
@@ -109,7 +104,7 @@ export function UserMenu({ role }: UserMenuProps) {
         <DropdownMenuSeparator />
         {getWorkspaceForRole(role) === 'STAFF' ? (
           <DropdownMenuItem asChild className="text-slate-700">
-            <Link href="/analyst/profile">
+            <Link href="/staff/profile">
               <User className="text-slate-500" />
               Hồ sơ cá nhân / Phiên đăng nhập
             </Link>

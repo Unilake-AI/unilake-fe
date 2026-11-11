@@ -22,13 +22,11 @@ import {
   ProgressRow,
   Tag,
 } from '@/components/page/page-parts'
-import type { DomainCode, DomainDefinition } from '@/config/domains'
 import { useDomain } from '@/hooks/use-domain'
 import { cn } from '@/lib/utils'
+import type { BusinessDomain, DomainDefinition } from '@/types/domains'
 
 import { ACADEMIC, ADMISSIONS, HR } from './dashboard-data'
-
-type BusinessDomain = Exclude<DomainCode, 'all'>
 
 const CHART_COLORS = { primary: '#4f46e5', secondary: '#0ea5e9', tertiary: '#f59e0b' }
 

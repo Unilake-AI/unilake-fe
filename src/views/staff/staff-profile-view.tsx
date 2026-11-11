@@ -1,9 +1,9 @@
 'use client'
 
-import type { StaffContext } from '@/api/shared/staff'
 import { Card, PageHeader, Tag, formatNumber } from '@/components/page/page-parts'
 import { ROLE_DEFINITIONS, toRoleCode } from '@/config/roles'
 import { useAuth } from '@/hooks/use-auth'
+import type { StaffContext } from '@/types/staff-context'
 import { SessionsPanel } from '@/views/admin/sessions-panel'
 
 import { StaffContextGate } from './staff-context-gate'

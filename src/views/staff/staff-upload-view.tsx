@@ -23,10 +23,8 @@ import { z } from 'zod'
 
 import { getApiErrorMessage, getErrorMessageForCode } from '@/api/http'
 import { API_ListDatasets } from '@/api/shared/datasets'
-import type { DatasetItem } from '@/api/shared/datasets'
-import { API_GetIngestionJob, API_UploadIngestion } from '@/api/shared/ingestion'
-import type { IngestionJob, UploadDomain } from '@/api/shared/ingestion'
-import type { StaffContext } from '@/api/shared/staff'
+import { API_GetIngestionJob } from '@/api/shared/ingestion'
+import { API_UploadIngestion } from '@/api/staff/upload'
 import {
   Button,
   Card,
@@ -40,6 +38,10 @@ import {
   statusLabel,
   statusTone,
 } from '@/components/page/page-parts'
+import type { DatasetItem } from '@/types/datasets'
+import type { IngestionJob } from '@/types/ingestion'
+import type { StaffContext } from '@/types/staff-context'
+import type { UploadDomain } from '@/types/staff-upload'
 
 import { StaffAccessDeniedState, StaffContextGate } from './staff-context-gate'
 import {
@@ -197,7 +199,7 @@ function JobTrackerCard({ jobId, initialJob }: { jobId: number; initialJob: Inge
             {active && ' · Tự động cập nhật mỗi 4 giây'}
           </span>
           <Link
-            href={`/analyst/ingestion?jobId=${job.ingestion_job_id}`}
+            href={`/staff/ingestion?jobId=${job.ingestion_job_id}`}
             className="inline-flex items-center gap-1 font-semibold text-indigo-600 hover:underline"
           >
             <History className="size-3.5" aria-hidden="true" />
@@ -462,7 +464,7 @@ function UploadContent({ context }: { context: StaffContext }) {
         description={`Tải tệp ${context.accepted_extensions.join(', ')} (tối đa ${formatBytes(context.max_file_bytes)}, ${formatNumber(context.max_records)} dòng) vào bộ dữ liệu đã có hoặc tạo bộ dữ liệu mới.`}
         actions={
           <Link
-            href="/analyst/ingestion"
+            href="/staff/ingestion"
             className="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
           >
             <History className="size-3.5" aria-hidden="true" />

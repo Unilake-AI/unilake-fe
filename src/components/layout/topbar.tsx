@@ -7,15 +7,10 @@ import { Bell, Building2, ChevronDown, Menu, Sparkles } from 'lucide-react'
 
 import { ASK_AI_PATHS } from '@/config/menu'
 import { getWorkspaceForRole } from '@/config/roles'
-import type { RoleCode } from '@/types/auth'
+import type { TopbarProps } from '@/types/layout/topbar'
 
 import { DomainSelector } from './domain-selector'
 import { UserMenu } from './user-menu'
-
-interface TopbarProps {
-  role: RoleCode
-  onOpenMobile?: () => void
-}
 
 export function Topbar({ role, onOpenMobile }: TopbarProps) {
   const askAiPath = ASK_AI_PATHS[getWorkspaceForRole(role)]

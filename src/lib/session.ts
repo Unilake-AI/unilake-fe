@@ -1,13 +1,9 @@
 import Cookies from 'js-cookie'
 
+import type { StoredSession } from '@/types/session'
+
 /** Tham số trên URL trang đăng nhập khi phiên bị hết hạn (`/login?expired=1`). */
 export const SESSION_EXPIRED_PARAM = 'expired'
-
-interface StoredSession {
-  access_token: string
-  refresh_token?: string | null
-  user?: unknown
-}
 
 /** Lưu token sau khi đăng nhập hoặc làm mới: cookie cho middleware, localStorage cho client. */
 export function storeSession(session: StoredSession): void {

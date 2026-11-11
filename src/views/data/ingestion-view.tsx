@@ -19,9 +19,9 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { API_RunCleaning } from '@/api/data-operations/cleaning'
-import { API_ListDatasets } from '@/api/data-operations/datasets'
-import { API_CreateIngestionJob, API_RetryIngestionJob } from '@/api/data-operations/ingestion'
+import { API_RunCleaning } from '@/api/admindata/cleaning'
+import { API_ListDatasets } from '@/api/admindata/datasets'
+import { API_CreateIngestionJob, API_RetryIngestionJob } from '@/api/admindata/ingestion'
 import { getApiErrorMessage, getErrorMessageForCode } from '@/api/http'
 import { API_ListDataSources } from '@/api/shared/data-sources'
 import {
@@ -30,9 +30,8 @@ import {
   API_GetIngestionStats,
   API_ListIngestionAttempts,
   API_ListIngestionJobs,
-  API_UploadIngestion,
 } from '@/api/shared/ingestion'
-import type { IngestionJob, UploadDomain } from '@/api/shared/ingestion'
+import { API_UploadIngestion } from '@/api/staff/upload'
 import {
   Button,
   Card,
@@ -55,6 +54,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import type { IngestionJob, IngestionJobStatusFilter } from '@/types/ingestion'
+import type { UploadDomain } from '@/types/staff-upload'
 import {
   CSV_DELIMITER_OPTIONS,
   CSV_ENCODING_OPTIONS,
@@ -90,8 +91,6 @@ const JOB_STATUS_OPTIONS = [
   { value: 'FAILED', label: 'FAILED' },
   { value: 'REJECTED', label: 'REJECTED' },
 ] as const
-
-type JobStatusFilter = 'QUEUED' | 'RETRY_WAIT' | 'RUNNING' | 'SUCCESS' | 'FAILED' | 'REJECTED'
 
 export { isJobActive }
 
@@ -981,7 +980,7 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
       API_ListIngestionJobs({
         limit: PAGE_SIZE,
         offset,
-        status: (statusFilter as JobStatusFilter) || undefined,
+        status: (statusFilter as IngestionJobStatusFilter) || undefined,
         dataset_id: datasetFilter ? Number(datasetFilter) : undefined,
         data_source_id: sourceFilter ? Number(sourceFilter) : undefined,
         mine_only: mineOnly || undefined,

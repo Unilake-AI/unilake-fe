@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { Activity, Info, RefreshCw } from 'lucide-react'
 
-import { API_ListIngestionWorkers } from '@/api/data-operations/ingestion'
+import { API_ListIngestionWorkers } from '@/api/admindata/ingestion'
 import { getApiErrorMessage } from '@/api/http'
 import {
   Button,
