@@ -8,8 +8,8 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { ChevronLeft, ChevronRight, Info, Plus, Search } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { API_UpdateDataSource } from '@/api/data-operations/data-sources'
-import { API_ListSourceSystems } from '@/api/data-operations/datasets'
+import { API_UpdateDataSource } from '@/api/admindata/data-sources'
+import { API_ListSourceSystems } from '@/api/admindata/datasets'
 import { getApiErrorMessage } from '@/api/http'
 import { API_GetDataSource, API_ListDataSources } from '@/api/shared/data-sources'
 import {
@@ -27,20 +27,18 @@ import {
   statusTone,
 } from '@/components/page/page-parts'
 import { SOURCE_SYSTEMS, SOURCE_TYPES } from '@/config/data-sources'
-import type { DataSourceFilter, DataSourceItem } from '@/types/data'
+import type { DataSourceFilter, DataSourceItem, DataSourceStatusFilter } from '@/types/data-sources'
 
 const PAGE_SIZE = 10
 
 const selectClass =
   'h-8 rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500'
 
-type StatusFilter = 'all' | 'active' | 'inactive'
-
 export function SourcesView() {
   const queryClient = useQueryClient()
   const [systemId, setSystemId] = useState('')
   const [sourceType, setSourceType] = useState('')
-  const [status, setStatus] = useState<StatusFilter>('all')
+  const [status, setStatus] = useState<DataSourceStatusFilter>('all')
   const [keyword, setKeyword] = useState('')
   const [page, setPage] = useState(1)
   const [selectedSourceId, setSelectedSourceId] = useState<number | null>(null)
@@ -205,7 +203,7 @@ export function SourcesView() {
           <select
             className={selectClass}
             value={status}
-            onChange={(event) => resetPage(setStatus)(event.target.value as StatusFilter)}
+            onChange={(event) => resetPage(setStatus)(event.target.value as DataSourceStatusFilter)}
           >
             <option value="all">Tất cả</option>
             <option value="active">Đang hoạt động</option>

@@ -15,7 +15,7 @@ import {
   API_GetDataset,
   API_ListDatasets,
   API_ListSourceSystems,
-} from '@/api/data-operations/datasets'
+} from '@/api/admindata/datasets'
 import { getApiErrorMessage } from '@/api/http'
 import {
   Button,

@@ -1,5 +1,5 @@
 import { http } from '@/api/http'
-import type { DataSourceFilter, DataSourceItem, DataSourceListResponse } from '@/types/data'
+import type { DataSourceFilter, DataSourceItem, DataSourceListResponse } from '@/types/data-sources'
 
 // Lấy danh sách nguồn dữ liệu
 export async function API_ListDataSources(

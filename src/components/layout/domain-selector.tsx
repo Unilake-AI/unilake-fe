@@ -20,8 +20,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import type { DomainDefinition } from '@/config/domains'
 import { useDomain } from '@/hooks/use-domain'
+import type { DomainDefinition } from '@/types/domains'
 
 const DOMAIN_ICONS: Record<DomainDefinition['iconName'], ComponentType<{ className?: string }>> = {
   Layers,

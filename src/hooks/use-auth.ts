@@ -6,19 +6,10 @@ import { useRouter } from 'next/navigation'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { API_Logout } from '@/api/shared/auth'
+import { API_ClearAuthCookies, API_GetCurrentUser, API_Logout } from '@/api/auth/client'
 import { ROLE_PRIORITY } from '@/config/roles'
 import { clearStoredSession, readRefreshToken } from '@/lib/session'
-import type { AuthMeResponse, AuthUser, RoleCode } from '@/types/auth'
-
-async function fetchCurrentUser(): Promise<AuthUser | null> {
-  const res = await fetch('/api/auth/me')
-  if (!res.ok) {
-    return null
-  }
-  const data = (await res.json()) as AuthMeResponse
-  return data.user
-}
+import type { RoleCode } from '@/types/roles'
 
 async function logoutApi(): Promise<void> {
   // Báo backend thu hồi refresh token; lỗi mạng không được chặn người dùng đăng xuất.
@@ -26,7 +17,7 @@ async function logoutApi(): Promise<void> {
   if (refreshToken) {
     await API_Logout(refreshToken).catch(() => undefined)
   }
-  await fetch('/api/auth/logout', { method: 'POST' }).catch(() => undefined)
+  await API_ClearAuthCookies().catch(() => undefined)
 }
 
 export function useAuth() {
@@ -39,7 +30,7 @@ export function useAuth() {
     isError,
   } = useQuery({
     queryKey: ['auth', 'me'],
-    queryFn: fetchCurrentUser,
+    queryFn: API_GetCurrentUser,
     staleTime: 60_000,
     retry: false,
   })

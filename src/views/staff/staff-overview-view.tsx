@@ -8,7 +8,6 @@ import { ArrowRight, History, RefreshCw, ShieldCheck, Upload } from 'lucide-reac
 import { getApiErrorMessage } from '@/api/http'
 import { API_GetIngestionStats, API_ListIngestionJobs } from '@/api/shared/ingestion'
 import { API_GetQualityIssueStats, API_ListQualityIssues } from '@/api/shared/quality-issues'
-import type { StaffContext } from '@/api/shared/staff'
 import {
   Button,
   Card,
@@ -23,6 +22,7 @@ import {
   statusLabel,
   statusTone,
 } from '@/components/page/page-parts'
+import type { StaffContext } from '@/types/staff-context'
 
 import { StaffContextGate } from './staff-context-gate'
 import { domainLabel, jobTypeLabel } from './staff-helpers'
@@ -86,7 +86,7 @@ function OverviewContent({ context }: { context: StaffContext }) {
               Làm mới
             </Button>
             <Link
-              href="/analyst/quality-issues"
+              href="/staff/quality-issues"
               className="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
             >
               <ShieldCheck className="size-3.5" aria-hidden="true" />
@@ -94,7 +94,7 @@ function OverviewContent({ context }: { context: StaffContext }) {
             </Link>
             {context.can_upload && (
               <Link
-                href="/analyst/upload"
+                href="/staff/upload"
                 className="inline-flex h-8 items-center gap-1.5 rounded-md bg-indigo-600 px-3 text-xs font-semibold text-white transition-colors hover:bg-indigo-700"
               >
                 <Upload className="size-3.5" aria-hidden="true" />
@@ -141,7 +141,7 @@ function OverviewContent({ context }: { context: StaffContext }) {
             Thống kê nạp dữ liệu
           </h2>
           <Link
-            href="/analyst/ingestion"
+            href="/staff/ingestion"
             className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700"
           >
             Xem toàn bộ lịch sử
@@ -195,7 +195,7 @@ function OverviewContent({ context }: { context: StaffContext }) {
             Yêu cầu xử lý dữ liệu lỗi của tôi
           </h2>
           <Link
-            href="/analyst/quality-issues"
+            href="/staff/quality-issues"
             className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700"
           >
             Quản lý yêu cầu
@@ -242,7 +242,7 @@ function OverviewContent({ context }: { context: StaffContext }) {
           subtitle="5 lần nạp mới nhất trong phạm vi lĩnh vực"
           right={
             <Link
-              href="/analyst/ingestion"
+              href="/staff/ingestion"
               className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700"
             >
               <History className="size-3.5" aria-hidden="true" />
@@ -295,7 +295,7 @@ function OverviewContent({ context }: { context: StaffContext }) {
                     <tr key={job.ingestion_job_id} className="hover:bg-slate-50">
                       <td className="px-3 py-2.5 font-mono font-semibold text-indigo-600">
                         <Link
-                          href={`/analyst/ingestion?jobId=${job.ingestion_job_id}`}
+                          href={`/staff/ingestion?jobId=${job.ingestion_job_id}`}
                           className="hover:underline"
                         >
                           #{job.ingestion_job_id}
@@ -324,7 +324,7 @@ function OverviewContent({ context }: { context: StaffContext }) {
           subtitle="Các yêu cầu gần nhất đang gán cho tài khoản của bạn"
           right={
             <Link
-              href="/analyst/quality-issues"
+              href="/staff/quality-issues"
               className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700"
             >
               Xem tất cả
@@ -378,7 +378,7 @@ function OverviewContent({ context }: { context: StaffContext }) {
                     <tr key={issue.issue_id} className="hover:bg-slate-50">
                       <td className="px-3 py-2.5">
                         <Link
-                          href={`/analyst/quality-issues/${issue.issue_id}`}
+                          href={`/staff/quality-issues/${issue.issue_id}`}
                           className="font-medium text-indigo-600 hover:underline"
                         >
                           {issue.title}

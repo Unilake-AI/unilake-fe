@@ -3,17 +3,16 @@
 import { useState } from 'react'
 
 import { Card, KpiCard, MockNotice, PageHeader, Tag } from '@/components/page/page-parts'
-import type { Tone } from '@/components/page/page-parts'
+import type { LogLevel } from '@/types/audit-logs'
+import type { StatusTone } from '@/types/page/page-parts'
 
-type Level = 'INFO' | 'WARN' | 'ERROR'
+const LEVEL_LABEL: Record<LogLevel, string> = { INFO: 'Thông tin', WARN: 'Cảnh báo', ERROR: 'Lỗi' }
 
-const LEVEL_LABEL: Record<Level, string> = { INFO: 'Thông tin', WARN: 'Cảnh báo', ERROR: 'Lỗi' }
-
-const LEVEL_TONE: Record<Level, Tone> = { INFO: 'sky', WARN: 'amber', ERROR: 'rose' }
+const LEVEL_TONE: Record<LogLevel, StatusTone> = { INFO: 'sky', WARN: 'amber', ERROR: 'rose' }
 
 const LOGS: {
   time: string
-  level: Level
+  level: LogLevel
   module: string
   user: string
   message: string
@@ -70,7 +69,7 @@ const LOGS: {
 ]
 
 export function LogsView() {
-  const [level, setLevel] = useState<Level | ''>('')
+  const [level, setLevel] = useState<LogLevel | ''>('')
   const rows = LOGS.filter((log) => !level || log.level === level)
 
   return (
@@ -103,7 +102,7 @@ export function LogsView() {
             <select
               className="h-8 rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-800"
               value={level}
-              onChange={(event) => setLevel(event.target.value as Level | '')}
+              onChange={(event) => setLevel(event.target.value as LogLevel | '')}
             >
               <option value="">Tất cả</option>
               <option value="INFO">{LEVEL_LABEL.INFO}</option>

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { ChevronRight, CircleAlert, Inbox, LoaderCircle, RefreshCw } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
+import type { StatusTone } from '@/types/page/page-parts'
 
 /** Khung trang theo Figma: breadcrumb, tiêu đề, mô tả và nhóm nút bên phải. */
 export function PageHeader({
@@ -81,7 +82,7 @@ export function KpiCard({
   label: string
   value: ReactNode
   hint?: ReactNode
-  tone?: Tone
+  tone?: StatusTone
 }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
@@ -94,9 +95,7 @@ export function KpiCard({
   )
 }
 
-export type Tone = 'slate' | 'indigo' | 'emerald' | 'amber' | 'rose' | 'sky'
-
-const TAG_TONE: Record<Tone, string> = {
+const TAG_TONE: Record<StatusTone, string> = {
   slate: 'border-slate-200 bg-slate-50 text-slate-600',
   indigo: 'border-indigo-200 bg-indigo-50 text-indigo-700',
   emerald: 'border-emerald-200 bg-emerald-50 text-emerald-700',
@@ -105,7 +104,7 @@ const TAG_TONE: Record<Tone, string> = {
   sky: 'border-sky-200 bg-sky-50 text-sky-700',
 }
 
-const HINT_TONE: Record<Tone, string> = {
+const HINT_TONE: Record<StatusTone, string> = {
   slate: 'text-slate-500',
   indigo: 'text-indigo-600',
   emerald: 'text-emerald-600',
@@ -114,7 +113,7 @@ const HINT_TONE: Record<Tone, string> = {
   sky: 'text-sky-600',
 }
 
-export function Tag({ children, tone = 'slate' }: { children: ReactNode; tone?: Tone }) {
+export function Tag({ children, tone = 'slate' }: { children: ReactNode; tone?: StatusTone }) {
   return (
     <span
       className={cn(
@@ -128,7 +127,7 @@ export function Tag({ children, tone = 'slate' }: { children: ReactNode; tone?: 
 }
 
 /** Màu nhãn theo trạng thái job/nguồn/truy vấn trả về từ backend. */
-export function statusTone(status: string | null | undefined): Tone {
+export function statusTone(status: string | null | undefined): StatusTone {
   switch ((status ?? '').toUpperCase()) {
     case 'SUCCESS':
     case 'COMPLETED':

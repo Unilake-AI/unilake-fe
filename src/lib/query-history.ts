@@ -2,16 +2,7 @@
  * Lịch sử câu hỏi Hỏi AI lưu trên trình duyệt của người dùng.
  * Backend chưa có API `query-history`; khi có sẽ thay bằng dữ liệu từ server.
  */
-export interface QueryHistoryEntry {
-  id: string
-  question: string
-  status: 'COMPLETED' | 'NO_DATA' | 'FAILED'
-  sql: string | null
-  rowCount: number
-  durationMs: number
-  askedAt: string
-  error?: string
-}
+import type { QueryHistoryEntry } from '@/types/query-history'
 
 export const QUERY_HISTORY_KEY = 'unilake.queryHistory'
 const MAX_ENTRIES = 100

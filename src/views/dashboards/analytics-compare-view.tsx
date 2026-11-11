@@ -19,13 +19,12 @@ import {
 import { Card, EmptyState, MockNotice, PageHeader, Tag } from '@/components/page/page-parts'
 import { useDomain } from '@/hooks/use-domain'
 import { cn } from '@/lib/utils'
+import type { AnalyticsComparisonSortKey } from '@/types/analytics-comparison'
 
 import { MAJOR_COMPARISON, formatGrowth, growthPercent } from './dashboard-data'
 
-type SortKey = 'current' | 'growth'
-
 export function AnalyticsCompareView({ askHref }: { askHref: string }) {
-  const [sortKey, setSortKey] = useState<SortKey>('current')
+  const [sortKey, setSortKey] = useState<AnalyticsComparisonSortKey>('current')
   const { domain } = useDomain()
 
   const rows = MAJOR_COMPARISON.map((row) => ({

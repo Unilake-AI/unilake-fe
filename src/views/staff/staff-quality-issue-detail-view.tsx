@@ -21,14 +21,9 @@ import { toast } from 'sonner'
 import { getApiErrorCode, getApiErrorMessage, getErrorMessageForCode } from '@/api/http'
 import { API_GetDataset } from '@/api/shared/datasets'
 import { API_GetIngestionJob } from '@/api/shared/ingestion'
-import type { IngestionJob } from '@/api/shared/ingestion'
-import {
-  API_GetQualityIssue,
-  API_SubmitQualityResolution,
-  API_UploadQualityIssueFile,
-} from '@/api/shared/quality-issues'
-import type { QualityIssueDetail } from '@/api/shared/quality-issues'
-import type { StaffContext } from '@/api/shared/staff'
+import { API_GetQualityIssue } from '@/api/shared/quality-issues'
+import { API_SubmitQualityResolution } from '@/api/staff/quality-issues'
+import { API_UploadQualityIssueFile } from '@/api/staff/upload'
 import {
   Button,
   Card,
@@ -50,6 +45,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import type { IngestionJob } from '@/types/ingestion'
+import type { QualityIssueDetail } from '@/types/quality-issues'
+import type { StaffContext } from '@/types/staff-context'
 
 import { StaffContextGate } from './staff-context-gate'
 import {
@@ -853,7 +851,7 @@ function IssueDetailContent({ context, issueId }: { context: StaffContext; issue
     return (
       <div className="space-y-4">
         <Link
-          href="/analyst/quality-issues"
+          href="/staff/quality-issues"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:underline"
         >
           <ArrowLeft className="size-3.5" aria-hidden="true" />
@@ -887,7 +885,7 @@ function IssueDetailContent({ context, issueId }: { context: StaffContext; issue
           <div className="flex items-center gap-2">
             <Tag tone={statusTone(issue.status)}>{statusLabel(issue.status)}</Tag>
             <Link
-              href="/analyst/quality-issues"
+              href="/staff/quality-issues"
               className="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
             >
               <ArrowLeft className="size-3.5" aria-hidden="true" />

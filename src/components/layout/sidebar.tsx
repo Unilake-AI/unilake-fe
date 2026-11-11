@@ -39,7 +39,7 @@ import {
 
 import { ROLE_MENUS } from '@/config/menu'
 import { ROLE_DEFINITIONS, getWorkspaceForRole } from '@/config/roles'
-import type { RoleCode } from '@/types/auth'
+import type { SidebarProps } from '@/types/layout/sidebar'
 
 const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
   LayoutDashboard,
@@ -71,11 +71,6 @@ const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
   Upload,
   User,
   Workflow,
-}
-
-interface SidebarProps {
-  role: RoleCode
-  onCloseMobile?: () => void
 }
 
 export function Sidebar({ role, onCloseMobile }: SidebarProps) {

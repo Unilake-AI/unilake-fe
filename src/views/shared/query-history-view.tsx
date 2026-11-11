@@ -18,7 +18,7 @@ import {
 import { getDomain } from '@/config/domains'
 import { useDomain } from '@/hooks/use-domain'
 import { clearQueryHistory, readQueryHistory } from '@/lib/query-history'
-import type { QueryHistoryEntry } from '@/lib/query-history'
+import type { QueryHistoryEntry } from '@/types/query-history'
 
 export function QueryHistoryView({ askHref }: { askHref: string }) {
   const { domain } = useDomain()

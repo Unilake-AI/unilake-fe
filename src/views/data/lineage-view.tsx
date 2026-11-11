@@ -6,9 +6,8 @@ import type { FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowRight, RefreshCw, Search } from 'lucide-react'
 
-import { API_GetLineage } from '@/api/data-admin/governance'
+import { API_GetLineage } from '@/api/admindata/governance'
 import { getApiErrorMessage } from '@/api/http'
-import type { components } from '@/api/schema'
 import {
   Button,
   Card,
@@ -20,16 +19,15 @@ import {
   formatDateTime,
   statusTone,
 } from '@/components/page/page-parts'
-import type { Tone } from '@/components/page/page-parts'
 import { cn } from '@/lib/utils'
+import type { LineageNode } from '@/types/lineage'
+import type { StatusTone } from '@/types/page/page-parts'
 
 import { DATA_DOMAINS } from './data-helpers'
 
-type LineageNode = components['schemas']['LineageNode']
-
 const LAYER_ORDER = ['SOURCE', 'BRONZE', 'SILVER', 'GOLD']
 
-function layerTone(layer: string): Tone {
+function layerTone(layer: string): StatusTone {
   const upper = layer.toUpperCase()
   if (upper === 'SOURCE') return 'sky'
   return statusTone(upper)

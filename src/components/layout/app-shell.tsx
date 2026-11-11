@@ -1,20 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import type { ReactNode } from 'react'
 
 import { X } from 'lucide-react'
 
 import { DomainProvider } from '@/hooks/use-domain'
-import type { RoleCode } from '@/types/auth'
+import type { AppShellProps } from '@/types/layout/app-shell'
 
 import { Sidebar } from './sidebar'
 import { Topbar } from './topbar'
-
-interface AppShellProps {
-  role: RoleCode
-  children: ReactNode
-}
 
 export function AppShell({ role, children }: AppShellProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)

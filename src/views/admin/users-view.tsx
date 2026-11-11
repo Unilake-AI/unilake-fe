@@ -5,13 +5,13 @@ import { useState } from 'react'
 import { Search } from 'lucide-react'
 
 import { Card, KpiCard, MockNotice, PageHeader, Tag } from '@/components/page/page-parts'
-import type { Tone } from '@/components/page/page-parts'
 import { ROLE_PRIORITY } from '@/config/roles'
-import type { RoleCode } from '@/types/auth'
+import type { StatusTone } from '@/types/page/page-parts'
+import type { RoleCode } from '@/types/roles'
 
 import { SessionsPanel } from './sessions-panel'
 
-const ROLE_TONE: Record<RoleCode, Tone> = {
+const ROLE_TONE: Record<RoleCode, StatusTone> = {
   ADMIN: 'amber',
   DATA_ADMIN: 'emerald',
   VIEWER: 'slate',

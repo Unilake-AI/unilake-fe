@@ -1,4 +1,4 @@
-import type { SourceType } from '@/types/data'
+import type { DataSourceConfigField, SourceType } from '@/types/data-sources'
 
 /**
  * Hệ thống nguồn theo seed `infra/postgres/seed/04-source-systems.sql`.
@@ -11,20 +11,10 @@ export const SOURCE_SYSTEMS = [
   { id: 4, code: 'FILE_SHARE', name: 'Shared File Storage' },
 ] as const
 
-export interface ConfigField {
-  key: string
-  label: string
-  kind: 'text' | 'number' | 'boolean' | 'select' | 'json' | 'password'
-  required: boolean
-  options?: string[]
-  defaultValue: string
-  hint?: string
-}
-
 /** Khoá cấu hình theo loại nguồn, khớp `REQUIRED_CONFIG` trong `backend/app/repositories/datasource_repo.py`. */
 export const SOURCE_TYPE_CONFIG: Record<
   SourceType,
-  { label: string; connectionType: string; locationHint: string; fields: ConfigField[] }
+  { label: string; connectionType: string; locationHint: string; fields: DataSourceConfigField[] }
 > = {
   CSV: {
     label: 'CSV',

@@ -7,14 +7,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, ChevronRight, Edit3, Plus, RefreshCw, X } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { API_ListDatasets, API_ListSourceSystems } from '@/api/data-operations/datasets'
+import { API_ListDatasets, API_ListSourceSystems } from '@/api/admindata/datasets'
 import {
   API_CreateProfile,
   API_GetProfile,
   API_ListProfiles,
   API_UpdateProfile,
-} from '@/api/data-operations/profiles'
-import type { SilverProfileDefinition, SilverProfileRead } from '@/api/data-operations/profiles'
+} from '@/api/admindata/profiles'
 import { getApiErrorCode, getApiErrorMessage } from '@/api/http'
 import { API_ListDataSources } from '@/api/shared/data-sources'
 import {
@@ -26,6 +25,11 @@ import {
   PageHeader,
   Tag,
 } from '@/components/page/page-parts'
+import type {
+  SilverProfileDefinition,
+  SilverProfileMappingRow,
+  SilverProfileRead,
+} from '@/types/silver-profiles'
 
 const PAGE_SIZE = 20
 
@@ -57,11 +61,6 @@ function parseList(raw: string): string[] {
     .split(/[\n,]/)
     .map((item) => item.trim())
     .filter(Boolean)
-}
-
-interface MappingRow {
-  source: string
-  target: string
 }
 
 function ProfileFormPanel({
@@ -98,7 +97,7 @@ function ProfileFormPanel({
     def?.collapse_exact_duplicates ?? false
   )
 
-  const [mappingRows, setMappingRows] = useState<MappingRow[]>(() => {
+  const [mappingRows, setMappingRows] = useState<SilverProfileMappingRow[]>(() => {
     const entries = Object.entries(def?.field_mapping ?? {})
     return entries.length > 0
       ? entries.map(([source, target]) => ({ source, target }))

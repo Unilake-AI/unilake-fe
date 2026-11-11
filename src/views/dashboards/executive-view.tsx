@@ -8,14 +8,14 @@ import {
   ProgressRow,
   Tag,
 } from '@/components/page/page-parts'
-import type { Tone } from '@/components/page/page-parts'
+import type { StatusTone } from '@/types/page/page-parts'
 
 const KPIS = [
   {
     label: 'Quy mô người học',
     value: '18.450',
     hint: 'Tân sinh viên: 1.750 (102,9% chỉ tiêu)',
-    tone: 'emerald' as Tone,
+    tone: 'emerald' as StatusTone,
   },
   { label: 'Tốt nghiệp đúng hạn', value: '86,4%', hint: 'GPA trung bình: 3,24 / 4,0' },
   { label: 'Giảng viên cơ hữu', value: '842', hint: 'Tỷ lệ SV / GV: 21,9' },
@@ -23,7 +23,7 @@ const KPIS = [
     label: 'Chất lượng dữ liệu',
     value: '96,8%',
     hint: 'Đạt ngưỡng tin cậy từ 90%',
-    tone: 'emerald' as Tone,
+    tone: 'emerald' as StatusTone,
   },
 ]
 
@@ -74,7 +74,7 @@ const FACULTIES: {
   phd: number
   ratio: string
   status: string
-  tone: Tone
+  tone: StatusTone
 }[] = [
   {
     name: 'Khoa học Máy tính & AI',

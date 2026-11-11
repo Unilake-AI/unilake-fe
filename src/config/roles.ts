@@ -1,5 +1,5 @@
-import type { DomainCode } from '@/config/domains'
-import type { RoleCode, RoleDefinition, RoleWorkspace } from '@/types/auth'
+import type { DomainCode } from '@/types/domains'
+import type { RoleCode, RoleDefinition, RoleWorkspace } from '@/types/roles'
 
 /** Mã role do backend seed và trả trong JWT. */
 export const ROLE_CODES: Record<RoleCode, RoleCode> = {
@@ -46,7 +46,7 @@ export const ROLE_DEFINITIONS: Record<RoleCode, RoleDefinition> = {
   ADMISSIONS_STAFF: {
     code: 'ADMISSIONS_STAFF',
     name: 'Nhân viên Tuyển sinh',
-    homePath: '/analyst',
+    homePath: '/staff',
     description: 'Khai thác dữ liệu Tuyển sinh',
     badgeVariant: 'default',
   },
@@ -60,7 +60,7 @@ export const ROLE_DEFINITIONS: Record<RoleCode, RoleDefinition> = {
   ACADEMIC_STAFF: {
     code: 'ACADEMIC_STAFF',
     name: 'Nhân viên Đào tạo',
-    homePath: '/analyst',
+    homePath: '/staff',
     description: 'Khai thác dữ liệu Đào tạo',
     badgeVariant: 'default',
   },
@@ -74,7 +74,7 @@ export const ROLE_DEFINITIONS: Record<RoleCode, RoleDefinition> = {
   HR_STAFF: {
     code: 'HR_STAFF',
     name: 'Nhân viên Nhân sự',
-    homePath: '/analyst',
+    homePath: '/staff',
     description: 'Khai thác dữ liệu Nhân sự',
     badgeVariant: 'default',
   },
@@ -146,7 +146,7 @@ export function getDefaultHomeForRoles(roles: RoleCode[]): string {
 
 export function getWorkspaceFromPrefix(pathname: string): RoleWorkspace | null {
   if (pathname === '/data' || pathname.startsWith('/data/')) return 'DATA_ADMIN'
-  if (pathname === '/analyst' || pathname.startsWith('/analyst/')) return 'STAFF'
+  if (pathname === '/staff' || pathname.startsWith('/staff/')) return 'STAFF'
   if (pathname === '/manager' || pathname.startsWith('/manager/')) return 'MANAGER'
   if (pathname === '/viewer' || pathname.startsWith('/viewer/')) return 'VIEWER'
   if (pathname === '/admin' || pathname.startsWith('/admin/')) return 'ADMIN'
