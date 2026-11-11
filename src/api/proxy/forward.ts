@@ -3,7 +3,10 @@ import type { NextRequest } from 'next/server'
 
 import { API_BASE_URL, SESSION_ENDPOINTS } from '@/api/api'
 
-export async function forward(request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
+export async function forward(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
   const { path } = await params
   const token = (await cookies()).get('access_token')?.value
   const apiPath = `/${path.join('/')}`
