@@ -34,10 +34,10 @@ import type {
 const PAGE_SIZE = 20
 
 const inputClass =
-  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30 disabled:bg-slate-50 disabled:text-slate-500'
+  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]/30 disabled:bg-slate-50 disabled:text-slate-500'
 
 const textareaClass =
-  'w-full rounded-md border border-slate-300 bg-white p-2.5 font-mono text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30'
+  'w-full rounded-md border border-slate-300 bg-white p-2.5 font-mono text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]/30'
 
 function parseJsonObject(
   raw: string,
@@ -490,7 +490,7 @@ function ProfileFormPanel({
               type="checkbox"
               checked={collapseDuplicates}
               onChange={(e) => setCollapseDuplicates(e.target.checked)}
-              className="size-4 accent-indigo-600"
+              className="size-4 accent-[#b91830]"
             />
             Gộp bản ghi trùng lặp hoàn toàn (collapse_exact_duplicates)
           </label>
@@ -781,7 +781,7 @@ export function ProfilesView() {
                           setFormMode('none')
                         }}
                         className={`flex w-full items-start justify-between gap-2 px-4 py-3 text-left text-xs transition-colors ${
-                          active ? 'bg-indigo-50/70' : 'hover:bg-slate-50'
+                          active ? 'bg-[#fff3f5]/70' : 'hover:bg-slate-50'
                         }`}
                       >
                         <div className="min-w-0">
@@ -919,7 +919,7 @@ export function ProfilesView() {
                         ([src, dst]) => (
                           <tr key={src}>
                             <td className="px-3 py-1.5 font-mono text-slate-700">{src}</td>
-                            <td className="px-3 py-1.5 font-mono font-semibold text-indigo-700">
+                            <td className="px-3 py-1.5 font-mono font-semibold text-[#a9162e]">
                               {dst}
                             </td>
                           </tr>

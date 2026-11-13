@@ -53,7 +53,7 @@ export function WorkersView() {
                 type="checkbox"
                 checked={autoRefresh}
                 onChange={(e) => setAutoRefresh(e.target.checked)}
-                className="size-3.5 accent-indigo-600"
+                className="size-3.5 accent-[#b91830]"
               />
               Tự động làm mới (5 giây)
             </label>
@@ -74,7 +74,7 @@ export function WorkersView() {
       />
 
       <div className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
-        <Info className="mt-0.5 size-4 shrink-0 text-indigo-600" aria-hidden="true" />
+        <Info className="mt-0.5 size-4 shrink-0 text-[#b91830]" aria-hidden="true" />
         <p>
           <strong>Lưu ý trạng thái:</strong> Worker <strong>HEALTHY</strong> nhưng không có job hiện
           tại nghĩa là <strong>đang rảnh (Idle)</strong> và sẵn sàng nhận việc, khác với{' '}
@@ -174,7 +174,7 @@ export function WorkersView() {
                         {worker.current_job_id != null ? (
                           <Link
                             href={`/data/ingestion?jobId=${worker.current_job_id}`}
-                            className="font-semibold text-indigo-600 hover:underline"
+                            className="font-semibold text-[#b91830] hover:underline"
                           >
                             Job #{worker.current_job_id}
                           </Link>

@@ -167,7 +167,7 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
                 setMineOnly(e.target.checked)
                 setOffset(0)
               }}
-              className="size-4 accent-indigo-600"
+              className="size-4 accent-[#b91830]"
             />
             Chỉ hiển thị yêu cầu giao cho tôi
           </label>
@@ -231,7 +231,7 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
                         <td className="px-3 py-2.5">
                           <Link
                             href={`/staff/quality-issues/${issue.issue_id}`}
-                            className="font-semibold text-indigo-600 hover:underline"
+                            className="font-semibold text-[#b91830] hover:underline"
                           >
                             {issue.title}
                           </Link>
@@ -271,7 +271,7 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
                         <td className="px-3 py-2.5 text-right">
                           <Link
                             href={`/staff/quality-issues/${issue.issue_id}`}
-                            className="inline-flex items-center gap-1 font-semibold text-indigo-600 hover:underline"
+                            className="inline-flex items-center gap-1 font-semibold text-[#b91830] hover:underline"
                           >
                             Chi tiết
                             <ArrowRight className="size-3.5" aria-hidden="true" />

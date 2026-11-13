@@ -6,15 +6,38 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowRight, CircleAlert, Clock, Eye, EyeOff, LoaderCircle, X } from 'lucide-react'
+import {
+  CircleAlert,
+  Clock,
+  Eye,
+  EyeOff,
+  Info,
+  Layers3,
+  LoaderCircle,
+  LockKeyhole,
+  LogIn,
+  ShieldCheck,
+  Sparkles,
+  UserRound,
+  X,
+} from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { API_SignIn } from '@/api/auth/client'
 import { getApiErrorMessage } from '@/api/http'
+import campus from '@/assets/login/ai-campus-composition.webp'
+import aiLake from '@/assets/login/ai-data-lake-3d.png'
+import aiLeavesLeft from '@/assets/login/ai-leaves-left.png'
+import aiLeavesTop from '@/assets/login/ai-leaves-top-left.png'
+import aiAmbient from '@/assets/login/ai-login-ambient.webp'
+import aiSky from '@/assets/login/ai-sky-background.webp'
+import officialMark from '@/assets/login/duy-tan-official-mark.png'
 import { getDefaultHomeForRoles, toRoleCode } from '@/config/roles'
 import { SESSION_EXPIRED_PARAM, storeSession } from '@/lib/session'
 import type { LoginFormValues } from '@/types/auth'
+
+import styles from './login-view.module.css'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -31,11 +54,30 @@ export const loginSchema = z.object({
 
 const DEFAULT_LOGIN_ERROR = 'Tên đăng nhập hoặc mật khẩu chưa đúng. Vui lòng kiểm tra lại.'
 
-const fieldClass =
-  'h-10 w-full rounded-md border bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2'
-const fieldOk = 'border-slate-300 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/30'
-const fieldInvalid =
-  'border-2 border-rose-500 bg-rose-50 focus-visible:border-rose-500 focus-visible:ring-rose-500/30'
+function UniversityBrand({ compact = false }: { compact?: boolean }) {
+  return (
+    <div
+      className={compact ? styles.cardUniversityLogo : styles.universityLogo}
+      aria-label="Duy Tân University"
+    >
+      <Image src={officialMark} alt="" width={60} height={60} />
+      <span>
+        <strong>DUY TÂN</strong>
+        <small>UNIVERSITY</small>
+      </span>
+    </div>
+  )
+}
+
+function UniLakeMark() {
+  return (
+    <svg viewBox="0 0 44 42" width="36" height="36" aria-hidden="true" fill="currentColor">
+      <ellipse cx="22" cy="8" rx="20" ry="7" />
+      <path d="M2 17c5 4 12 6 20 6s15-2 20-6v5c0 5-9 8-20 8S2 27 2 22v-5Z" />
+      <path d="M2 28c5 4 12 6 20 6s15-2 20-6v5c0 5-9 8-20 8S2 38 2 33v-5Z" />
+    </svg>
+  )
+}
 
 export function LoginView() {
   const router = useRouter()
@@ -85,206 +127,227 @@ export function LoginView() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-white lg:grid lg:grid-cols-[2fr_3fr]">
-      <section
-        className="flex flex-col justify-between gap-6 bg-slate-900 px-6 py-8 lg:px-14 lg:py-12"
-        aria-label="Giới thiệu UniLake AI"
-      >
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-16 w-56 min-w-0 items-center overflow-hidden rounded-xl bg-slate-50 sm:h-[72px] sm:w-60">
-            <Image
-              src="/logo_text.png"
-              alt="UniLake AI"
-              width={1672}
-              height={941}
-              sizes="(min-width: 640px) 240px, 224px"
-              className="h-auto w-full"
-            />
-          </div>
-          <span className="shrink-0 rounded border border-indigo-200 bg-indigo-50 px-1.5 py-px font-mono text-[10px] font-bold text-indigo-700">
-            v1.0
+    <main className={styles.page}>
+      <div className={styles.sky} aria-hidden="true">
+        <Image src={aiSky} alt="" fill sizes="100vw" priority />
+      </div>
+      <div className={styles.ambient} aria-hidden="true">
+        <Image src={aiAmbient} alt="" fill sizes="70vw" />
+      </div>
+      <Image
+        className={styles.leavesTop}
+        src={aiLeavesTop}
+        alt=""
+        width={230}
+        height={250}
+        aria-hidden="true"
+      />
+      <Image
+        className={styles.leavesSide}
+        src={aiLeavesLeft}
+        alt=""
+        width={230}
+        height={250}
+        aria-hidden="true"
+      />
+      <Image
+        className={styles.waves}
+        src="/login/waves.svg"
+        alt=""
+        width={720}
+        height={180}
+        aria-hidden="true"
+      />
+      <section className={styles.intro} aria-label="Giới thiệu UniLake AI">
+        <div className={styles.brandRow}>
+          <UniversityBrand />
+          <span className={styles.brandDivider} aria-hidden="true" />
+          <span className={styles.uniLakeBrand}>
+            <span className={styles.databaseMark} aria-hidden="true">
+              <UniLakeMark />
+            </span>
+            UniLake AI
           </span>
         </div>
-
-        <div className="space-y-5">
-          <p className="hidden font-mono text-[10px] font-medium uppercase tracking-widest text-indigo-200 lg:block">
-            Data lake đa nguồn · AI Analytics
+        <div className={styles.introCopy}>
+          <span className={styles.redRule} aria-hidden="true" />
+          <h1>UniLake AI</h1>
+          <p className={styles.introTagline}>
+            Nền tảng Data Lake
+            <br />
+            cho Trường Đại học Duy Tân
           </p>
-          <h1 className="text-2xl font-bold leading-tight text-white lg:text-[34px] lg:leading-[42px]">
-            Dữ liệu quản trị đại học, hỏi bằng ngôn ngữ tự nhiên.
-          </h1>
-          <p className="hidden text-sm leading-6 text-slate-400 lg:block">
-            Tích hợp dữ liệu Tuyển sinh, Đào tạo và Nhân sự trên kiến trúc Bronze – Silver – Gold,
-            có quản trị chất lượng và truy vết nguồn gốc.
+          <p className={styles.introDescription}>
+            Gom dữ liệu từ các phòng ban, làm sạch và chuẩn hóa qua 3 tầng dữ liệu Bronze – Silver –
+            Gold, kiểm soát chất lượng dữ liệu và hỗ trợ lãnh đạo ra quyết định bằng Hỏi AI.
           </p>
-          <ul className="flex flex-wrap gap-2" aria-label="Các phân hệ dữ liệu">
-            {['Tuyển sinh', 'Đào tạo', 'Nhân sự'].map((domain) => (
-              <li
-                key={domain}
-                className="rounded-full border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-200"
-              >
-                {domain}
-              </li>
-            ))}
-          </ul>
-          <ol
-            className="hidden flex-wrap items-center gap-2 lg:flex"
-            aria-label="Luồng xử lý dữ liệu"
-          >
-            {['Nguồn', 'Bronze', 'Silver', 'Gold'].map((layer, index) => (
-              <li key={layer} className="flex items-center gap-2">
-                {index > 0 && <ArrowRight className="size-3.5 text-slate-500" aria-hidden="true" />}
-                <span
-                  className={`rounded-md bg-slate-800 px-2.5 py-1 font-mono text-[11px] font-bold ${
-                    layer === 'Bronze' || layer === 'Gold' ? 'text-amber-500' : 'text-slate-300'
-                  }`}
-                >
-                  {layer}
-                </span>
-              </li>
-            ))}
-          </ol>
         </div>
-
-        <p className="hidden font-mono text-[10px] font-medium text-slate-400 lg:block">
-          Phiên bản 1.0 · Capstone C1SE.11 · Đại học Duy Tân
-        </p>
+        <ul className={styles.features} aria-label="Các tính năng chính">
+          <li>
+            <span className={styles.featureIcon}>
+              <Layers3 size={21} />
+            </span>
+            <span>
+              <strong>Tích hợp dữ liệu</strong>
+              <small>Tuyển sinh · Đào tạo · Nhân sự</small>
+            </span>
+          </li>
+          <li>
+            <span className={styles.featureIcon}>
+              <ShieldCheck size={21} />
+            </span>
+            <span>
+              <strong>Dữ liệu tin cậy</strong>
+              <small>Làm sạch & kiểm soát chất lượng</small>
+            </span>
+          </li>
+          <li>
+            <span className={styles.featureIcon}>
+              <Sparkles size={21} />
+            </span>
+            <span>
+              <strong>Hỏi AI thông minh</strong>
+              <small>Tra cứu, phân tích và ra quyết định</small>
+            </span>
+          </li>
+        </ul>
+        <div className={styles.campus} aria-hidden="true">
+          <Image src={campus} alt="" width={563} height={355} priority />
+        </div>
       </section>
-
-      <section className="flex flex-1 items-start justify-center px-6 py-8 lg:items-center">
-        <div className="w-full max-w-[400px] space-y-4">
-          <p className="font-mono text-[10px] font-medium uppercase tracking-widest text-indigo-600">
-            Cổng truy cập
-          </p>
-          <header className="space-y-1">
-            <h2 className="text-[26px] font-bold leading-8 text-slate-900">Đăng nhập</h2>
-            <p className="text-[13px] leading-5 text-slate-500">
-              Dùng tài khoản của trường để truy cập hệ thống.
-            </p>
-          </header>
-
-          {sessionExpired && !serverError && (
+      <section className={styles.formArea} aria-label="Đăng nhập hệ thống">
+        <div className={styles.card}>
+          <header className={styles.cardBrand}>
+            <div className={styles.cardBrandText}>
+              <UniversityBrand compact />
+              <span className={styles.cardLake}>
+                <span className={styles.databaseMark} aria-hidden="true">
+                  <UniLakeMark />
+                </span>
+                UniLake AI
+              </span>
+              <p>Nền tảng Data Lake cho Trường Đại học Duy Tân</p>
+            </div>
             <div
-              role="status"
-              className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 p-3"
+              className={styles.lakeIllustration}
+              aria-label="Ba tầng dữ liệu Gold, Silver, Bronze"
+              role="img"
             >
-              <Clock className="mt-0.5 size-4 shrink-0 text-amber-700" aria-hidden="true" />
-              <div className="space-y-0.5">
-                <p className="text-xs font-bold text-amber-800">Phiên đăng nhập đã hết hạn</p>
-                <p className="text-xs leading-[17px] text-slate-700">
-                  Vui lòng đăng nhập lại để tiếp tục làm việc.
-                </p>
-              </div>
+              <Image
+                className={styles.lakeArt}
+                src={aiLake}
+                alt=""
+                width={190}
+                height={190}
+                sizes="190px"
+              />
+              <span className={styles.lakeGold}>Gold</span>
+              <span className={styles.lakeSilver}>Silver</span>
+              <span className={styles.lakeBronze}>Bronze</span>
+            </div>
+          </header>
+          <div className={styles.cardDivider} />
+          <div className={styles.formHeading}>
+            <h2>Đăng nhập</h2>
+            <p>Vui lòng đăng nhập bằng tài khoản công vụ của nhà trường.</p>
+          </div>
+          {sessionExpired && !serverError && (
+            <div role="status" className={styles.statusBox}>
+              <Clock size={18} aria-hidden="true" />
+              <span>
+                <strong>Phiên đăng nhập đã hết hạn</strong>
+                <br />
+                Vui lòng đăng nhập lại để tiếp tục làm việc.
+              </span>
             </div>
           )}
-
           {serverError && (
-            <div
-              role="alert"
-              className="flex items-start gap-2.5 rounded-lg border border-rose-200 bg-rose-50 p-3"
-            >
-              <CircleAlert className="mt-0.5 size-4 shrink-0 text-rose-700" aria-hidden="true" />
-              <div className="flex-1 space-y-0.5">
-                <p className="text-xs font-bold text-rose-700">Đăng nhập không thành công</p>
-                <p className="text-xs leading-[17px] text-slate-700">{serverError}</p>
-              </div>
+            <div role="alert" className={styles.errorBox}>
+              <CircleAlert size={18} aria-hidden="true" />
+              <span>
+                <strong>Đăng nhập không thành công</strong>
+                <br />
+                {serverError}
+              </span>
               <button
                 type="button"
                 aria-label="Đóng thông báo lỗi"
                 onClick={() => setServerError(null)}
-                className="rounded p-0.5 text-rose-700 hover:bg-rose-100"
               >
-                <X className="size-3.5" />
+                <X size={16} />
               </button>
             </div>
           )}
-
           <form
             noValidate
-            className="space-y-4"
+            className={styles.form}
             onSubmit={(event) => void handleSubmit(onSubmit)(event)}
           >
-            <div className="space-y-1.5">
-              <label htmlFor="username" className="block text-xs font-semibold text-slate-700">
-                Email hoặc tên đăng nhập
-              </label>
-              <input
-                id="username"
-                type="text"
-                autoComplete="username"
-                placeholder="tenban@university.edu.vn"
-                aria-invalid={errors.username ? true : undefined}
-                aria-describedby={errors.username ? 'username-error' : undefined}
-                className={`${fieldClass} ${errors.username ? fieldInvalid : fieldOk}`}
-                {...register('username')}
-              />
+            <div className={styles.field}>
+              <label htmlFor="username">Tên đăng nhập hoặc email</label>
+              <div className={styles.inputWrap}>
+                <UserRound size={17} aria-hidden="true" />
+                <input
+                  id="username"
+                  type="text"
+                  autoComplete="username"
+                  placeholder="Nhập tên đăng nhập hoặc email"
+                  aria-invalid={errors.username ? true : undefined}
+                  aria-describedby={errors.username ? 'username-error' : undefined}
+                  {...register('username')}
+                />
+              </div>
               {errors.username && (
-                <p id="username-error" className="text-xs text-rose-600">
+                <p id="username-error" className={styles.fieldError} role="alert">
                   {errors.username.message}
                 </p>
               )}
             </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="password" className="block text-xs font-semibold text-slate-700">
-                Mật khẩu
-              </label>
-              <div className="relative">
+            <div className={styles.field}>
+              <label htmlFor="password">Mật khẩu</label>
+              <div className={styles.inputWrap}>
+                <LockKeyhole size={17} aria-hidden="true" />
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
-                  placeholder="Nhập mật khẩu của bạn"
+                  placeholder="Nhập mật khẩu"
                   aria-invalid={errors.password ? true : undefined}
                   aria-describedby={errors.password ? 'password-error' : undefined}
-                  className={`${fieldClass} pr-10 ${errors.password ? fieldInvalid : fieldOk}`}
                   {...register('password')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((current) => !current)}
                   aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                  className="absolute right-1 top-1 flex size-8 items-center justify-center rounded text-slate-400 hover:text-slate-700"
                 >
-                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
               {errors.password && (
-                <p id="password-error" className="text-xs text-rose-600">
+                <p id="password-error" className={styles.fieldError} role="alert">
                   {errors.password.message}
                 </p>
               )}
             </div>
-
-            <div className="flex items-center justify-between gap-3">
-              <label className="flex items-center gap-2 text-xs text-slate-700">
-                <input
-                  type="checkbox"
-                  className="size-4 rounded border-slate-300 accent-indigo-600"
-                />
-                Ghi nhớ đăng nhập
-              </label>
-              <a
-                href="#forgot-password"
-                className="text-xs font-semibold text-indigo-600 hover:underline"
-              >
-                Quên mật khẩu?
-              </a>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-indigo-600 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-indigo-600/70"
-            >
-              {isSubmitting && <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />}
+            <button type="submit" disabled={isSubmitting} className={styles.submit}>
+              {isSubmitting ? (
+                <LoaderCircle size={18} className={styles.spinner} aria-hidden="true" />
+              ) : (
+                <LogIn size={18} aria-hidden="true" />
+              )}
               {isSubmitting ? 'Đang xác thực…' : 'Đăng nhập'}
             </button>
           </form>
-
-          <p className="text-[11px] leading-4 text-slate-500">
-            Quyền truy cập được cấp theo vai trò. Liên hệ Quản trị Hệ thống nếu bị từ chối.
-          </p>
+          <aside className={styles.notice}>
+            <Info size={20} aria-hidden="true" />
+            <span>
+              <strong>Lưu ý</strong>
+              <br />
+              Sử dụng tài khoản được cấp bởi Trường Đại học Duy Tân. Nếu gặp vấn đề khi đăng nhập,
+              vui lòng liên hệ Quản trị hệ thống.
+            </span>
+          </aside>
         </div>
       </section>
     </main>

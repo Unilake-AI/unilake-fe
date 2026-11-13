@@ -54,7 +54,7 @@ import { domainLabel, formatCellValue } from './data-helpers'
 const PAGE_SIZE = 20
 
 const inputClass =
-  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30'
+  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]/30'
 
 function SampleRowsTable({ title, rows }: { title: string; rows: Array<Record<string, unknown>> }) {
   if (rows.length === 0) {
@@ -593,7 +593,7 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
                             setSelectedRunId(run.run_id)
                             setLoadReportRunId(null)
                           }}
-                          className="font-semibold text-indigo-600 hover:underline"
+                          className="font-semibold text-[#b91830] hover:underline"
                         >
                           {run.run_id.slice(0, 8)}…
                         </button>

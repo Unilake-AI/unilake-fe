@@ -16,7 +16,15 @@ import {
   YAxis,
 } from 'recharts'
 
-import { Card, EmptyState, MockNotice, PageHeader, Tag } from '@/components/page/page-parts'
+import {
+  Card,
+  EmptyState,
+  KpiCard,
+  MockNotice,
+  PageHeader,
+  Tag,
+  formatNumber,
+} from '@/components/page/page-parts'
 import { useDomain } from '@/hooks/use-domain'
 import { cn } from '@/lib/utils'
 import type { AnalyticsComparisonSortKey } from '@/types/analytics-comparison'
@@ -34,6 +42,10 @@ export function AnalyticsCompareView({ askHref }: { askHref: string }) {
   })).sort((a, b) =>
     sortKey === 'current' ? b.current - a.current : (b.growth ?? 0) - (a.growth ?? 0)
   )
+  const previousTotal = rows.reduce((total, row) => total + row.previous, 0)
+  const currentTotal = rows.reduce((total, row) => total + row.current, 0)
+  const change = currentTotal - previousTotal
+  const improvingMajors = rows.filter((row) => row.change > 0).length
 
   if (domain.code !== 'all' && domain.code !== 'admissions') {
     return (
@@ -61,7 +73,7 @@ export function AnalyticsCompareView({ askHref }: { askHref: string }) {
         actions={
           <Link
             href={askHref}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-indigo-200 bg-indigo-50 px-3 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[#ebc5cd] bg-[#fff3f5] px-3 text-xs font-semibold text-[#a9162e] hover:bg-[#fbe4e9]"
           >
             <Sparkles className="size-3.5" aria-hidden="true" />
             Hỏi AI về dữ liệu này
@@ -70,23 +82,64 @@ export function AnalyticsCompareView({ askHref }: { askHref: string }) {
       />
       <MockNotice />
 
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard label="Nhập học kỳ trước" value={formatNumber(previousTotal)} hint="Năm 2025" />
+        <KpiCard
+          label="Nhập học kỳ hiện tại"
+          value={formatNumber(currentTotal)}
+          hint="Năm 2026"
+          tone="indigo"
+        />
+        <KpiCard
+          label="Biến động toàn bộ"
+          value={`${change > 0 ? '+' : ''}${formatNumber(change)}`}
+          hint={formatGrowth(growthPercent(previousTotal, currentTotal))}
+          tone={change >= 0 ? 'emerald' : 'rose'}
+        />
+        <KpiCard
+          label="Ngành tăng trưởng"
+          value={`${improvingMajors}/${rows.length}`}
+          hint="So với cùng kỳ"
+          tone="sky"
+        />
+      </div>
+
       <Card
         title="So sánh số nhập học theo ngành"
         subtitle="2026 so với cùng kỳ năm trước (2025)"
         right={<Tag tone="indigo">{rows.length} nhóm</Tag>}
+        bodyClassName="px-3 pb-5 pt-6 sm:px-5"
       >
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={rows} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-              <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="major" tick={{ fontSize: 10, fill: '#64748b' }} interval={0} />
-              <YAxis tick={{ fontSize: 11, fill: '#64748b' }} />
-              <Tooltip />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="previous" name="2025" fill="#cbd5e1" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="current" name="2026" fill="#4f46e5" radius={[3, 3, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+        <p className="mb-3 text-xs text-[#65718d] sm:hidden">Vuốt ngang để xem toàn bộ ngành.</p>
+        <div className="overflow-x-auto pb-1">
+          <div className="h-72 min-w-[620px] sm:h-80 sm:min-w-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={rows} margin={{ top: 8, right: 10, left: -16, bottom: 12 }}>
+                <CartesianGrid stroke="#e5e9f4" strokeDasharray="4 4" vertical={false} />
+                <XAxis
+                  dataKey="major"
+                  tick={{ fontSize: 10, fill: '#596884' }}
+                  tickLine={false}
+                  axisLine={false}
+                  interval={0}
+                  angle={-15}
+                  textAnchor="end"
+                  height={62}
+                />
+                <YAxis tick={{ fontSize: 11, fill: '#596884' }} tickLine={false} axisLine={false} />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: 12,
+                    borderColor: '#dfe4f2',
+                    boxShadow: '0 12px 30px rgba(20,33,66,.1)',
+                  }}
+                />
+                <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+                <Bar dataKey="previous" name="2025" fill="#c9d0e5" radius={[5, 5, 0, 0]} />
+                <Bar dataKey="current" name="2026" fill="#514cf2" radius={[5, 5, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </Card>
 
@@ -108,7 +161,7 @@ export function AnalyticsCompareView({ askHref }: { askHref: string }) {
                 onClick={() => setSortKey(key)}
                 className={cn(
                   'rounded px-2 py-1 text-[11px] font-medium',
-                  sortKey === key ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+                  sortKey === key ? 'bg-[#b91830] text-white' : 'text-slate-600 hover:bg-slate-100'
                 )}
               >
                 {label}

@@ -1,12 +1,14 @@
 'use client'
 
+import { Database, ShieldCheck, UserRound } from 'lucide-react'
+
 import { Card, PageHeader, Tag, formatNumber } from '@/components/page/page-parts'
 import { ROLE_DEFINITIONS, toRoleCode } from '@/config/roles'
 import { useAuth } from '@/hooks/use-auth'
 import type { StaffContext } from '@/types/staff-context'
 import { SessionsPanel } from '@/views/admin/sessions-panel'
 
-import { StaffContextGate } from './staff-context-gate'
+import { DepartmentAssignmentBanner, StaffContextGate } from './staff-context-gate'
 import { formatBytes } from './staff-helpers'
 
 function ProfileContent({ context }: { context: StaffContext }) {
@@ -19,11 +21,35 @@ function ProfileContent({ context }: { context: StaffContext }) {
         title="Hồ sơ cá nhân và phiên đăng nhập"
         description="Thông tin tài khoản, phạm vi lĩnh vực, phân công đơn vị và quản lý các phiên đăng nhập đang hoạt động."
       />
+      {context.needs_department_assignment && <DepartmentAssignmentBanner note={context.note} />}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card title="Thông tin tài khoản và phân công">
-          <dl className="space-y-3 text-xs">
-            <div className="flex justify-between gap-3">
+        <Card
+          title={
+            <span className="flex items-center gap-2">
+              <UserRound className="size-5 text-[#5146e7]" />
+              Thông tin tài khoản và phân công
+            </span>
+          }
+        >
+          <div className="mb-5 flex items-center gap-4 rounded-xl bg-[#f6f6ff] p-4">
+            <span className="flex size-16 shrink-0 items-center justify-center rounded-full bg-[#7369f1] text-xl font-bold text-white">
+              {context.username.slice(0, 2).toUpperCase()}
+            </span>
+            <div>
+              <strong className="text-base text-[#111a35]">{context.username}</strong>
+              <p className="text-xs text-[#596884]">
+                {context.roles
+                  .map((r) => {
+                    const code = toRoleCode(r)
+                    return code ? ROLE_DEFINITIONS[code].name : r
+                  })
+                  .join(', ')}
+              </p>
+            </div>
+          </div>
+          <dl className="divide-y divide-[#e5e9f3] text-sm [&>div]:py-3">
+            <div className="flex justify-between gap-3 py-2">
               <dt className="text-slate-500">Tên đăng nhập</dt>
               <dd className="font-mono font-semibold text-slate-900">{context.username}</dd>
             </div>
@@ -73,8 +99,18 @@ function ProfileContent({ context }: { context: StaffContext }) {
           </dl>
         </Card>
 
-        <Card title="Quyền thao tác và giới hạn tiếp nhận">
-          <dl className="space-y-3 text-xs">
+        <Card
+          title={
+            <span className="flex items-center gap-2">
+              <ShieldCheck className="size-5 text-[#5146e7]" />
+              Quyền thao tác và giới hạn tiếp nhận
+            </span>
+          }
+        >
+          <div className="mb-4 flex size-12 items-center justify-center rounded-xl bg-[#f0f2ff] text-[#5146e7]">
+            <Database className="size-6" />
+          </div>
+          <dl className="divide-y divide-[#e5e9f3] text-sm [&>div]:py-3">
             <div className="flex justify-between gap-3">
               <dt className="text-slate-500">Quyền tải tệp lên Bronze</dt>
               <dd>
@@ -113,5 +149,9 @@ function ProfileContent({ context }: { context: StaffContext }) {
 }
 
 export function StaffProfileView() {
-  return <StaffContextGate>{(context) => <ProfileContent context={context} />}</StaffContextGate>
+  return (
+    <StaffContextGate showAssignmentBanner={false}>
+      {(context) => <ProfileContent context={context} />}
+    </StaffContextGate>
+  )
 }

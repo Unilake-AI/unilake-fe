@@ -42,7 +42,7 @@ describe('UserMenu', () => {
     render(<UserMenu role="ACADEMIC_STAFF" />)
 
     const trigger = screen.getByRole('button', { name: 'Mở menu người dùng' })
-    expect(trigger).toHaveTextContent('Trần Thị Mai Phương')
+    expect(trigger).toHaveTextContent('academic_staff')
     expect(trigger).toHaveTextContent('[ACADEMIC_STAFF]')
   })
 

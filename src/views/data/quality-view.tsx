@@ -63,7 +63,7 @@ import { domainLabel } from './data-helpers'
 const PAGE_SIZE = 20
 
 const inputClass =
-  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30'
+  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]/30'
 
 function CreateIssuePanel({
   onClose,
@@ -210,14 +210,14 @@ function CreateIssuePanel({
                   <label
                     key={rec.record_id}
                     className={`flex cursor-pointer items-center gap-3 px-3 py-2 ${
-                      checked ? 'bg-indigo-50/70' : 'hover:bg-slate-50'
+                      checked ? 'bg-[#fff3f5]/70' : 'hover:bg-slate-50'
                     }`}
                   >
                     <input
                       type="checkbox"
                       checked={checked}
                       onChange={() => toggleRecord(rec.record_id)}
-                      className="size-4 accent-indigo-600"
+                      className="size-4 accent-[#b91830]"
                     />
                     <span className="font-mono font-semibold text-slate-900">
                       Dòng {rec.record_position}
@@ -546,7 +546,7 @@ function IssueDetailPanel({ issueId }: { issueId: string }) {
             {issue.resolution_job_id && (
               <Link
                 href={`/data/cleaning?jobId=${issue.resolution_job_id}`}
-                className="font-semibold text-indigo-600 hover:underline"
+                className="font-semibold text-[#b91830] hover:underline"
               >
                 Chạy Cleaning cho Job #{issue.resolution_job_id}
               </Link>
@@ -657,7 +657,7 @@ function IssueDetailPanel({ issueId }: { issueId: string }) {
                               : [...prev, rec.record_id]
                           )
                         }
-                        className="size-3.5 accent-indigo-600"
+                        className="size-3.5 accent-[#b91830]"
                       />
                       <span className="font-mono">Dòng {rec.record_position}</span>
                       <span className="text-slate-500">({rec.error_codes.join(', ')})</span>
@@ -1007,13 +1007,13 @@ export function QualityView() {
                       return (
                         <tr
                           key={issue.issue_id}
-                          className={active ? 'bg-indigo-50/60' : 'hover:bg-slate-50'}
+                          className={active ? 'bg-[#fff3f5]/60' : 'hover:bg-slate-50'}
                         >
                           <td className="px-3 py-2.5">
                             <button
                               type="button"
                               onClick={() => setSelectedIssueId(issue.issue_id)}
-                              className="text-left font-semibold text-indigo-600 hover:underline"
+                              className="text-left font-semibold text-[#b91830] hover:underline"
                             >
                               {issue.title}
                             </button>

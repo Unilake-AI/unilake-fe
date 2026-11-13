@@ -32,7 +32,7 @@ import type { DataSourceFilter, DataSourceItem, DataSourceStatusFilter } from '@
 const PAGE_SIZE = 10
 
 const selectClass =
-  'h-8 rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500'
+  'h-8 rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]'
 
 export function SourcesView() {
   const queryClient = useQueryClient()
@@ -132,7 +132,7 @@ export function SourcesView() {
         actions={
           <Link
             href="/data/sources/new"
-            className="inline-flex h-8 items-center gap-1.5 rounded-md bg-indigo-600 px-3 text-xs font-semibold text-white hover:bg-indigo-700"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#b91830] px-3 text-xs font-semibold text-white hover:bg-[#9e1429]"
           >
             <Plus className="size-3.5" aria-hidden="true" />
             Thêm nguồn dữ liệu
@@ -141,12 +141,12 @@ export function SourcesView() {
       />
 
       <div className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
-        <Info className="mt-0.5 size-4 shrink-0 text-indigo-600" aria-hidden="true" />
+        <Info className="mt-0.5 size-4 shrink-0 text-[#b91830]" aria-hidden="true" />
         <p>
           <strong>Phân biệt Nguồn dữ liệu và Bộ dữ liệu (Dataset):</strong> Nguồn dữ liệu khai báo
           vị trí và giao thức đọc từ hệ thống ngoài; để lưu trữ vật lý tại tầng Bronze và chạy
           pipeline, hãy đăng ký hoặc chọn bộ dữ liệu tương ứng tại{' '}
-          <Link href="/data/datasets" className="font-semibold text-indigo-600 hover:underline">
+          <Link href="/data/datasets" className="font-semibold text-[#b91830] hover:underline">
             Bộ dữ liệu (Datasets)
           </Link>
           .
@@ -165,7 +165,7 @@ export function SourcesView() {
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="Tìm tên nguồn hoặc vị trí…"
-            className="h-8 w-56 rounded-md border border-slate-300 bg-white pl-8 pr-2 text-xs text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            className="h-8 w-56 rounded-md border border-slate-300 bg-white pl-8 pr-2 text-xs text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]"
           />
         </label>
         <label className="flex items-center gap-1.5 text-xs text-slate-500">
@@ -294,7 +294,7 @@ export function SourcesView() {
                   return (
                     <tr
                       key={source.data_source_id}
-                      className={`align-top ${isSelected ? 'bg-indigo-50/50' : 'hover:bg-slate-50'}`}
+                      className={`align-top ${isSelected ? 'bg-[#fff3f5]/50' : 'hover:bg-slate-50'}`}
                     >
                       <td className="px-3 py-2.5">
                         <button
@@ -302,7 +302,7 @@ export function SourcesView() {
                           onClick={() =>
                             setSelectedSourceId(isSelected ? null : source.data_source_id)
                           }
-                          className="text-left font-semibold text-indigo-700 hover:underline"
+                          className="text-left font-semibold text-[#a9162e] hover:underline"
                         >
                           {source.source_name}
                         </button>
@@ -347,7 +347,7 @@ export function SourcesView() {
                       <td className="whitespace-nowrap px-3 py-2.5 text-right">
                         <Link
                           href={`/data/sources/${source.data_source_id}`}
-                          className="inline-flex h-8 items-center rounded-md px-3 text-xs font-semibold text-indigo-700 hover:bg-indigo-50"
+                          className="inline-flex h-8 items-center rounded-md px-3 text-xs font-semibold text-[#a9162e] hover:bg-[#fff3f5]"
                           aria-label={`Sửa nguồn ${source.source_name}`}
                         >
                           Sửa

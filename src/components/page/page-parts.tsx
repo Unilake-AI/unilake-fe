@@ -1,44 +1,130 @@
 import type { ReactNode } from 'react'
 
-import { ChevronRight, CircleAlert, Inbox, LoaderCircle, RefreshCw } from 'lucide-react'
+import Image from 'next/image'
+import type { StaticImageData } from 'next/image'
 
+import {
+  CheckCircle2,
+  ChartNoAxesCombined,
+  ChevronRight,
+  CircleAlert,
+  Clock3,
+  Database,
+  FileClock,
+  FileWarning,
+  GitBranch,
+  Layers3,
+  LoaderCircle,
+  Network,
+  RefreshCw,
+  Search,
+  Settings2,
+  Sparkles,
+  UploadCloud,
+  UsersRound,
+} from 'lucide-react'
+
+import emptyData from '@/assets/dashboard/empty-data.webp'
+import campusArtwork from '@/assets/login/duy-tan-campus-source.png'
 import { cn } from '@/lib/utils'
 import type { StatusTone } from '@/types/page/page-parts'
 
-/** Khung trang theo Figma: breadcrumb, tiêu đề, mô tả và nhóm nút bên phải. */
+/** Biểu tượng của từng nhóm trang, dùng chung cho ba phân hệ phòng ban. */
+function getPageIcon(title: string) {
+  if (/người dùng|phân quyền|hồ sơ cá nhân/i.test(title)) return UsersRound
+  if (/nhật ký|lịch sử|phiên đăng nhập/i.test(title)) return FileClock
+  if (/cấu hình|profiles|settings/i.test(title)) return Settings2
+  if (/lineage|truy vết/i.test(title)) return GitBranch
+  if (/quarantine|lỗi|chất lượng|quality/i.test(title)) return FileWarning
+  if (/nguồn dữ liệu|bộ dữ liệu|catalog|silver|bronze/i.test(title)) return Layers3
+  if (/nạp dữ liệu|ingestion|upload/i.test(title)) return UploadCloud
+  if (/worker|pipeline|làm sạch|cleaning/i.test(title)) return Network
+  if (/khám phá|tìm kiếm/i.test(title)) return Search
+  if (/hỏi ai|nlq/i.test(title)) return Sparkles
+  if (/tổng quan|dashboard|bảng điều khiển|phân tích|so sánh|điều hành/i.test(title))
+    return ChartNoAxesCombined
+  return Database
+}
+
+/** Khung trang theo Figma: breadcrumb, biểu tượng, tiêu đề, mô tả và thao tác. */
 export function PageHeader({
   breadcrumb,
   title,
   description,
   actions,
+  illustration,
 }: {
   breadcrumb: string[]
   title: string
   description?: ReactNode
   actions?: ReactNode
+  /** Hình minh hoạ đặt ở góc phải (vd. robot ở trang Hỏi AI); thay cho ảnh khuôn viên. */
+  illustration?: StaticImageData
 }) {
+  const Icon = getPageIcon(title)
+  const isOverview = /tổng quan|dashboard|điều hành/i.test(title)
   return (
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-      <div className="min-w-0 space-y-1">
+    <header className="relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-[#e5e9f5] bg-[radial-gradient(circle_at_88%_15%,rgba(210,221,255,.72),transparent_34%),linear-gradient(110deg,#fff_0%,#f5f6ff_100%)] p-5 shadow-[0_8px_24px_rgba(31,43,83,.045)] sm:px-6 lg:min-h-[145px] lg:flex-row lg:items-end lg:justify-between">
+      {illustration ? (
+        <Image
+          src={illustration}
+          alt=""
+          aria-hidden="true"
+          width={260}
+          height={260}
+          priority
+          className="pointer-events-none absolute -bottom-16 right-0 hidden h-auto w-44 object-contain sm:right-7 sm:block sm:w-56"
+        />
+      ) : (
+        isOverview && (
+          <Image
+            src={campusArtwork}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-[45%] object-cover object-center opacity-[.13] [mask-image:linear-gradient(to_right,transparent,black_45%)] lg:block"
+          />
+        )
+      )}
+      <div
+        className={cn(
+          'relative z-10 min-w-0 space-y-3',
+          illustration && 'sm:max-w-[calc(100%-15rem)]'
+        )}
+      >
         <nav aria-label="Breadcrumb">
-          <ol className="flex flex-wrap items-center gap-1 font-mono text-[10px] font-medium uppercase tracking-wider text-slate-400">
+          <ol className="flex flex-wrap items-center gap-2 text-xs font-medium text-[#63708d]">
             {breadcrumb.map((item, index) => (
               <li key={`${item}-${index}`} className="flex items-center gap-1">
-                {index > 0 && <ChevronRight className="size-3" aria-hidden="true" />}
-                <span className={index === breadcrumb.length - 1 ? 'text-indigo-600' : undefined}>
+                {index > 0 && <ChevronRight className="size-3.5" aria-hidden="true" />}
+                <span
+                  className={
+                    index === breadcrumb.length - 1 ? 'font-semibold text-[#ad1830]' : undefined
+                  }
+                >
                   {item}
                 </span>
               </li>
             ))}
           </ol>
         </nav>
-        <h1 className="text-xl font-bold text-slate-900">{title}</h1>
-        {description && (
-          <p className="max-w-3xl text-[13px] leading-5 text-slate-500">{description}</p>
-        )}
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#e9eaff] text-[#514cf2] shadow-[inset_0_0_0_1px_rgba(94,89,232,.08)] sm:size-12">
+            <Icon className="size-6" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold tracking-tight text-[#0f1831] sm:text-[30px]">
+              {title}
+            </h1>
+            {description && (
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-[#596884]">{description}</p>
+            )}
+          </div>
+        </div>
       </div>
-      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
-    </div>
+      {actions && (
+        <div className="relative z-10 flex shrink-0 flex-wrap items-center gap-2">{actions}</div>
+      )}
+    </header>
   )
 }
 
@@ -58,17 +144,22 @@ export function Card({
   bodyClassName?: string
 }) {
   return (
-    <section className={cn('rounded-lg border border-slate-200 bg-white', className)}>
+    <section
+      className={cn(
+        'min-w-0 rounded-2xl border border-[#dfe4f2] bg-white shadow-[0_8px_24px_rgba(31,43,83,.055)]',
+        className
+      )}
+    >
       {(title || right) && (
-        <header className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-200 px-4 py-3">
+        <header className="flex flex-wrap items-start justify-between gap-2 border-b border-[#e5e9f3] px-5 py-4">
           <div className="min-w-0">
-            {title && <h2 className="text-sm font-semibold text-slate-900">{title}</h2>}
-            {subtitle && <p className="mt-0.5 text-[11px] text-slate-500">{subtitle}</p>}
+            {title && <h2 className="text-base font-bold text-[#111a35]">{title}</h2>}
+            {subtitle && <p className="mt-1 text-xs text-[#65718d]">{subtitle}</p>}
           </div>
           {right}
         </header>
       )}
-      <div className={cn('p-4', bodyClassName)}>{children}</div>
+      <div className={cn('p-5', bodyClassName)}>{children}</div>
     </section>
   )
 }
@@ -84,13 +175,47 @@ export function KpiCard({
   hint?: ReactNode
   tone?: StatusTone
 }) {
+  const Icon =
+    tone === 'emerald'
+      ? CheckCircle2
+      : tone === 'amber'
+        ? Clock3
+        : tone === 'rose'
+          ? CircleAlert
+          : Database
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <p className="font-mono text-[10px] font-medium uppercase tracking-wider text-slate-500">
-        {label}
-      </p>
-      <p className="mt-1.5 font-mono text-2xl font-bold text-slate-900">{value}</p>
-      {hint && <p className={cn('mt-1 text-[11px]', HINT_TONE[tone])}>{hint}</p>}
+    <div className="relative overflow-hidden rounded-2xl border border-[#dfe4f2] bg-white p-5 shadow-[0_8px_24px_rgba(31,43,83,.055)]">
+      <div
+        aria-hidden="true"
+        className={cn(
+          'pointer-events-none absolute -bottom-12 -right-12 size-32 rounded-full blur-2xl',
+          {
+            'bg-[#e5e7ff]': tone === 'indigo' || tone === 'slate',
+            'bg-[#dcf8e5]': tone === 'emerald',
+            'bg-[#fff0d4]': tone === 'amber',
+            'bg-[#ffe0e8]': tone === 'rose',
+            'bg-[#e4f1ff]': tone === 'sky',
+          }
+        )}
+      />
+      <div
+        aria-hidden="true"
+        className={cn(
+          'relative mb-3 flex size-11 items-center justify-center rounded-2xl text-xl font-bold',
+          {
+            'bg-[#eef0ff] text-[#4f52e8]': tone === 'indigo' || tone === 'slate',
+            'bg-[#e5f8ea] text-[#15913a]': tone === 'emerald',
+            'bg-[#fff3df] text-[#e58a00]': tone === 'amber',
+            'bg-[#fce8ee] text-[#c51c3d]': tone === 'rose',
+            'bg-[#e8f3ff] text-[#2376d6]': tone === 'sky',
+          }
+        )}
+      >
+        <Icon className="size-6" />
+      </div>
+      <p className="relative text-xs font-semibold text-[#4a5875]">{label}</p>
+      <p className="relative mt-1 text-3xl font-bold text-[#111a35]">{value}</p>
+      {hint && <p className={cn('relative mt-1 text-xs', HINT_TONE[tone])}>{hint}</p>}
     </div>
   )
 }
@@ -244,7 +369,7 @@ export function Button({
   icon?: ReactNode
 }) {
   const styles = {
-    primary: 'bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-600/60',
+    primary: 'bg-[#b91830] text-white hover:bg-[#9e1429] disabled:bg-[#b91830]/60',
     outline: 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
     soft: 'border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100',
     ghost: 'text-slate-600 hover:bg-slate-100',
@@ -253,7 +378,7 @@ export function Button({
     <button
       type="button"
       className={cn(
-        'inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-70',
+        'inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830] disabled:cursor-not-allowed disabled:opacity-70',
         styles,
         className
       )}
@@ -267,7 +392,7 @@ export function Button({
 
 export function FilterChip({ label, value }: { label: string; value: string }) {
   return (
-    <span className="inline-flex h-8 items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 text-xs">
+    <span className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#cbd4e3] bg-white px-3 text-xs shadow-sm">
       <span className="text-slate-500">{label}</span>
       <span className="font-medium text-slate-800">{value}</span>
     </span>
@@ -290,7 +415,7 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
   return (
     <div
       role="alert"
-      className="flex flex-col items-center gap-3 rounded-md border border-rose-200 bg-rose-50 px-4 py-6 text-center"
+      className="flex flex-col items-center gap-3 rounded-xl border border-rose-200 bg-[#fff5f7] px-4 py-7 text-center"
     >
       <div className="flex items-center gap-2 text-sm font-medium text-rose-700">
         <CircleAlert className="size-4" aria-hidden="true" />
@@ -307,19 +432,23 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
 
 export function EmptyState({ title, description }: { title: string; description?: string }) {
   return (
-    <div className="flex flex-col items-center gap-1.5 py-10 text-center">
-      <Inbox className="size-6 text-slate-300" aria-hidden="true" />
-      <p className="text-sm font-medium text-slate-700">{title}</p>
-      {description && <p className="max-w-md text-xs text-slate-500">{description}</p>}
+    <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
+      <Image src={emptyData} alt="" width={92} height={92} className="size-20 object-contain" />
+      <p className="text-sm font-bold text-[#17233d]">{title}</p>
+      {description && <p className="max-w-md text-xs leading-5 text-[#65718d]">{description}</p>}
     </div>
   )
 }
 
 export function MockNotice() {
   return (
-    <p className="rounded-md border border-dashed border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-800">
-      Trang này đang hiển thị dữ liệu minh họa.
-    </p>
+    <div
+      className="flex items-center gap-3 rounded-xl border border-amber-300 bg-[#fffae9] px-4 py-3 text-xs font-medium text-amber-900 shadow-sm"
+      role="note"
+    >
+      <CircleAlert className="size-4 shrink-0" aria-hidden="true" />
+      <span>Trang này đang hiển thị dữ liệu minh họa.</span>
+    </div>
   )
 }
 

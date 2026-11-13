@@ -53,7 +53,7 @@ const createDatasetSchema = z.object({
 })
 
 const inputClass =
-  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30'
+  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]/30'
 
 function CreateDatasetPanel({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient()
@@ -194,7 +194,7 @@ function CreateDatasetPanel({ onClose }: { onClose: () => void }) {
             id="ds-description"
             rows={2}
             maxLength={4000}
-            className="w-full rounded-md border border-slate-300 bg-white p-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30"
+            className="w-full rounded-md border border-slate-300 bg-white p-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]/30"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Dữ liệu nhân sự dùng cho tầng Bronze"
@@ -302,11 +302,11 @@ export function DatasetsView() {
       />
 
       <div className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
-        <Info className="mt-0.5 size-4 shrink-0 text-indigo-600" aria-hidden="true" />
+        <Info className="mt-0.5 size-4 shrink-0 text-[#b91830]" aria-hidden="true" />
         <p>
           <strong>Lưu ý kiến trúc:</strong> Đăng ký bộ dữ liệu chỉ khai báo metadata trong hệ thống,
           chưa tạo dữ liệu vật lý trên Bronze. Sau khi đăng ký, hãy vào{' '}
-          <Link href="/data/ingestion" className="font-semibold text-indigo-600 hover:underline">
+          <Link href="/data/ingestion" className="font-semibold text-[#b91830] hover:underline">
             Nạp dữ liệu (Ingestion)
           </Link>{' '}
           để tải tệp hoặc thu thập từ nguồn đã đăng ký.
@@ -412,9 +412,9 @@ export function DatasetsView() {
                     return (
                       <tr
                         key={ds.dataset_id}
-                        className={isSelected ? 'bg-indigo-50/60' : 'hover:bg-slate-50'}
+                        className={isSelected ? 'bg-[#fff3f5]/60' : 'hover:bg-slate-50'}
                       >
-                        <td className="px-3 py-2.5 font-mono font-semibold text-indigo-600">
+                        <td className="px-3 py-2.5 font-mono font-semibold text-[#b91830]">
                           <button
                             type="button"
                             onClick={() => setSelectedId(isSelected ? null : ds.dataset_id)}

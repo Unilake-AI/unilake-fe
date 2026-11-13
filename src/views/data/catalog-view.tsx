@@ -37,7 +37,7 @@ import { cn } from '@/lib/utils'
 import type { CatalogEntry, CatalogField, CatalogTable, DataLayer } from '@/types/catalog'
 
 const inputClass =
-  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30 disabled:bg-slate-50 disabled:text-slate-500'
+  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]/30 disabled:bg-slate-50 disabled:text-slate-500'
 
 function entryKey(entry: Pick<CatalogEntry, 'domain_id' | 'layer' | 'dataset'>): string {
   return `${entry.domain_id}.${entry.layer}.${entry.dataset}`
@@ -351,7 +351,7 @@ function CatalogFormPanel({
                         )
                       )
                     }
-                    className="size-4 accent-indigo-600"
+                    className="size-4 accent-[#b91830]"
                   />
                   Nullable
                 </label>
@@ -500,7 +500,7 @@ export function CatalogView() {
       />
 
       <div className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
-        <Info className="mt-0.5 size-4 shrink-0 text-indigo-600" aria-hidden="true" />
+        <Info className="mt-0.5 size-4 shrink-0 text-[#b91830]" aria-hidden="true" />
         <p>
           Data Catalog chỉ quản lý siêu dữ liệu mô tả schema; thao tác thêm/sửa/ẩn không tạo hoặc
           xóa bảng vật lý trong Bronze/Silver.
@@ -562,7 +562,7 @@ export function CatalogView() {
                   aria-hidden="true"
                 />
                 <input
-                  className="h-8 w-full rounded-md border border-slate-300 pl-8 pr-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                  className="h-8 w-full rounded-md border border-slate-300 pl-8 pr-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]"
                   placeholder="Tìm dataset, bảng, cột…"
                   value={keyword}
                   onChange={(event) => setKeyword(event.target.value)}
@@ -587,7 +587,7 @@ export function CatalogView() {
                         className={cn(
                           'flex w-full items-start justify-between gap-2 rounded-md border px-3 py-2 text-left',
                           active
-                            ? 'border-indigo-500 bg-indigo-50'
+                            ? 'border-[#b91830] bg-[#fff3f5]'
                             : 'border-slate-200 hover:bg-slate-50'
                         )}
                       >
@@ -683,7 +683,7 @@ export function CatalogView() {
                                 <td className="px-3 py-2 font-mono font-semibold text-slate-900">
                                   {col.name}
                                 </td>
-                                <td className="px-3 py-2 font-mono text-indigo-700">
+                                <td className="px-3 py-2 font-mono text-[#a9162e]">
                                   {col.data_type}
                                 </td>
                                 <td className="px-3 py-2">
@@ -720,7 +720,7 @@ export function CatalogView() {
                           <td className="px-4 py-2.5 font-mono font-semibold text-slate-900">
                             {field.name}
                           </td>
-                          <td className="px-4 py-2.5 font-mono text-indigo-700">
+                          <td className="px-4 py-2.5 font-mono text-[#a9162e]">
                             {field.data_type}
                           </td>
                           <td className="px-4 py-2.5">

@@ -168,7 +168,7 @@ export function UsersView() {
                 aria-hidden="true"
               />
               <input
-                className="h-8 w-56 rounded-md border border-slate-300 pl-8 pr-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                className="h-8 w-56 rounded-md border border-slate-300 pl-8 pr-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]"
                 placeholder="Tìm theo tên, email…"
                 value={keyword}
                 onChange={(event) => setKeyword(event.target.value)}

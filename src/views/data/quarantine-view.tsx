@@ -32,7 +32,7 @@ import { domainLabel, formatCellValue } from './data-helpers'
 const PAGE_SIZE = 20
 
 const inputClass =
-  'h-8 rounded-md border border-slate-300 bg-white px-2.5 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30'
+  'h-8 rounded-md border border-slate-300 bg-white px-2.5 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]/30'
 
 export function QuarantineView() {
   const [cleaningRunId, setCleaningRunId] = useState('')
@@ -261,7 +261,7 @@ export function QuarantineView() {
                       return (
                         <tr
                           key={rec.record_id}
-                          className={active ? 'bg-indigo-50/60' : 'hover:bg-slate-50'}
+                          className={active ? 'bg-[#fff3f5]/60' : 'hover:bg-slate-50'}
                         >
                           <td className="px-3 py-2.5">
                             <button
@@ -270,7 +270,7 @@ export function QuarantineView() {
                                 setSelectedRecordId(rec.record_id)
                                 setLoadSourceForId(null)
                               }}
-                              className="text-left font-mono font-semibold text-indigo-600 hover:underline"
+                              className="text-left font-mono font-semibold text-[#b91830] hover:underline"
                             >
                               Dòng {formatNumber(rec.record_position)}
                             </button>
