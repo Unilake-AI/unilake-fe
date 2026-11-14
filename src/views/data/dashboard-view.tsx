@@ -101,7 +101,7 @@ export function DataDashboardView() {
             </Button>
             <Link
               href="/data/ingestion"
-              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-indigo-600 px-3 text-xs font-semibold text-white hover:bg-indigo-700"
+              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#b91830] px-3 text-xs font-semibold text-white hover:bg-[#9e1429]"
             >
               Quản lý Ingestion
               <ArrowRight className="size-3.5" aria-hidden="true" />
@@ -118,7 +118,7 @@ export function DataDashboardView() {
           </h2>
           <Link
             href="/data/ingestion"
-            className="text-xs font-medium text-indigo-600 hover:underline"
+            className="text-xs font-medium text-[#b91830] hover:underline"
           >
             Xem danh sách job
           </Link>
@@ -157,7 +157,7 @@ export function DataDashboardView() {
           right={
             <Link
               href="/data/ingestion"
-              className="text-xs font-medium text-indigo-600 hover:underline"
+              className="text-xs font-medium text-[#b91830] hover:underline"
             >
               Chi tiết
             </Link>
@@ -207,7 +207,7 @@ export function DataDashboardView() {
           right={
             <Link
               href="/data/workers"
-              className="text-xs font-medium text-indigo-600 hover:underline"
+              className="text-xs font-medium text-[#b91830] hover:underline"
             >
               Giám sát Worker
             </Link>
@@ -245,7 +245,7 @@ export function DataDashboardView() {
           right={
             <Link
               href="/data/quality"
-              className="text-xs font-medium text-indigo-600 hover:underline"
+              className="text-xs font-medium text-[#b91830] hover:underline"
             >
               Quản lý yêu cầu
             </Link>
@@ -326,7 +326,7 @@ export function DataDashboardView() {
           right={
             <Link
               href="/data/ingestion"
-              className="text-xs font-medium text-indigo-600 hover:underline"
+              className="text-xs font-medium text-[#b91830] hover:underline"
             >
               Tất cả
             </Link>
@@ -369,7 +369,7 @@ export function DataDashboardView() {
                 <tbody className="divide-y divide-slate-100">
                   {jobsQuery.data.map((job) => (
                     <tr key={job.ingestion_job_id}>
-                      <td className="px-3 py-2.5 font-mono font-semibold text-indigo-600">
+                      <td className="px-3 py-2.5 font-mono font-semibold text-[#b91830]">
                         <Link
                           href={`/data/ingestion?jobId=${job.ingestion_job_id}`}
                           className="hover:underline"
@@ -401,7 +401,7 @@ export function DataDashboardView() {
           right={
             <Link
               href="/data/cleaning"
-              className="text-xs font-medium text-indigo-600 hover:underline"
+              className="text-xs font-medium text-[#b91830] hover:underline"
             >
               Tất cả
             </Link>

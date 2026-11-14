@@ -141,7 +141,7 @@ export function LogsView() {
                   <td className="px-3 py-2.5 font-mono text-slate-600">{log.module}</td>
                   <td className="px-3 py-2.5 font-mono text-slate-600">{log.user}</td>
                   <td className="px-3 py-2.5 text-slate-800">{log.message}</td>
-                  <td className="px-3 py-2.5 font-mono text-[11px] text-indigo-700">
+                  <td className="px-3 py-2.5 font-mono text-[11px] text-[#a9162e]">
                     {log.requestId}
                   </td>
                 </tr>

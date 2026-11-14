@@ -37,14 +37,14 @@ export function DomainSelector() {
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label="Chọn phân hệ nghiệp vụ"
-        className="flex h-8 min-w-0 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 data-[state=open]:border-indigo-500 data-[state=open]:ring-1 data-[state=open]:ring-indigo-500"
+        className="relative flex h-10 min-w-0 items-center gap-2 rounded-[9px] border border-[#cbd4e3] bg-white px-3 text-[13px] font-semibold text-[#17233d] shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830] data-[state=open]:border-[#b91830]"
       >
-        <Landmark className="size-3.5 shrink-0 text-slate-500" />
+        <Landmark className="size-4 shrink-0 text-[#34486c]" />
         <span className="truncate">
           <span className="hidden sm:inline">Phân hệ: </span>
           {domain.shortLabel}
         </span>
-        <ChevronDown className="size-3.5 shrink-0 text-slate-400" />
+        <ChevronDown className="size-4 shrink-0 text-[#34486c]" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-72">
         <DropdownMenuLabel className="font-mono text-[10px] font-medium uppercase tracking-wider text-slate-400">
@@ -59,13 +59,13 @@ export function DomainSelector() {
               onSelect={() => setDomain(item.code)}
               className={
                 selected
-                  ? 'bg-indigo-50 text-indigo-700 focus:bg-indigo-50 focus:text-indigo-700'
+                  ? 'bg-rose-50 text-[#b91830] focus:bg-rose-50 focus:text-[#b91830]'
                   : 'text-slate-700'
               }
             >
-              <Icon className={selected ? 'text-indigo-600' : 'text-slate-500'} />
+              <Icon className={selected ? 'text-[#b91830]' : 'text-slate-500'} />
               <span className="flex-1">{item.label}</span>
-              {selected && <Check className="text-indigo-600" aria-label="Đang chọn" />}
+              {selected && <Check className="text-[#b91830]" aria-label="Đang chọn" />}
             </DropdownMenuItem>
           )
         })}

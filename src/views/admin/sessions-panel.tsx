@@ -45,48 +45,61 @@ export function SessionsPanel() {
           onRetry={() => void sessions.refetch()}
         />
       ) : sessions.data?.length ? (
-        <ul className="divide-y divide-slate-100">
-          {sessions.data.map((session) => (
-            <li
-              key={session.login_session_id}
-              className="flex flex-wrap items-center justify-between gap-3 py-3"
-            >
-              <div className="min-w-0 text-xs">
-                <p className="font-semibold text-slate-900">
-                  Phiên #{session.login_session_id} · {formatDateTime(session.login_at)}
-                </p>
-                <p className="break-words text-slate-600">
-                  {session.ip_address ?? 'Không rõ IP'} ·{' '}
-                  {session.user_agent ?? 'Không rõ thiết bị'}
-                </p>
-              </div>
-              {confirmId === session.login_session_id ? (
-                <div className="flex gap-2">
-                  <Button disabled={revoke.isPending} onClick={() => setConfirmId(null)}>
-                    Hủy
-                  </Button>
-                  <Button
-                    variant="primary"
-                    disabled={revoke.isPending}
-                    onClick={() => revoke.mutate(session.login_session_id)}
-                  >
-                    {revoke.isPending ? 'Đang thu hồi…' : 'Xác nhận thu hồi'}
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  disabled={revoke.isPending}
-                  onClick={() => {
-                    revoke.reset()
-                    setConfirmId(session.login_session_id)
-                  }}
+        <div className="overflow-x-auto">
+          <div className="hidden min-w-[840px] grid-cols-[140px_160px_minmax(220px,1fr)_130px_230px] gap-3 rounded-lg bg-[#f0f2ff] px-4 py-3 text-xs font-semibold text-[#34415f] md:grid">
+            <span>Phiên</span>
+            <span>Thời gian đăng nhập</span>
+            <span>Thiết bị / Trình duyệt</span>
+            <span>Địa chỉ IP</span>
+            <span>Thao tác</span>
+          </div>
+          <ul className="min-w-[840px] divide-y divide-[#e5e9f3]">
+            {sessions.data.map((session) => (
+              <li
+                key={session.login_session_id}
+                className="grid grid-cols-[140px_160px_minmax(220px,1fr)_130px_230px] items-center gap-3 px-4 py-3"
+              >
+                <strong className="text-xs text-[#111a35]">
+                  Phiên #{session.login_session_id}
+                </strong>
+                <time className="text-xs text-[#596884]">{formatDateTime(session.login_at)}</time>
+                <span
+                  className="min-w-0 truncate text-xs text-[#34415f]"
+                  title={session.user_agent ?? undefined}
                 >
-                  Thu hồi phiên
-                </Button>
-              )}
-            </li>
-          ))}
-        </ul>
+                  {session.user_agent ?? 'Không rõ thiết bị'}
+                </span>
+                <span className="text-xs text-[#596884]">
+                  {session.ip_address ?? 'Không rõ IP'}
+                </span>
+                {confirmId === session.login_session_id ? (
+                  <div className="flex gap-1">
+                    <Button disabled={revoke.isPending} onClick={() => setConfirmId(null)}>
+                      Hủy
+                    </Button>
+                    <Button
+                      variant="primary"
+                      disabled={revoke.isPending}
+                      onClick={() => revoke.mutate(session.login_session_id)}
+                    >
+                      {revoke.isPending ? 'Đang thu hồi…' : 'Xác nhận thu hồi'}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    disabled={revoke.isPending}
+                    onClick={() => {
+                      revoke.reset()
+                      setConfirmId(session.login_session_id)
+                    }}
+                  >
+                    Thu hồi phiên
+                  </Button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : sessions.isSuccess ? (
         <EmptyState title="Không có phiên đang hoạt động" />
       ) : (

@@ -45,7 +45,7 @@ function axiosError(status: number, data: unknown): AxiosError {
 async function fillAndSubmit(username: string, password: string) {
   const user = userEvent.setup()
   if (username) {
-    await user.type(screen.getByLabelText('Email hoặc tên đăng nhập'), username)
+    await user.type(screen.getByLabelText('Tên đăng nhập hoặc email'), username)
   }
   if (password) {
     await user.type(screen.getByLabelText('Mật khẩu'), password)
@@ -95,7 +95,7 @@ describe('LoginView', () => {
 
     expect(await screen.findByText('Vui lòng nhập tên đăng nhập hoặc email.')).toBeInTheDocument()
     expect(screen.getByText('Vui lòng nhập mật khẩu.')).toBeInTheDocument()
-    expect(screen.getByLabelText('Email hoặc tên đăng nhập')).toHaveAttribute(
+    expect(screen.getByLabelText('Tên đăng nhập hoặc email')).toHaveAttribute(
       'aria-invalid',
       'true'
     )

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, BookOpenCheck, GraduationCap, UsersRound } from 'lucide-react'
 
 import { Card, MockNotice, PageHeader, ProgressRow, Tag } from '@/components/page/page-parts'
 import { useDomain } from '@/hooks/use-domain'
@@ -40,6 +40,30 @@ const PANELS: {
     rows: HR.units.slice(0, 3),
   },
 ]
+
+const PANEL_STYLE = {
+  admissions: {
+    icon: GraduationCap,
+    tone: 'indigo' as const,
+    card: 'border-t-4 border-t-[#514cf2]',
+    iconBox: 'bg-[#eeedff] text-[#514cf2]',
+    metric: 'bg-[#f6f5ff]',
+  },
+  academic: {
+    icon: BookOpenCheck,
+    tone: 'emerald' as const,
+    card: 'border-t-4 border-t-[#16a36c]',
+    iconBox: 'bg-[#e7f8ef] text-[#168c61]',
+    metric: 'bg-[#f0faf5]',
+  },
+  hr: {
+    icon: UsersRound,
+    tone: 'amber' as const,
+    card: 'border-t-4 border-t-[#e79b26]',
+    iconBox: 'bg-[#fff3dd] text-[#d38918]',
+    metric: 'bg-[#fff9ee]',
+  },
+}
 
 const TARGETS: {
   domain: string
@@ -117,40 +141,52 @@ export function DomainsCompareView({ detailHref }: { detailHref: string }) {
       <MockNotice />
 
       <div className="grid gap-4 xl:grid-cols-3">
-        {PANELS.map((panel) => (
-          <Card
-            key={panel.code}
-            title={panel.title}
-            right={
-              <button
-                type="button"
-                onClick={() => openDomain(panel.code)}
-                className="flex items-center gap-1 text-xs font-semibold text-indigo-700 hover:underline"
-              >
-                Xem chi tiết
-                <ArrowRight className="size-3.5" aria-hidden="true" />
-              </button>
-            }
-            bodyClassName="space-y-4"
-          >
-            <dl className="grid grid-cols-2 gap-3">
-              {panel.kpis.map((kpi) => (
-                <div key={kpi.label}>
-                  <dt className="font-mono text-[10px] uppercase tracking-wider text-slate-500">
-                    {kpi.label}
-                  </dt>
-                  <dd className="font-mono text-lg font-bold text-slate-900">{kpi.value}</dd>
-                </div>
-              ))}
-            </dl>
-            <div className="space-y-2.5">
-              <p className="text-xs font-semibold text-slate-700">{panel.chartTitle}</p>
-              {panel.rows.map((row) => (
-                <ProgressRow key={row.label} {...row} />
-              ))}
-            </div>
-          </Card>
-        ))}
+        {PANELS.map((panel) => {
+          const style = PANEL_STYLE[panel.code]
+          const Icon = style.icon
+          return (
+            <Card
+              key={panel.code}
+              className={style.card}
+              title={
+                <span className="flex items-center gap-3">
+                  <span
+                    className={`flex size-10 items-center justify-center rounded-xl ${style.iconBox}`}
+                  >
+                    <Icon className="size-5" aria-hidden="true" />
+                  </span>
+                  {panel.title}
+                </span>
+              }
+              right={
+                <button
+                  type="button"
+                  onClick={() => openDomain(panel.code)}
+                  className="flex items-center gap-1 text-xs font-semibold text-[#a9162e] hover:underline"
+                >
+                  Xem chi tiết
+                  <ArrowRight className="size-3.5" aria-hidden="true" />
+                </button>
+              }
+              bodyClassName="space-y-4"
+            >
+              <dl className="grid grid-cols-2 gap-2.5">
+                {panel.kpis.map((kpi) => (
+                  <div key={kpi.label} className={`rounded-xl p-3 ${style.metric}`}>
+                    <dt className="text-[11px] font-medium text-[#5b6781]">{kpi.label}</dt>
+                    <dd className="mt-1 text-xl font-bold text-[#111a35]">{kpi.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <div className="space-y-3 border-t border-[#edf0f8] pt-4">
+                <p className="text-xs font-semibold text-[#34415f]">{panel.chartTitle}</p>
+                {panel.rows.map((row) => (
+                  <ProgressRow key={row.label} {...row} tone={style.tone} />
+                ))}
+              </div>
+            </Card>
+          )
+        })}
       </div>
 
       <Card

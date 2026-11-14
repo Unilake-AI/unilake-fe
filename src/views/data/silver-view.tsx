@@ -189,7 +189,7 @@ export function SilverView() {
       />
 
       <div className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
-        <Info className="mt-0.5 size-4 shrink-0 text-indigo-600" aria-hidden="true" />
+        <Info className="mt-0.5 size-4 shrink-0 text-[#b91830]" aria-hidden="true" />
         <p>
           <strong>Mô hình phiên bản Silver:</strong> Mỗi lần công bố Silver tạo một snapshot hoàn
           chỉnh cho toàn bộ thực thể/bảng (entity/table) thuộc phạm vi của profile, không cập nhật
@@ -285,7 +285,7 @@ export function SilverView() {
                       <li
                         key={snap.snapshot_id}
                         className={`flex items-center justify-between gap-2 px-4 py-3 text-xs ${
-                          isSelected ? 'bg-indigo-50/70' : 'hover:bg-slate-50'
+                          isSelected ? 'bg-[#fff3f5]/70' : 'hover:bg-slate-50'
                         }`}
                       >
                         <button
@@ -296,7 +296,7 @@ export function SilverView() {
                           }}
                           className="min-w-0 flex-1 text-left"
                         >
-                          <p className="truncate font-mono font-semibold text-indigo-700 hover:underline">
+                          <p className="truncate font-mono font-semibold text-[#a9162e] hover:underline">
                             {snap.snapshot_id}
                           </p>
                           <p className="truncate font-mono text-[10px] text-slate-400">

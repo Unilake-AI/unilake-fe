@@ -60,7 +60,7 @@ export function ExploreView() {
             className={cn(
               'rounded-md border px-2.5 py-1 font-medium uppercase',
               layer === item
-                ? 'border-indigo-600 bg-indigo-600 text-white'
+                ? 'border-[#b91830] bg-[#b91830] text-white'
                 : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
             )}
           >
@@ -103,7 +103,7 @@ export function ExploreView() {
                       className={cn(
                         'flex w-full items-center justify-between gap-2 rounded-md border px-3 py-2 text-left',
                         active
-                          ? 'border-indigo-500 bg-indigo-50'
+                          ? 'border-[#b91830] bg-[#fff3f5]'
                           : 'border-slate-200 hover:bg-slate-50'
                       )}
                     >
@@ -141,7 +141,7 @@ export function ExploreView() {
                         <td className="px-4 py-2.5 font-mono font-semibold text-slate-900">
                           {field.name}
                         </td>
-                        <td className="px-4 py-2.5 font-mono text-indigo-700">{field.data_type}</td>
+                        <td className="px-4 py-2.5 font-mono text-[#a9162e]">{field.data_type}</td>
                         <td className="px-4 py-2.5 text-slate-600">{field.description || '—'}</td>
                       </tr>
                     ))}

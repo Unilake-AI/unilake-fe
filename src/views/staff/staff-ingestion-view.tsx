@@ -161,11 +161,11 @@ function JobDetailSection({
       )}
 
       {job.quality_issue_id && (
-        <div className="flex items-center justify-between rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-indigo-900">
+        <div className="flex items-center justify-between rounded-md border border-[#ebc5cd] bg-[#fff3f5] px-3 py-2 text-[#7a1020]">
           <span>Lần nạp này gắn với yêu cầu xử lý dữ liệu lỗi.</span>
           <Link
             href={`/staff/quality-issues/${job.quality_issue_id}`}
-            className="font-semibold text-indigo-700 hover:underline"
+            className="font-semibold text-[#a9162e] hover:underline"
           >
             Mở yêu cầu xử lý
           </Link>
@@ -362,7 +362,7 @@ function IngestionContent({
             {context.can_upload && (
               <Link
                 href="/staff/upload"
-                className="inline-flex h-8 items-center gap-1.5 rounded-md bg-indigo-600 px-3 text-xs font-semibold text-white transition-colors hover:bg-indigo-700"
+                className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#b91830] px-3 text-xs font-semibold text-white transition-colors hover:bg-[#9e1429]"
               >
                 <Upload className="size-3.5" aria-hidden="true" />
                 Nạp dữ liệu mới
@@ -480,7 +480,7 @@ function IngestionContent({
                 setMineOnly(e.target.checked)
                 setOffset(0)
               }}
-              className="size-4 accent-indigo-600"
+              className="size-4 accent-[#b91830]"
             />
             Chỉ lần nạp của tôi
           </label>
@@ -538,7 +538,7 @@ function IngestionContent({
                     const dsName = datasetNameMap.get(job.dataset_id)
                     return (
                       <Fragment key={job.ingestion_job_id}>
-                        <tr className={isSelected ? 'bg-indigo-50/60' : 'hover:bg-slate-50'}>
+                        <tr className={isSelected ? 'bg-[#fff3f5]/60' : 'hover:bg-slate-50'}>
                           <td className="px-3 py-2.5">
                             <button
                               type="button"
@@ -546,7 +546,7 @@ function IngestionContent({
                               onClick={() =>
                                 setSelectedJobId(isSelected ? null : job.ingestion_job_id)
                               }
-                              className="font-mono font-semibold text-indigo-600 hover:underline"
+                              className="font-mono font-semibold text-[#b91830] hover:underline"
                             >
                               Chi tiết #{job.ingestion_job_id}
                             </button>

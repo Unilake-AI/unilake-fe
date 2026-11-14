@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 
+import Image from 'next/image'
 import Link from 'next/link'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -25,10 +26,10 @@ import { getApiErrorMessage, getErrorMessageForCode } from '@/api/http'
 import { API_ListDatasets } from '@/api/shared/datasets'
 import { API_GetIngestionJob } from '@/api/shared/ingestion'
 import { API_UploadIngestion } from '@/api/staff/upload'
+import emptySearch from '@/assets/dashboard/empty-search.webp'
 import {
   Button,
   Card,
-  EmptyState,
   ErrorState,
   LoadingState,
   PageHeader,
@@ -72,7 +73,7 @@ const newDatasetSchema = z.object({
 })
 
 const inputClass =
-  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30 disabled:bg-slate-50 disabled:text-slate-500'
+  'h-10 w-full rounded-lg border border-[#cbd4e3] bg-white px-3 text-sm text-[#17233d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6761ed]/30 disabled:bg-slate-50 disabled:text-slate-500'
 
 function JobTrackerCard({ jobId, initialJob }: { jobId: number; initialJob: IngestionJob }) {
   const query = useQuery({
@@ -460,12 +461,12 @@ function UploadContent({ context }: { context: StaffContext }) {
     <div className="space-y-5">
       <PageHeader
         breadcrumb={['Không gian nhân viên', 'Nạp dữ liệu']}
-        title="Nạp dữ liệu vào tầng Bronze"
+        title="Nạp dữ liệu"
         description={`Tải tệp ${context.accepted_extensions.join(', ')} (tối đa ${formatBytes(context.max_file_bytes)}, ${formatNumber(context.max_records)} dòng) vào bộ dữ liệu đã có hoặc tạo bộ dữ liệu mới.`}
         actions={
           <Link
             href="/staff/ingestion"
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#cbd4e3] bg-white px-4 text-sm font-semibold text-[#3438b1] transition-colors hover:bg-[#f5f5ff]"
           >
             <History className="size-3.5" aria-hidden="true" />
             Lịch sử nạp dữ liệu
@@ -480,9 +481,18 @@ function UploadContent({ context }: { context: StaffContext }) {
       <div className="grid gap-5 xl:grid-cols-[1fr_340px]">
         <div className="space-y-5">
           {/* Chọn chế độ nạp */}
-          <Card title="1. Chọn đích lưu dữ liệu">
+          <Card
+            title={
+              <span className="flex items-center gap-3">
+                <span className="flex size-9 items-center justify-center rounded-full bg-[#fce8ee] text-[#b91830]">
+                  1
+                </span>
+                Chọn nơi lưu dữ liệu
+              </span>
+            }
+          >
             <div
-              className="mb-4 flex flex-wrap gap-2"
+              className="mb-4 grid grid-cols-1 overflow-hidden rounded-lg border border-[#dfe4f2] sm:grid-cols-2"
               role="tablist"
               aria-label="Chế độ nạp dữ liệu"
             >
@@ -494,10 +504,10 @@ function UploadContent({ context }: { context: StaffContext }) {
                   setMode('existing')
                   setValidationError(null)
                 }}
-                className={`rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                className={`min-h-11 border-b-2 px-3 py-2 text-sm font-semibold transition-colors ${
                   mode === 'existing'
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                    ? 'border-[#d51e3d] bg-[#fce8ee] text-[#b91830]'
+                    : 'border-transparent bg-white text-[#34415f] hover:bg-[#f8f9fd]'
                 }`}
               >
                 Nạp vào bộ dữ liệu đã có
@@ -510,10 +520,10 @@ function UploadContent({ context }: { context: StaffContext }) {
                   setMode('new')
                   setValidationError(null)
                 }}
-                className={`rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                className={`min-h-11 border-b-2 px-3 py-2 text-sm font-semibold transition-colors ${
                   mode === 'new'
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                    ? 'border-[#d51e3d] bg-[#fce8ee] text-[#b91830]'
+                    : 'border-transparent bg-white text-[#34415f] hover:bg-[#f8f9fd]'
                 }`}
               >
                 Tạo bộ dữ liệu mới và nạp
@@ -580,10 +590,21 @@ function UploadContent({ context }: { context: StaffContext }) {
                     onRetry={() => void datasetsQuery.refetch()}
                   />
                 ) : datasets.length === 0 ? (
-                  <EmptyState
-                    title="Không tìm thấy bộ dữ liệu phù hợp"
-                    description="Bạn có thể thử từ khóa khác hoặc chuyển sang tab Tạo bộ dữ liệu mới."
-                  />
+                  <div className="flex flex-col items-center justify-center rounded-xl border border-[#dfe4f2] bg-[#f7f8fd] px-4 py-6 text-center">
+                    <Image
+                      src={emptySearch}
+                      alt=""
+                      width={140}
+                      height={100}
+                      className="h-24 w-auto object-contain"
+                    />
+                    <h3 className="mt-2 text-sm font-bold text-[#111a35]">
+                      Không tìm thấy bộ dữ liệu phù hợp
+                    </h3>
+                    <p className="mt-1 text-xs text-[#65718d]">
+                      Bạn có thể thử từ khóa khác hoặc chuyển sang tab Tạo bộ dữ liệu mới.
+                    </p>
+                  </div>
                 ) : (
                   <>
                     <div className="divide-y divide-slate-200 rounded-md border border-slate-200">
@@ -721,7 +742,16 @@ function UploadContent({ context }: { context: StaffContext }) {
           </Card>
 
           {/* Chọn tệp và tùy chọn đọc tệp */}
-          <Card title="2. Chọn tệp và cấu hình đọc tệp">
+          <Card
+            title={
+              <span className="flex items-center gap-3">
+                <span className="flex size-9 items-center justify-center rounded-full bg-[#fce8ee] text-[#b91830]">
+                  2
+                </span>
+                Chọn tệp và cấu hình đọc tệp
+              </span>
+            }
+          >
             <form
               id="staff-upload-form"
               className="space-y-4"
@@ -765,7 +795,7 @@ function UploadContent({ context }: { context: StaffContext }) {
                     setUploadProgress(null)
                     uploadMutation.reset()
                   }}
-                  className="block w-full cursor-pointer rounded-md border border-dashed border-slate-300 bg-slate-50 p-3 text-xs text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-indigo-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-indigo-700"
+                  className="block w-full cursor-pointer rounded-xl border-2 border-dashed border-[#c8c3ff] bg-[#f8f8ff] p-6 text-xs text-[#34415f] file:mr-3 file:rounded-lg file:border-0 file:bg-[#5146e7] file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-[#4539d4]"
                 />
                 <p className="text-[11px] text-slate-500">
                   Tên tệp chỉ dùng chữ cái không dấu, số, dấu gạch ngang, gạch dưới và dấu chấm. Tệp
@@ -973,7 +1003,7 @@ function UploadContent({ context }: { context: StaffContext }) {
         {/* Tóm tắt thông tin tệp trước khi gửi */}
         <div className="space-y-4">
           <Card title="Tóm tắt yêu cầu tải lên">
-            <dl className="space-y-3 text-xs">
+            <dl className="divide-y divide-[#e5e9f3] text-xs [&>div]:flex [&>div]:items-start [&>div]:justify-between [&>div]:gap-3 [&>div]:py-2 [&_dd]:max-w-[60%] [&_dd]:text-right">
               <div>
                 <dt className="text-slate-500">Hình thức</dt>
                 <dd className="mt-0.5 font-medium text-slate-900">

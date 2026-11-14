@@ -31,7 +31,7 @@ import type {
 
 const inputClass =
   'h-9 w-full rounded-md border bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2'
-const okClass = 'border-slate-300 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/30'
+const okClass = 'border-slate-300 focus-visible:border-[#b91830] focus-visible:ring-[#b91830]/30'
 const badClass = 'border-2 border-rose-500 bg-rose-50 focus-visible:ring-rose-500/30'
 
 function defaultConfig(type: SourceType): Record<string, string> {
@@ -183,7 +183,7 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
             <button
               type="submit"
               disabled={save.isPending}
-              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-indigo-600 px-3 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-70"
+              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#b91830] px-3 text-xs font-semibold text-white hover:bg-[#9e1429] disabled:opacity-70"
             >
               {save.isPending && (
                 <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
@@ -295,7 +295,7 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
               <label className="flex items-center gap-2 text-xs text-slate-700">
                 <input
                   type="checkbox"
-                  className="size-4 rounded border-slate-300 accent-indigo-600"
+                  className="size-4 rounded border-slate-300 accent-[#b91830]"
                   checked={isActive}
                   onChange={(event) => setIsActive(event.target.checked)}
                 />
@@ -312,7 +312,7 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
               <label className="mb-4 flex items-center gap-2 text-xs text-slate-700">
                 <input
                   type="checkbox"
-                  className="size-4 rounded border-slate-300 accent-indigo-600"
+                  className="size-4 rounded border-slate-300 accent-[#b91830]"
                   checked={replaceConfig}
                   onChange={(event) => setReplaceConfig(event.target.checked)}
                 />
