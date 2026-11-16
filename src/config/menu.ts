@@ -76,7 +76,9 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
       groupTitle: 'Quản lý đơn vị',
       items: [
         { title: 'Tổng quan phân hệ', href: '/manager', iconName: 'LayoutDashboard' },
-        { title: 'Phân tích & So sánh', href: '/manager/analytics', iconName: 'BarChart3' },
+        { title: 'Phân tích dữ liệu', href: '/manager/analytics', iconName: 'BarChart3' },
+        { title: 'Bộ dữ liệu phòng ban', href: '/manager/datasets', iconName: 'Database' },
+        { title: 'Yêu cầu sửa dữ liệu', href: '/manager/quality-issues', iconName: 'FileWarning' },
         { title: 'Hỏi AI (NLQ)', href: '/manager/ask', iconName: 'Sparkles', badge: 'AI' },
         { title: 'Lịch sử truy vấn', href: '/manager/history', iconName: 'History' },
       ],

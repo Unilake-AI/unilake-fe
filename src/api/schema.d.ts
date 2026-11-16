@@ -1348,6 +1348,142 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/manager/context': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Context */
+    get: operations['context_api_v1_manager_context_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/manager/overview': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Overview */
+    get: operations['overview_api_v1_manager_overview_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/manager/analytics': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Analytics */
+    get: operations['analytics_api_v1_manager_analytics_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/manager/datasets': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Datasets */
+    get: operations['datasets_api_v1_manager_datasets_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/manager/datasets/{dataset_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Dataset Detail */
+    get: operations['dataset_detail_api_v1_manager_datasets__dataset_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/manager/issues': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Issues */
+    get: operations['issues_api_v1_manager_issues_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/manager/issues/stats': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Issue Stats */
+    get: operations['issue_stats_api_v1_manager_issues_stats_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/manager/issues/{issue_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Issue Detail */
+    get: operations['issue_detail_api_v1_manager_issues__issue_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/': {
     parameters: {
       query?: never
@@ -1921,6 +2057,17 @@ export interface components {
       /** Description */
       description?: string | null
     }
+    /** DatasetPage */
+    DatasetPage: {
+      /** Items */
+      items: components['schemas']['ManagerDataset'][]
+      /** Total */
+      total: number
+      /** Limit */
+      limit: number
+      /** Offset */
+      offset: number
+    }
     /**
      * DatasetRead
      * @description Payload trả về metadata của dataset đã đăng ký.
@@ -2022,6 +2169,59 @@ export interface components {
        * @default
        */
       description?: string
+    }
+    /** GoldMetric */
+    GoldMetric: {
+      /** Dataset Id */
+      dataset_id: number
+      /** Dataset Name */
+      dataset_name: string
+      /** Domain */
+      domain: string
+      /** Scope */
+      scope: string
+      /** Gold Snapshot Id */
+      gold_snapshot_id: string
+      /** Silver Snapshot Id */
+      silver_snapshot_id: string
+      /** Recipe Version */
+      recipe_version: string
+      /**
+       * Finished At
+       * Format: date-time
+       */
+      finished_at: string
+      /** Entity */
+      entity: string
+      /** Metric */
+      metric: string
+      /** Dimensions */
+      dimensions: {
+        [key: string]: unknown
+      }
+      /** Value */
+      value: number
+      /**
+       * Unit
+       * @default records
+       * @constant
+       */
+      unit?: 'records'
+    }
+    /** GoldSource */
+    GoldSource: {
+      /** Scope */
+      scope: string
+      /** Silver Snapshot Id */
+      silver_snapshot_id: string
+      /** Job Id */
+      job_id: string | null
+      /** Sync Status */
+      sync_status: string
+      /** Finished At */
+      finished_at: string | null
+      /** Error Code */
+      error_code: string | null
     }
     /** HTTPValidationError */
     HTTPValidationError: {
@@ -2463,6 +2663,72 @@ export interface components {
       /** Refresh Token */
       refresh_token?: string | null
     }
+    /** ManagerContext */
+    ManagerContext: {
+      /** User Id */
+      user_id: number
+      /** Roles */
+      roles: string[]
+      /** Domains */
+      domains: components['schemas']['DomainChoice'][]
+      /** Departments */
+      departments: components['schemas']['DepartmentChoice'][]
+      /** Default Domain */
+      default_domain: string | null
+      /** Needs Department Assignment */
+      needs_department_assignment: boolean
+      /**
+       * Data Layer
+       * @default GOLD
+       * @constant
+       */
+      data_layer?: 'GOLD'
+      /** Note */
+      note: string
+    }
+    /** ManagerDataset */
+    ManagerDataset: {
+      /** Dataset Id */
+      dataset_id: number
+      /** Dataset Code */
+      dataset_code: string
+      /** Dataset Name */
+      dataset_name: string
+      /** Domain */
+      domain: string
+      /** Owner Department Id */
+      owner_department_id: number
+      /** Description */
+      description: string | null
+      /** Sources */
+      sources: components['schemas']['GoldSource'][]
+    }
+    /** ManagerOverview */
+    ManagerOverview: {
+      /**
+       * Data Layer
+       * @default GOLD
+       * @constant
+       */
+      data_layer?: 'GOLD'
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'READY' | 'PARTIAL' | 'PENDING' | 'NO_DATA'
+      /** Datasets */
+      datasets: number
+      sources: components['schemas']['SourceStats']
+      /** Last Updated At */
+      last_updated_at: string | null
+      kpis: components['schemas']['MetricPage']
+      issues: components['schemas']['IssueStats']
+      /**
+       * Note
+       * @default Số bản ghi theo từng nguồn Gold; không cộng thành số người duy nhất.
+       */
+      note?: string
+    }
     /** ManualCleaningRequest */
     ManualCleaningRequest: {
       /** Profile Id */
@@ -2534,6 +2800,17 @@ export interface components {
     MessageResponse: {
       /** Message */
       message: string
+    }
+    /** MetricPage */
+    MetricPage: {
+      /** Items */
+      items: components['schemas']['GoldMetric'][]
+      /** Total */
+      total: number
+      /** Limit */
+      limit: number
+      /** Offset */
+      offset: number
     }
     /**
      * NaturalLanguageQueryRequest
@@ -2841,6 +3118,49 @@ export interface components {
       collapse_exact_duplicates?: boolean
       /** Source Preview Columns */
       source_preview_columns?: string[]
+    }
+    /** SourceStats */
+    SourceStats: {
+      /**
+       * Total
+       * @default 0
+       */
+      total?: number
+      /**
+       * Current
+       * @default 0
+       */
+      current?: number
+      /**
+       * Not Started
+       * @default 0
+       */
+      not_started?: number
+      /**
+       * Queued
+       * @default 0
+       */
+      queued?: number
+      /**
+       * Running
+       * @default 0
+       */
+      running?: number
+      /**
+       * Retry Wait
+       * @default 0
+       */
+      retry_wait?: number
+      /**
+       * Failed
+       * @default 0
+       */
+      failed?: number
+      /**
+       * Superseded
+       * @default 0
+       */
+      superseded?: number
     }
     /**
      * SourceSystemRead
@@ -6181,6 +6501,556 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['StaffContext']
+        }
+      }
+    }
+  }
+  context_api_v1_manager_context_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ManagerContext']
+        }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  overview_api_v1_manager_overview_get: {
+    parameters: {
+      query?: {
+        domain?: ('hr' | 'academic' | 'admissions') | null
+        dataset_id?: number | null
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ManagerOverview']
+        }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  analytics_api_v1_manager_analytics_get: {
+    parameters: {
+      query?: {
+        domain?: ('hr' | 'academic' | 'admissions') | null
+        dataset_id?: number | null
+        limit?: number
+        offset?: number
+        entity?: string | null
+        metric?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MetricPage']
+        }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  datasets_api_v1_manager_datasets_get: {
+    parameters: {
+      query?: {
+        domain?: ('hr' | 'academic' | 'admissions') | null
+        dataset_id?: number | null
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DatasetPage']
+        }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  dataset_detail_api_v1_manager_datasets__dataset_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        dataset_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ManagerDataset']
+        }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  issues_api_v1_manager_issues_get: {
+    parameters: {
+      query?: {
+        department_id?: number | null
+        assignee_user_id?: number | null
+        status?: ('ASSIGNED' | 'PENDING_VERIFICATION' | 'VERIFIED') | null
+        mine_only?: boolean
+        limit?: number
+        offset?: number
+        domain?: ('hr' | 'academic' | 'admissions') | null
+        dataset_id?: number | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['IssueRead'][]
+        }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  issue_stats_api_v1_manager_issues_stats_get: {
+    parameters: {
+      query?: {
+        department_id?: number | null
+        assignee_user_id?: number | null
+        status?: ('ASSIGNED' | 'PENDING_VERIFICATION' | 'VERIFIED') | null
+        mine_only?: boolean
+        limit?: number
+        offset?: number
+        domain?: ('hr' | 'academic' | 'admissions') | null
+        dataset_id?: number | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['IssueStats']
+        }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  issue_detail_api_v1_manager_issues__issue_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        issue_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['IssueDetail']
+        }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
