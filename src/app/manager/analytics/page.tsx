@@ -1,7 +1,7 @@
-import { AnalyticsCompareView } from '@/views/dashboards/analytics-compare-view'
+import { ManagerReportsView } from '@/views/manager/reports-view'
 
-export const metadata = { title: 'Phân tích & So sánh | UniLake AI' }
+export const metadata = { title: 'Phân tích dữ liệu | UniLake AI' }
 
-export default function AnalyticsComparePage() {
-  return <AnalyticsCompareView askHref="/manager/ask" />
+export default function ManagerPage() {
+  return <ManagerReportsView mode="analytics" />
 }

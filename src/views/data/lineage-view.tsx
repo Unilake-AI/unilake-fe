@@ -6,9 +6,8 @@ import type { FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowRight, RefreshCw, Search } from 'lucide-react'
 
-import { API_GetLineage } from '@/api/data-admin/governance'
+import { API_GetLineage } from '@/api/admindata/governance'
 import { getApiErrorMessage } from '@/api/http'
-import type { components } from '@/api/schema'
 import {
   Button,
   Card,
@@ -20,16 +19,15 @@ import {
   formatDateTime,
   statusTone,
 } from '@/components/page/page-parts'
-import type { Tone } from '@/components/page/page-parts'
 import { cn } from '@/lib/utils'
+import type { LineageNode } from '@/types/lineage'
+import type { StatusTone } from '@/types/page/page-parts'
 
 import { DATA_DOMAINS } from './data-helpers'
 
-type LineageNode = components['schemas']['LineageNode']
-
 const LAYER_ORDER = ['SOURCE', 'BRONZE', 'SILVER', 'GOLD']
 
-function layerTone(layer: string): Tone {
+function layerTone(layer: string): StatusTone {
   const upper = layer.toUpperCase()
   if (upper === 'SOURCE') return 'sky'
   return statusTone(upper)
@@ -229,7 +227,7 @@ export function LineageView() {
                             className={cn(
                               'w-full rounded-md border p-2.5 text-left transition-colors',
                               isSelected
-                                ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500'
+                                ? 'border-[#b91830] bg-[#fff3f5] ring-1 ring-[#b91830]'
                                 : 'border-slate-200 bg-white hover:bg-slate-50'
                             )}
                           >
@@ -322,7 +320,7 @@ export function LineageView() {
                           selectedNode &&
                           (edge.source === selectedNode.id || edge.target === selectedNode.id)
                         return (
-                          <tr key={edge.id} className={related ? 'bg-indigo-50/40' : undefined}>
+                          <tr key={edge.id} className={related ? 'bg-[#fff3f5]/40' : undefined}>
                             <td className="px-3 py-2.5">
                               <Tag tone={layerTone(edge.source_layer)}>{edge.source_layer}</Tag>
                               <p className="mt-0.5 font-mono text-[11px] text-slate-800">

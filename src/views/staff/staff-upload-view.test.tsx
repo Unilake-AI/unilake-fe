@@ -207,7 +207,9 @@ describe('StaffUploadView', () => {
       await waitFor(
         () => {
           expect(
-            screen.getByText('Đã lưu dữ liệu vào Bronze. Đang chờ quản trị dữ liệu xử lý Silver.')
+            screen.getByText(
+              'Đã lưu dữ liệu vào Bronze. Kết quả Silver được theo dõi riêng trong lịch sử nạp dữ liệu.'
+            )
           ).toBeInTheDocument()
         },
         { timeout: 6000 }

@@ -50,11 +50,11 @@ describe('ROLE_MENUS', () => {
       '/viewer/dashboards',
     ])
     expect(ROLE_MENUS.STAFF[0]?.items.map((item) => item.href)).toEqual([
-      '/analyst',
-      '/analyst/upload',
-      '/analyst/ingestion',
-      '/analyst/quality-issues',
-      '/analyst/profile',
+      '/staff',
+      '/staff/upload',
+      '/staff/ingestion',
+      '/staff/quality-issues',
+      '/staff/profile',
     ])
     expect(ROLE_MENUS.ADMIN[0]?.items.map((item) => item.href)).toContain('/admin')
     expect(ROLE_MENUS.DATA_ADMIN.flatMap((g) => g.items.map((item) => item.href))).toEqual([
@@ -65,9 +65,11 @@ describe('ROLE_MENUS', () => {
       '/data/workers',
       '/data/profiles',
       '/data/cleaning',
+      '/data/auto-pipeline',
       '/data/quarantine',
       '/data/quality',
       '/data/silver',
+      '/data/gold',
       '/data/catalog',
       '/data/lineage',
     ])

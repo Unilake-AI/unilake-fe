@@ -1,15 +1,4 @@
-export type RoleCode =
-  | 'ADMIN'
-  | 'DATA_ADMIN'
-  | 'VIEWER'
-  | 'ADMISSIONS_MANAGER'
-  | 'ADMISSIONS_STAFF'
-  | 'ACADEMIC_MANAGER'
-  | 'ACADEMIC_STAFF'
-  | 'HR_MANAGER'
-  | 'HR_STAFF'
-
-export type RoleWorkspace = 'ADMIN' | 'DATA_ADMIN' | 'VIEWER' | 'MANAGER' | 'STAFF'
+import type { RoleCode } from '@/types/roles'
 
 export interface AuthUser {
   id?: string | number
@@ -17,27 +6,6 @@ export interface AuthUser {
   email?: string
   fullName?: string
   roles: RoleCode[]
-}
-
-export interface RoleDefinition {
-  code: RoleCode
-  name: string
-  homePath: string
-  description: string
-  badgeVariant?: 'default' | 'secondary' | 'outline' | 'destructive'
-}
-
-export interface MenuItem {
-  title: string
-  href: string
-  iconName: string
-  badge?: string
-  description?: string
-}
-
-export interface MenuGroup {
-  groupTitle?: string
-  items: MenuItem[]
 }
 
 export interface LoginRequest {
@@ -71,12 +39,4 @@ export interface LogoutRequest {
 export interface AuthMeResponse {
   authenticated: boolean
   user: AuthUser | null
-}
-
-export interface LoginSession {
-  login_session_id: number
-  login_at: string
-  ip_address: string | null
-  user_agent: string | null
-  session_status: string
 }

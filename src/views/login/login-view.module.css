@@ -1,0 +1,1240 @@
+.page {
+  --red: #be1730;
+  --ink: #11192c;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 57.5%) minmax(0, 42.5%);
+  min-height: 100svh;
+  overflow: hidden;
+  color: var(--ink);
+  background: #e3efff;
+}
+.sky {
+  position: absolute;
+  inset: 0;
+  z-index: -4;
+  background:
+    radial-gradient(ellipse 48% 70% at 43% 18%, #fff9 0%, #fff0 74%),
+    radial-gradient(ellipse 45% 70% at 90% 17%, #fff 0%, #f3e6f1 72%, #f3e6f100 100%),
+    linear-gradient(115deg, #cde3fd 0%, #e9f2ff 57%, #f5e5ee 100%);
+}
+.ambient {
+  position: absolute;
+  z-index: -2;
+  width: 70vw;
+  height: 125vh;
+  right: -25vw;
+  top: -38vh;
+  border: 5px solid #fff9;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 43% 56%,
+    #ffffffa8,
+    #fbf0f9a8 54%,
+    #eddce5a6 75%,
+    #ffffff00 85%
+  );
+  transform: rotate(-20deg);
+  pointer-events: none;
+}
+.leavesTop,
+.leavesSide {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  filter: drop-shadow(0 5px 4px #546f3c33);
+}
+.leavesTop {
+  width: clamp(135px, 15vw, 230px);
+  left: -31px;
+  top: -26px;
+  transform: rotate(-10deg);
+}
+.leavesSide {
+  width: clamp(125px, 13vw, 205px);
+  left: -93px;
+  top: 41%;
+  transform: rotate(86deg);
+}
+.waves {
+  position: absolute;
+  z-index: -1;
+  width: min(58vw, 850px);
+  height: clamp(115px, 16vw, 210px);
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+.intro {
+  position: relative;
+  min-width: 0;
+  min-height: 830px;
+  padding: clamp(35px, 4vw, 58px) 4vw 390px max(7vw, 48px);
+}
+.brandRow {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  white-space: nowrap;
+}
+.universityLogo {
+  display: block;
+  width: 175px;
+  height: auto;
+}
+.brandDivider {
+  width: 1px;
+  height: 45px;
+  background: #9bacbf77;
+}
+.uniLakeBrand,
+.cardLake {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: clamp(19px, 1.6vw, 25px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+.databaseMark {
+  display: inline-flex;
+  color: #be1730;
+}
+.introCopy {
+  position: relative;
+  z-index: 3;
+  max-width: 570px;
+  margin-top: 32px;
+}
+.redRule {
+  display: block;
+  width: 46px;
+  height: 4px;
+  margin-bottom: 15px;
+  background: #be1730;
+  border-radius: 4px;
+}
+.introCopy h1 {
+  color: #b51631;
+  font-size: clamp(42px, 3.65vw, 58px);
+  line-height: 1;
+  letter-spacing: -0.065em;
+  font-weight: 800;
+}
+.introTagline {
+  margin-top: 5px;
+  font-size: clamp(27px, 2.35vw, 37px);
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.045em;
+}
+.introDescription {
+  max-width: 540px;
+  margin-top: 20px;
+  font-size: clamp(14px, 1vw, 16px);
+  line-height: 1.55;
+  color: #28364b;
+}
+.features {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  width: min(710px, 100%);
+  margin-top: 26px;
+}
+.features li {
+  display: flex;
+  align-items: flex-start;
+  min-width: 0;
+  gap: 10px;
+}
+.featureIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  color: var(--red);
+  background: #f9e8edcc;
+}
+.features strong {
+  display: block;
+  padding-top: 1px;
+  font-size: 13px;
+  line-height: 1.2;
+}
+.features small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.25;
+  color: #384358;
+}
+.campus {
+  position: absolute;
+  left: -2%;
+  bottom: -7%;
+  z-index: 1;
+  width: min(111%, 940px);
+  height: 51%;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 100%);
+}
+.campus img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 57%;
+}
+.campus::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 45%;
+  height: 27%;
+  background: linear-gradient(90deg, transparent, #dceafad9 30%, #e8f0fc 90%);
+  filter: blur(15px);
+}
+.formArea {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px clamp(24px, 4vw, 70px) 40px 0;
+}
+.card {
+  width: min(100%, 550px);
+  padding: 34px 48px 40px;
+  border: 2px solid #fff;
+  border-radius: 31px;
+  background: linear-gradient(135deg, #ffffffed, #fffafdf1);
+  box-shadow:
+    0 24px 40px #24334436,
+    0 4px 15px #33435a12,
+    inset 0 1px 1px #fff;
+  backdrop-filter: blur(18px);
+}
+.cardBrand {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 149px;
+}
+.cardBrandText {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+}
+.cardBrandText > img {
+  width: 155px;
+  height: auto;
+  display: block;
+}
+.cardLake {
+  margin-top: 13px;
+  font-size: 26px;
+}
+.cardBrandText p {
+  margin-top: 8px;
+  max-width: 245px;
+  color: #344057;
+  font-size: 11px;
+  line-height: 1.3;
+}
+.lakeArt {
+  align-self: flex-start;
+  width: 155px;
+  min-width: 132px;
+  margin: -20px -13px 0 -29px;
+}
+.cardDivider {
+  height: 1px;
+  background: #e9e6ec;
+  margin: 0 0 25px;
+}
+.formHeading h2 {
+  font-size: 31px;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.045em;
+}
+.formHeading p {
+  margin-top: 5px;
+  color: #394258;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.form {
+  display: grid;
+  gap: 19px;
+  margin-top: 24px;
+}
+.field {
+  display: grid;
+  gap: 7px;
+}
+.field label {
+  font-size: 13px;
+  font-weight: 700;
+}
+.inputWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 13px;
+  border: 1px solid #d7dce5;
+  border-radius: 10px;
+  color: #52627c;
+  background: #ffffffb8;
+  box-shadow: inset 0 1px 2px #121a2a08;
+  transition:
+    border-color 0.16s,
+    box-shadow 0.16s;
+}
+.inputWrap:focus-within {
+  border-color: #b51631;
+  box-shadow: 0 0 0 3px #c51b3426;
+}
+.inputWrap:has(input[aria-invalid='true']) {
+  border-color: #dd5062;
+  background: #fff7f8;
+}
+.inputWrap input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  outline: 0;
+  border: 0;
+  background: transparent;
+  color: #172034;
+  font-size: 14px;
+}
+.inputWrap input::placeholder {
+  color: #8490a4;
+}
+.inputWrap button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 32px;
+  border-radius: 6px;
+  color: #35435e;
+}
+.inputWrap button:hover {
+  background: #f9e8ed;
+  color: var(--red);
+}
+.inputWrap button:focus-visible,
+.errorBox button:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
+.fieldError {
+  color: #a9152c;
+  font-size: 12px;
+}
+.submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 50px;
+  margin-top: 5px;
+  border-radius: 10px;
+  background: linear-gradient(100deg, #c21b35, #b81631);
+  box-shadow: 0 6px 12px #b516312b;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  transition:
+    filter 0.15s,
+    transform 0.15s;
+}
+.submit:hover:not(:disabled) {
+  filter: brightness(0.94);
+}
+.submit:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.submit:focus-visible {
+  outline: 3px solid #941128;
+  outline-offset: 3px;
+}
+.submit:disabled {
+  opacity: 0.72;
+  cursor: wait;
+}
+.spinner {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 23px;
+  padding: 17px 16px;
+  border-radius: 11px;
+  color: #26334b;
+  background: #f7edf1;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.notice svg {
+  flex: none;
+  color: #d34659;
+  margin-top: 2px;
+}
+.notice strong {
+  display: inline-block;
+  margin-bottom: 3px;
+  font-size: 13px;
+}
+.statusBox,
+.errorBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.statusBox {
+  background: #fff5e7;
+  color: #714816;
+}
+.errorBox {
+  background: #fff0f2;
+  color: #921a30;
+}
+.statusBox svg,
+.errorBox svg {
+  flex: none;
+}
+.errorBox span {
+  flex: 1;
+}
+.errorBox button {
+  padding: 2px;
+  border-radius: 4px;
+}
+@media (min-width: 1600px) {
+  .page {
+    min-height: 100svh;
+  }
+  .intro {
+    padding-left: max(7vw, calc((100vw - 1680px) / 2));
+  }
+  .campus {
+    max-width: 1050px;
+  }
+}
+@media (max-width: 1150px) {
+  .page {
+    grid-template-columns: 53% 47%;
+  }
+  .intro {
+    padding-left: 5vw;
+    padding-right: 2vw;
+  }
+  .features {
+    gap: 8px;
+  }
+  .features li {
+    gap: 5px;
+  }
+  .featureIcon {
+    width: 34px;
+    height: 34px;
+  }
+  .features small {
+    font-size: 10px;
+  }
+  .formArea {
+    padding-right: 3vw;
+    padding-left: 0;
+  }
+  .card {
+    padding: 31px 32px 35px;
+  }
+}
+@media (max-width: 800px) {
+  .page {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .intro {
+    min-height: 0;
+    padding: 24px 5vw 30px;
+  }
+  .brandRow {
+    gap: 14px;
+  }
+  .universityLogo {
+    width: 142px;
+  }
+  .brandDivider {
+    height: 34px;
+  }
+  .uniLakeBrand {
+    font-size: 20px;
+  }
+  .introCopy {
+    margin-top: 28px;
+  }
+  .introCopy h1 {
+    font-size: 42px;
+  }
+  .introTagline {
+    font-size: 26px;
+  }
+  .introDescription {
+    max-width: 630px;
+  }
+  .features {
+    max-width: 700px;
+  }
+  .campus {
+    right: 0;
+    left: auto;
+    bottom: -60px;
+    width: 53%;
+    height: 290px;
+    opacity: 0.23;
+  }
+  .formArea {
+    padding: 12px 5vw 50px;
+  }
+  .card {
+    max-width: 560px;
+  }
+  .waves {
+    width: 100%;
+    height: 145px;
+  }
+  .leavesTop {
+    width: 135px;
+    left: -45px;
+    top: -36px;
+    opacity: 0.7;
+  }
+  .leavesSide {
+    display: none;
+  }
+}
+@media (max-width: 550px) {
+  .intro {
+    padding: 20px 20px 14px;
+  }
+  .brandRow {
+    gap: 11px;
+  }
+  .universityLogo {
+    width: 122px;
+  }
+  .brandDivider {
+    height: 28px;
+  }
+  .uniLakeBrand {
+    gap: 4px;
+    font-size: 16px;
+  }
+  .uniLakeBrand svg {
+    width: 18px;
+  }
+  .introCopy {
+    margin-top: 19px;
+  }
+  .redRule {
+    width: 31px;
+    height: 3px;
+    margin-bottom: 10px;
+  }
+  .introCopy h1 {
+    font-size: 35px;
+  }
+  .introTagline {
+    font-size: 20px;
+  }
+  .introDescription {
+    margin-top: 11px;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .features {
+    gap: 7px;
+    margin-top: 15px;
+  }
+  .features li {
+    gap: 5px;
+  }
+  .featureIcon {
+    width: 25px;
+    height: 25px;
+    border-radius: 6px;
+  }
+  .featureIcon svg {
+    width: 15px;
+  }
+  .features strong {
+    font-size: 9px;
+  }
+  .features small {
+    display: none;
+  }
+  .campus {
+    bottom: -20px;
+    right: -48px;
+    width: 66%;
+    height: 160px;
+    opacity: 0.18;
+  }
+  .formArea {
+    padding: 13px 16px 38px;
+  }
+  .card {
+    padding: 23px 21px 24px;
+    border-radius: 24px;
+  }
+  .cardBrand {
+    min-height: 112px;
+  }
+  .cardBrandText > img {
+    width: 125px;
+  }
+  .cardLake {
+    margin-top: 8px;
+    font-size: 20px;
+  }
+  .cardLake svg {
+    width: 18px;
+  }
+  .cardBrandText p {
+    margin-top: 3px;
+    font-size: 9px;
+  }
+  .lakeArt {
+    width: 116px;
+    min-width: 106px;
+    margin: -14px -10px 0 -20px;
+  }
+  .cardDivider {
+    margin-bottom: 17px;
+  }
+  .formHeading h2 {
+    font-size: 27px;
+  }
+  .formHeading p {
+    font-size: 12px;
+  }
+  .form {
+    gap: 15px;
+    margin-top: 18px;
+  }
+  .inputWrap {
+    height: 46px;
+  }
+  .submit {
+    height: 48px;
+  }
+  .notice {
+    margin-top: 18px;
+    padding: 12px;
+    font-size: 10px;
+  }
+  .notice strong {
+    font-size: 12px;
+  }
+  .leavesTop {
+    width: 95px;
+    left: -40px;
+    top: -31px;
+  }
+}
+@media (max-width: 380px) {
+  .brandRow {
+    gap: 7px;
+  }
+  .universityLogo {
+    width: 107px;
+  }
+  .uniLakeBrand {
+    font-size: 15px;
+  }
+  .introDescription {
+    font-size: 11px;
+  }
+  .card {
+    padding: 20px 17px 22px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .submit,
+  .inputWrap {
+    transition: none;
+  }
+  .spinner {
+    animation: none;
+  }
+}
+/* AI artwork lives in its own layers; text and controls remain native HTML. */
+.sky img,
+.ambient img {
+  object-fit: cover;
+}
+.sky::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #f4f8ff3d;
+}
+.ambient {
+  overflow: hidden;
+}
+.ambient img {
+  opacity: 0.7;
+}
+.intro {
+  padding-top: clamp(25px, 3vw, 42px);
+}
+.campus {
+  bottom: -2%;
+  width: min(96%, 760px);
+  height: 43%;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 23%, #000);
+  mask-image: linear-gradient(to bottom, transparent, #000 23%, #000);
+}
+.campus img {
+  object-fit: contain;
+  object-position: bottom left;
+}
+.campus::after {
+  display: none;
+}
+.card {
+  transform: translateY(-20px);
+}
+.leavesTop {
+  width: clamp(165px, 17vw, 250px);
+  left: -65px;
+  top: -41px;
+  transform: none;
+}
+.leavesSide {
+  width: clamp(135px, 15vw, 220px);
+  left: -87px;
+  top: 42%;
+  transform: none;
+}
+.cardBrand {
+  position: relative;
+}
+.lakeIllustration {
+  position: absolute;
+  top: -22px;
+  right: -14px;
+  width: 154px;
+  height: 150px;
+}
+.lakeArt {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.lakeIllustration span {
+  position: absolute;
+  left: 19%;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: #ffffffad;
+  color: #63444d;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-shadow: 0 1px #fff;
+}
+.lakeGold {
+  top: 31%;
+}
+.lakeSilver {
+  top: 57%;
+}
+.lakeBronze {
+  top: 82%;
+}
+@media (max-width: 800px) {
+  .intro {
+    padding-top: 24px;
+  }
+  .card {
+    transform: none;
+  }
+  .campus {
+    bottom: -30px;
+    right: 0;
+    left: auto;
+    width: 53%;
+    height: 230px;
+    opacity: 0.23;
+  }
+}
+@media (max-width: 550px) {
+  .intro {
+    padding-top: 20px;
+  }
+  .leavesTop {
+    width: 120px;
+    left: -47px;
+    top: -34px;
+  }
+  .campus {
+    width: 65%;
+    height: 155px;
+    bottom: -20px;
+  }
+  .lakeIllustration {
+    width: 118px;
+    height: 116px;
+    right: -10px;
+    top: -14px;
+  }
+  .lakeIllustration span {
+    font-size: 7px;
+  }
+}
+/* Fine tuning against the supplied 1671 × 941 reference. */
+.sky::after {
+  background: #f6faff80;
+}
+.intro {
+  padding-left: 8vw;
+}
+.leavesTop {
+  width: clamp(135px, 11vw, 182px);
+  left: -45px;
+  top: -34px;
+}
+.leavesSide {
+  width: clamp(140px, 13vw, 205px);
+  left: -92px;
+  top: 39%;
+}
+.campus {
+  width: min(115%, 940px);
+  height: 60%;
+  bottom: 0;
+}
+.universityLogo,
+.cardUniversityLogo {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  white-space: nowrap;
+}
+.universityLogo img,
+.cardUniversityLogo img {
+  flex: none;
+  width: clamp(48px, 3.6vw, 60px);
+  height: auto;
+}
+.universityLogo span,
+.cardUniversityLogo span {
+  display: flex;
+  flex-direction: column;
+  line-height: 0.89;
+}
+.universityLogo strong,
+.cardUniversityLogo strong {
+  color: #b81631;
+  font-size: clamp(22px, 1.9vw, 31px);
+  font-weight: 800;
+  letter-spacing: -0.06em;
+}
+.universityLogo small,
+.cardUniversityLogo small {
+  margin-top: 5px;
+  color: #283246;
+  font-size: clamp(13px, 1.1vw, 18px);
+  font-weight: 400;
+  letter-spacing: 0.035em;
+}
+.uniLakeBrand svg,
+.cardLake svg {
+  display: block;
+  width: clamp(26px, 2.7vw, 39px);
+  height: auto;
+}
+.cardUniversityLogo img {
+  width: clamp(44px, 3.6vw, 58px);
+}
+.cardUniversityLogo strong {
+  font-size: clamp(20px, 1.85vw, 30px);
+}
+.cardUniversityLogo small {
+  font-size: clamp(12px, 1.05vw, 17px);
+}
+.lakeIllustration {
+  top: -13px;
+  right: -13px;
+  width: 170px;
+  height: 160px;
+}
+.lakeIllustration span {
+  left: 18%;
+  padding: 0 3px;
+  background: #ffffff9e;
+  color: #412b34;
+  font-size: 10px;
+}
+.lakeGold {
+  top: 29%;
+}
+.lakeSilver {
+  top: 53%;
+}
+.lakeBronze {
+  top: 76%;
+}
+@media (min-width: 1600px) {
+  .introCopy {
+    margin-top: 52px;
+  }
+  .introCopy h1 {
+    font-size: 64px;
+  }
+  .introTagline {
+    font-size: 40px;
+  }
+  .introDescription {
+    max-width: 650px;
+    margin-top: 25px;
+    font-size: 16px;
+  }
+  .features {
+    margin-top: 39px;
+    width: 790px;
+  }
+  .features strong {
+    font-size: 16px;
+  }
+  .features small {
+    font-size: 13px;
+  }
+  .featureIcon {
+    width: 51px;
+    height: 51px;
+  }
+  .featureIcon svg {
+    width: 27px;
+    height: 27px;
+  }
+  .card {
+    width: min(100%, 635px);
+    max-width: 635px;
+    padding: 40px 58px 44px;
+  }
+  .cardBrand {
+    min-height: 190px;
+  }
+  .cardDivider {
+    margin-bottom: 28px;
+  }
+  .formHeading h2 {
+    font-size: 36px;
+  }
+  .formHeading p {
+    font-size: 15px;
+  }
+  .form {
+    margin-top: 34px;
+    gap: 22px;
+  }
+  .field label {
+    font-size: 16px;
+  }
+  .inputWrap {
+    height: 50px;
+  }
+  .inputWrap input {
+    font-size: 16px;
+  }
+  .submit {
+    height: 56px;
+    font-size: 18px;
+  }
+  .notice {
+    margin-top: 28px;
+    padding: 20px;
+    font-size: 13px;
+  }
+  .notice strong {
+    font-size: 16px;
+  }
+  .lakeIllustration {
+    top: -4px;
+    right: -7px;
+    width: 195px;
+    height: 190px;
+  }
+  .lakeIllustration span {
+    font-size: 13px;
+  }
+}
+@media (max-width: 800px) {
+  .intro {
+    padding-left: 5vw;
+  }
+  .campus {
+    bottom: -30px;
+    right: 0;
+    left: auto;
+    width: 53%;
+    height: 230px;
+    opacity: 0.23;
+  }
+}
+@media (max-width: 550px) {
+  .intro {
+    padding-left: 20px;
+  }
+  .universityLogo img {
+    width: 32px;
+  }
+  .universityLogo strong {
+    font-size: 16px;
+  }
+  .universityLogo small {
+    font-size: 9px;
+    margin-top: 2px;
+  }
+  .cardUniversityLogo img {
+    width: 39px;
+  }
+  .cardUniversityLogo strong {
+    font-size: 18px;
+  }
+  .cardUniversityLogo small {
+    font-size: 10px;
+    margin-top: 3px;
+  }
+  .uniLakeBrand svg,
+  .cardLake svg {
+    width: 18px;
+  }
+  .lakeIllustration {
+    width: 118px;
+    height: 116px;
+    top: -12px;
+    right: -8px;
+  }
+  .lakeIllustration span {
+    font-size: 8px;
+  }
+  .campus {
+    width: 65%;
+    height: 155px;
+    bottom: -20px;
+  }
+}
+/* Match vertical landmarks in the 1671 × 941 reference. */
+.cardBrandText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.campus {
+  height: 52%;
+  bottom: -35px;
+}
+.lakeSilver {
+  top: 48%;
+}
+.lakeBronze {
+  top: 68%;
+}
+@media (min-width: 1600px) {
+  .introCopy {
+    margin-top: 35px;
+  }
+  .features {
+    margin-top: 31px;
+  }
+  .card {
+    padding-bottom: 34px;
+  }
+  .cardBrand {
+    min-height: 185px;
+  }
+  .form {
+    margin-top: 28px;
+    gap: 16px;
+  }
+  .inputWrap {
+    height: 46px;
+  }
+  .submit {
+    margin-top: 14px;
+  }
+}
+@media (max-width: 800px) {
+  .campus {
+    bottom: -30px;
+    right: 0;
+    left: auto;
+    width: 53%;
+    height: 230px;
+    opacity: 0.23;
+  }
+}
+@media (max-width: 550px) {
+  .campus {
+    width: 65%;
+    height: 155px;
+    bottom: -20px;
+  }
+}
+.features {
+  margin-left: -2vw;
+}
+.campus {
+  left: 58px;
+  bottom: -55px;
+}
+@media (min-width: 1600px) {
+  .brandRow {
+    gap: 37px;
+  }
+  .universityLogo {
+    width: 195px;
+  }
+  .features {
+    width: 830px;
+  }
+  .cardLake {
+    margin-top: 23px;
+  }
+  .campus {
+    left: 75px;
+  }
+}
+@media (max-width: 800px) {
+  .features {
+    margin-left: 0;
+  }
+  .campus {
+    bottom: -30px;
+    right: 0;
+    left: auto;
+  }
+}
+@media (max-width: 550px) {
+  .campus {
+    bottom: -20px;
+  }
+}
+.campus {
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent 0%, #000 23%),
+    linear-gradient(to right, #000 69%, transparent 82%);
+  mask-image:
+    linear-gradient(to bottom, transparent 0%, #000 23%),
+    linear-gradient(to right, #000 69%, transparent 82%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+.lakeGold {
+  top: 21%;
+}
+.lakeSilver {
+  top: 40%;
+}
+.lakeBronze {
+  top: 60%;
+}
+/* Keep the real building's ground visible while blending the sky and right edge. */
+.campus {
+  bottom: 0;
+}
+@media (min-width: 801px) and (max-width: 1599px) {
+  .campus {
+    -webkit-mask-image:
+      linear-gradient(to bottom, transparent 13%, #000 23%),
+      linear-gradient(to right, #000 55%, transparent 74%);
+    mask-image:
+      linear-gradient(to bottom, transparent 13%, #000 23%),
+      linear-gradient(to right, #000 55%, transparent 74%);
+  }
+}
+@media (min-width: 1600px) {
+  .campus {
+    -webkit-mask-image:
+      linear-gradient(to bottom, transparent 13%, #000 23%),
+      linear-gradient(to right, #000 57%, transparent 82%);
+    mask-image:
+      linear-gradient(to bottom, transparent 13%, #000 23%),
+      linear-gradient(to right, #000 57%, transparent 82%);
+  }
+}
+@media (max-width: 800px) {
+  .campus {
+    bottom: -30px;
+  }
+}
+@media (max-width: 550px) {
+  .campus {
+    bottom: -20px;
+  }
+}
+/* The campus artwork includes its own sky and ground. Blend its edges, not its roof. */
+@media (min-width: 801px) {
+  .campus {
+    left: 0;
+    bottom: 0;
+    width: min(56.9vw, 950px);
+    height: auto;
+    aspect-ratio: 1580 / 995;
+  }
+  .campus img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+  .campus {
+    -webkit-mask-image:
+      linear-gradient(to bottom, transparent 0%, #000 26%),
+      linear-gradient(to right, transparent 0%, #000 6%, #000 88%, transparent 100%);
+    mask-image:
+      linear-gradient(to bottom, transparent 0%, #000 26%),
+      linear-gradient(to right, transparent 0%, #000 6%, #000 88%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+}
+@media (min-width: 1600px) {
+  .campus {
+    bottom: -20px;
+  }
+}

@@ -216,10 +216,11 @@ describe('DATA_ADMIN QualityView', () => {
 
       // 1. Tạo yêu cầu xử lý & kiểm tra chặn chọn hồ sơ lệch dataset
       await user.click(await screen.findByRole('button', { name: 'Tạo yêu cầu xử lý' }))
+      await user.click(screen.getByRole('radio', { name: 'Chọn phòng ban và người phụ trách' }))
       await user.click(await screen.findByLabelText(/Dòng 3/))
       await user.click(screen.getByLabelText(/Dòng 5/))
       expect(
-        screen.getByText(/Các hồ sơ đã chọn không cùng bộ dữ liệu, lĩnh vực hoặc entity/)
+        screen.getByText(/Các hồ sơ đã chọn không cùng lượt làm sạch, bộ dữ liệu hoặc loại dữ liệu/)
       ).toBeInTheDocument()
 
       await user.click(screen.getByLabelText(/Dòng 5/)) // bỏ chọn hồ sơ lệch

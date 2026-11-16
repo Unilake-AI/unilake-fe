@@ -21,14 +21,9 @@ import { toast } from 'sonner'
 import { getApiErrorCode, getApiErrorMessage, getErrorMessageForCode } from '@/api/http'
 import { API_GetDataset } from '@/api/shared/datasets'
 import { API_GetIngestionJob } from '@/api/shared/ingestion'
-import type { IngestionJob } from '@/api/shared/ingestion'
-import {
-  API_GetQualityIssue,
-  API_SubmitQualityResolution,
-  API_UploadQualityIssueFile,
-} from '@/api/shared/quality-issues'
-import type { QualityIssueDetail } from '@/api/shared/quality-issues'
-import type { StaffContext } from '@/api/shared/staff'
+import { API_GetQualityIssue } from '@/api/shared/quality-issues'
+import { API_SubmitQualityResolution } from '@/api/staff/quality-issues'
+import { API_UploadQualityIssueFile } from '@/api/staff/upload'
 import {
   Button,
   Card,
@@ -50,6 +45,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import type { IngestionJob } from '@/types/ingestion'
+import type { QualityIssueDetail } from '@/types/quality-issues'
+import type { StaffContext } from '@/types/staff-context'
 
 import { StaffContextGate } from './staff-context-gate'
 import {
@@ -68,10 +66,12 @@ import {
 } from './staff-helpers'
 
 const inputClass =
-  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30 disabled:bg-slate-50 disabled:text-slate-500'
+  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]/30 disabled:bg-slate-50 disabled:text-slate-500'
 
 function eventTypeLabel(eventType: string): string {
   switch (eventType.toUpperCase()) {
+    case 'RETURN_APPROVED':
+      return 'Quản trị duyệt trả hồ sơ về người nạp'
     case 'ASSIGNED':
       return 'Giao yêu cầu xử lý'
     case 'ASSIGNEE_CHANGED':
@@ -537,7 +537,7 @@ function ResolutionWorkflow({
                 setUploadProgress(null)
                 uploadMutation.reset()
               }}
-              className="block w-full cursor-pointer rounded-md border border-dashed border-slate-300 bg-slate-50 p-3 text-xs text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-indigo-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-indigo-700"
+              className="block w-full cursor-pointer rounded-md border border-dashed border-slate-300 bg-slate-50 p-3 text-xs text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-[#b91830] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-[#9e1429]"
             />
             {expectedFilename && (
               <p className="text-[11px] text-slate-500">
@@ -553,7 +553,7 @@ function ResolutionWorkflow({
                 type="checkbox"
                 checked={overrideParser}
                 onChange={(e) => setOverrideParser(e.target.checked)}
-                className="size-4 accent-indigo-600"
+                className="size-4 accent-[#b91830]"
               />
               Ghi đè cấu hình đọc tệp (bỏ chọn để giữ nguyên cấu hình của tệp nguồn gốc)
             </label>
@@ -693,7 +693,7 @@ function ResolutionWorkflow({
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
                 <div
-                  className="h-full bg-indigo-600 transition-all"
+                  className="h-full bg-[#b91830] transition-all"
                   style={{ width: `${uploadProgress ?? 0}%` }}
                 />
               </div>
@@ -760,7 +760,7 @@ function ResolutionWorkflow({
               value={resolutionNote}
               onChange={(e) => setResolutionNote(e.target.value)}
               placeholder="Ví dụ: Đã cập nhật và tải lại dữ liệu cần sửa."
-              className="w-full rounded-md border border-slate-300 bg-white p-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30 disabled:bg-slate-50 disabled:text-slate-500"
+              className="w-full rounded-md border border-slate-300 bg-white p-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]/30 disabled:bg-slate-50 disabled:text-slate-500"
             />
           </div>
 
@@ -853,8 +853,8 @@ function IssueDetailContent({ context, issueId }: { context: StaffContext; issue
     return (
       <div className="space-y-4">
         <Link
-          href="/analyst/quality-issues"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:underline"
+          href="/staff/quality-issues"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#b91830] hover:underline"
         >
           <ArrowLeft className="size-3.5" aria-hidden="true" />
           Quay lại danh sách yêu cầu
@@ -872,6 +872,7 @@ function IssueDetailContent({ context, issueId }: { context: StaffContext; issue
 
   const departmentName =
     context.departments.find((d) => d.department_id === issue.department_id)?.department_name ??
+    issue.department_name ??
     `Đơn vị #${issue.department_id}`
   const datasetName = datasetQuery.data?.dataset_name ?? `Bộ dữ liệu #${issue.dataset_id}`
   const sourceFilename = issue.quarantine_records.find((r) => r.source_table)?.source_table ?? '—'
@@ -887,7 +888,7 @@ function IssueDetailContent({ context, issueId }: { context: StaffContext; issue
           <div className="flex items-center gap-2">
             <Tag tone={statusTone(issue.status)}>{statusLabel(issue.status)}</Tag>
             <Link
-              href="/analyst/quality-issues"
+              href="/staff/quality-issues"
               className="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
             >
               <ArrowLeft className="size-3.5" aria-hidden="true" />

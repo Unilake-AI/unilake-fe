@@ -42,7 +42,7 @@ describe('UserMenu', () => {
     render(<UserMenu role="ACADEMIC_STAFF" />)
 
     const trigger = screen.getByRole('button', { name: 'Mở menu người dùng' })
-    expect(trigger).toHaveTextContent('Trần Thị Mai Phương')
+    expect(trigger).toHaveTextContent('academic_staff')
     expect(trigger).toHaveTextContent('[ACADEMIC_STAFF]')
   })
 
@@ -54,7 +54,7 @@ describe('UserMenu', () => {
 
     expect(await screen.findByRole('menuitem', { name: /Nhân viên Đào tạo/ })).toHaveAttribute(
       'href',
-      '/analyst'
+      '/staff'
     )
     expect(screen.getByRole('menuitem', { name: /Ban Giám hiệu/ })).toHaveAttribute(
       'href',

@@ -14,19 +14,16 @@ import {
   Plus,
   RefreshCw,
   UserCheck,
-  X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { API_ListCleaningRuns } from '@/api/data-operations/cleaning'
+import { API_ListCleaningRuns } from '@/api/admindata/cleaning'
 import {
   API_AssignQualityIssue,
-  API_CreateQualityIssue,
   API_ListIssueAssignees,
   API_ListIssueDepartments,
   API_VerifyQualityIssue,
-} from '@/api/data-operations/quality-issues'
-import { API_ListQuarantineRecords } from '@/api/data-operations/quarantine'
+} from '@/api/admindata/quality-issues'
 import { getApiErrorMessage } from '@/api/http'
 import { API_GetIngestionJob } from '@/api/shared/ingestion'
 import {
@@ -34,7 +31,6 @@ import {
   API_ListQualityIssues,
   API_GetQualityIssueStats,
 } from '@/api/shared/quality-issues'
-import type { QualityIssueDetail } from '@/api/shared/quality-issues'
 import {
   Button,
   Card,
@@ -58,296 +54,15 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 
+import { CreateIssuePanel } from './create-quality-issue-panel'
 import { domainLabel } from './data-helpers'
 
 const PAGE_SIZE = 20
 
 const inputClass =
-  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30'
+  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]/30'
 
-function CreateIssuePanel({
-  onClose,
-  onCreated,
-}: {
-  onClose: () => void
-  onCreated: (issue: QualityIssueDetail) => void
-}) {
-  const queryClient = useQueryClient()
-  const [selectedRecordIds, setSelectedRecordIds] = useState<string[]>([])
-  const [departmentId, setDepartmentId] = useState('')
-  const [assigneeUserId, setAssigneeUserId] = useState('')
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [formError, setFormError] = useState<string | null>(null)
-
-  const quarantineQuery = useQuery({
-    queryKey: ['quarantine-records', 'for-issue-create'],
-    queryFn: () => API_ListQuarantineRecords({ limit: 100, offset: 0 }),
-  })
-
-  const departmentsQuery = useQuery({
-    queryKey: ['quality-issues', 'departments'],
-    queryFn: API_ListIssueDepartments,
-  })
-
-  const records = quarantineQuery.data ?? []
-  const selectedRecords = records.filter((r) => selectedRecordIds.includes(r.record_id))
-  const firstRecord = selectedRecords[0]
-  const recordsCompatible =
-    selectedRecords.length === 0 ||
-    selectedRecords.every(
-      (r) =>
-        r.dataset_id === firstRecord?.dataset_id &&
-        r.domain === firstRecord?.domain &&
-        r.entity === firstRecord?.entity
-    )
-
-  const parsedDeptId = Number(departmentId)
-  const inferredDomain = firstRecord?.domain as 'hr' | 'academic' | 'admissions' | undefined
-
-  const assigneesQuery = useQuery({
-    queryKey: ['quality-issues', 'assignees', parsedDeptId, inferredDomain],
-    queryFn: () =>
-      API_ListIssueAssignees({
-        department_id: parsedDeptId,
-        domain: inferredDomain!,
-        limit: 100,
-        offset: 0,
-      }),
-    enabled: Number.isInteger(parsedDeptId) && parsedDeptId > 0 && Boolean(inferredDomain),
-  })
-
-  const createMutation = useMutation({
-    mutationFn: API_CreateQualityIssue,
-    onSuccess: async (created) => {
-      await queryClient.invalidateQueries({ queryKey: ['quality-issues'] })
-      toast.success(`Đã tạo yêu cầu xử lý “${created.title}”.`)
-      onCreated(created)
-      onClose()
-    },
-  })
-
-  function toggleRecord(recordId: string) {
-    setSelectedRecordIds((prev) =>
-      prev.includes(recordId) ? prev.filter((id) => id !== recordId) : [...prev, recordId]
-    )
-  }
-
-  function handleSubmit(event: FormEvent) {
-    event.preventDefault()
-    if (createMutation.isPending) return
-    setFormError(null)
-    createMutation.reset()
-
-    if (selectedRecordIds.length === 0) {
-      setFormError('Vui lòng chọn ít nhất 1 hồ sơ cách ly (Quarantine).')
-      return
-    }
-    if (!recordsCompatible) {
-      setFormError(
-        'Các hồ sơ được chọn phải thuộc cùng một bộ dữ liệu (dataset), lĩnh vực (domain) và loại dữ liệu (entity).'
-      )
-      return
-    }
-    if (!Number.isInteger(parsedDeptId) || parsedDeptId <= 0) {
-      setFormError('Vui lòng chọn phòng ban phụ trách.')
-      return
-    }
-    if (!title.trim()) {
-      setFormError('Vui lòng nhập tiêu đề yêu cầu.')
-      return
-    }
-
-    createMutation.mutate({
-      title: title.trim(),
-      description: description.trim(),
-      department_id: parsedDeptId,
-      assignee_user_id: assigneeUserId ? Number(assigneeUserId) : null,
-      quarantine_record_ids: selectedRecordIds,
-    })
-  }
-
-  return (
-    <Card
-      title="Tạo yêu cầu xử lý dữ liệu lỗi mới"
-      subtitle="Chọn các hồ sơ Quarantine cùng bộ dữ liệu, entity và tệp nguồn để giao phòng ban xử lý."
-      right={
-        <Button variant="ghost" onClick={onClose} aria-label="Đóng form tạo yêu cầu">
-          <X className="size-4" aria-hidden="true" />
-        </Button>
-      }
-    >
-      <form className="space-y-4 text-xs" onSubmit={handleSubmit} noValidate>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="font-semibold text-slate-700">
-              1. Chọn hồ sơ cách ly ({selectedRecordIds.length} đã chọn) *
-            </span>
-            {firstRecord && (
-              <span className="font-mono text-[11px] text-slate-500">
-                Dataset #{firstRecord.dataset_id} · {domainLabel(firstRecord.domain)} ·{' '}
-                {firstRecord.entity}
-              </span>
-            )}
-          </div>
-
-          {quarantineQuery.isPending ? (
-            <LoadingState label="Đang tải danh sách hồ sơ Quarantine…" />
-          ) : quarantineQuery.isError ? (
-            <ErrorState
-              message={getApiErrorMessage(
-                quarantineQuery.error,
-                'Không tải được danh sách hồ sơ Quarantine.'
-              )}
-            />
-          ) : records.length === 0 ? (
-            <EmptyState title="Không có hồ sơ Quarantine nào" />
-          ) : (
-            <div className="max-h-52 divide-y divide-slate-100 overflow-y-auto rounded-md border border-slate-200">
-              {records.map((rec) => {
-                const checked = selectedRecordIds.includes(rec.record_id)
-                return (
-                  <label
-                    key={rec.record_id}
-                    className={`flex cursor-pointer items-center gap-3 px-3 py-2 ${
-                      checked ? 'bg-indigo-50/70' : 'hover:bg-slate-50'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleRecord(rec.record_id)}
-                      className="size-4 accent-indigo-600"
-                    />
-                    <span className="font-mono font-semibold text-slate-900">
-                      Dòng {rec.record_position}
-                    </span>
-                    <span className="text-slate-600">
-                      DS #{rec.dataset_id} · {domainLabel(rec.domain)} · {rec.entity}
-                    </span>
-                    <span className="ml-auto flex gap-1">
-                      {rec.error_codes.map((c) => (
-                        <Tag key={c} tone="rose">
-                          {c}
-                        </Tag>
-                      ))}
-                    </span>
-                  </label>
-                )
-              })}
-            </div>
-          )}
-
-          {!recordsCompatible && (
-            <p role="alert" className="text-rose-600">
-              Các hồ sơ đã chọn không cùng bộ dữ liệu, lĩnh vực hoặc entity. Vui lòng chỉ chọn các
-              hồ sơ cùng nhóm.
-            </p>
-          )}
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="space-y-1">
-            <label htmlFor="qi-dept" className="block font-semibold text-slate-700">
-              2. Phòng ban phụ trách *
-            </label>
-            <select
-              id="qi-dept"
-              className={inputClass}
-              value={departmentId}
-              onChange={(e) => {
-                setDepartmentId(e.target.value)
-                setAssigneeUserId('')
-              }}
-            >
-              <option value="">Chọn phòng ban</option>
-              {(departmentsQuery.data ?? []).map((d) => (
-                <option key={d.department_id} value={String(d.department_id)}>
-                  {d.department_name} ({d.department_code})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1">
-            <label htmlFor="qi-assignee" className="block font-semibold text-slate-700">
-              3. Người phụ trách (tùy chọn)
-            </label>
-            <select
-              id="qi-assignee"
-              className={inputClass}
-              disabled={!departmentId || !inferredDomain}
-              value={assigneeUserId}
-              onChange={(e) => setAssigneeUserId(e.target.value)}
-            >
-              <option value="">
-                {!departmentId || !inferredDomain
-                  ? 'Chọn hồ sơ và phòng ban trước'
-                  : assigneesQuery.isPending
-                    ? 'Đang tải danh sách nhân viên…'
-                    : 'Chưa giao ngay / Chọn người phụ trách'}
-              </option>
-              {(assigneesQuery.data ?? []).map((a) => (
-                <option key={a.user_id} value={String(a.user_id)}>
-                  {a.full_name} (@{a.username})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1 md:col-span-2">
-            <label htmlFor="qi-title" className="block font-semibold text-slate-700">
-              Tiêu đề yêu cầu *
-            </label>
-            <input
-              id="qi-title"
-              className={inputClass}
-              maxLength={200}
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="vd. Bổ sung số CCCD thí sinh còn thiếu"
-            />
-          </div>
-
-          <div className="space-y-1 md:col-span-2">
-            <label htmlFor="qi-desc" className="block font-semibold text-slate-700">
-              Mô tả chi tiết
-            </label>
-            <textarea
-              id="qi-desc"
-              rows={2}
-              maxLength={4000}
-              className="w-full rounded-md border border-slate-300 bg-white p-2.5 text-sm text-slate-900"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {(formError || createMutation.isError) && (
-          <p
-            role="alert"
-            className="rounded-md border border-rose-200 bg-rose-50 p-2.5 text-rose-700"
-          >
-            {formError ??
-              getApiErrorMessage(createMutation.error, 'Không thể tạo yêu cầu xử lý dữ liệu lỗi.')}
-          </p>
-        )}
-
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose} disabled={createMutation.isPending}>
-            Hủy
-          </Button>
-          <Button type="submit" variant="primary" disabled={createMutation.isPending}>
-            {createMutation.isPending ? 'Đang tạo…' : 'Tạo yêu cầu'}
-          </Button>
-        </div>
-      </form>
-    </Card>
-  )
-}
-
-function IssueDetailPanel({ issueId }: { issueId: string }) {
+export function IssueDetailPanel({ issueId }: { issueId: string }) {
   const queryClient = useQueryClient()
   const [assigneeId, setAssigneeId] = useState('')
   const [selectedRunId, setSelectedRunId] = useState('')
@@ -546,7 +261,7 @@ function IssueDetailPanel({ issueId }: { issueId: string }) {
             {issue.resolution_job_id && (
               <Link
                 href={`/data/cleaning?jobId=${issue.resolution_job_id}`}
-                className="font-semibold text-indigo-600 hover:underline"
+                className="font-semibold text-[#b91830] hover:underline"
               >
                 Chạy Cleaning cho Job #{issue.resolution_job_id}
               </Link>
@@ -657,7 +372,7 @@ function IssueDetailPanel({ issueId }: { issueId: string }) {
                               : [...prev, rec.record_id]
                           )
                         }
-                        className="size-3.5 accent-indigo-600"
+                        className="size-3.5 accent-[#b91830]"
                       />
                       <span className="font-mono">Dòng {rec.record_position}</span>
                       <span className="text-slate-500">({rec.error_codes.join(', ')})</span>
@@ -1007,13 +722,13 @@ export function QualityView() {
                       return (
                         <tr
                           key={issue.issue_id}
-                          className={active ? 'bg-indigo-50/60' : 'hover:bg-slate-50'}
+                          className={active ? 'bg-[#fff3f5]/60' : 'hover:bg-slate-50'}
                         >
                           <td className="px-3 py-2.5">
                             <button
                               type="button"
                               onClick={() => setSelectedIssueId(issue.issue_id)}
-                              className="text-left font-semibold text-indigo-600 hover:underline"
+                              className="text-left font-semibold text-[#b91830] hover:underline"
                             >
                               {issue.title}
                             </button>

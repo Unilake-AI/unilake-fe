@@ -125,11 +125,11 @@ describe('StaffOverviewView', () => {
         expect(await screen.findByText('12')).toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'Nạp dữ liệu' })).toHaveAttribute(
           'href',
-          '/analyst/upload'
+          '/staff/upload'
         )
         expect(screen.getByRole('link', { name: 'Yêu cầu dữ liệu lỗi' })).toHaveAttribute(
           'href',
-          '/analyst/quality-issues'
+          '/staff/quality-issues'
         )
       } finally {
         client.clear()

@@ -23,9 +23,9 @@ Frontend được xây dựng trên Next.js App Router và tổ chức giao di�
 | --- | --- | --- |
 | Quản trị hệ thống (`ADMIN`) | `/admin` | Quản lý người dùng, phân quyền, cấu hình và nhật ký hệ thống |
 | Quản trị dữ liệu (`DATA_ADMIN`) | `/data` | Quản lý nguồn dữ liệu, nạp dữ liệu, catalog, chất lượng và lineage |
-| Nhân viên Tuyển sinh (`ADMISSIONS_STAFF`) | `/analyst` | Khám phá và truy vấn dữ liệu Tuyển sinh |
-| Nhân viên Đào tạo (`ACADEMIC_STAFF`) | `/analyst` | Khám phá và truy vấn dữ liệu Đào tạo |
-| Nhân viên Nhân sự (`HR_STAFF`) | `/analyst` | Khám phá và truy vấn dữ liệu Nhân sự |
+| Nhân viên Tuyển sinh (`ADMISSIONS_STAFF`) | `/staff` | Nạp dữ liệu và xử lý vấn đề chất lượng dữ liệu Tuyển sinh |
+| Nhân viên Đào tạo (`ACADEMIC_STAFF`) | `/staff` | Nạp dữ liệu và xử lý vấn đề chất lượng dữ liệu Đào tạo |
+| Nhân viên Nhân sự (`HR_STAFF`) | `/staff` | Nạp dữ liệu và xử lý vấn đề chất lượng dữ liệu Nhân sự |
 | Trưởng phòng Tuyển sinh (`ADMISSIONS_MANAGER`) | `/manager` | Theo dõi và phân tích dữ liệu Tuyển sinh |
 | Trưởng phòng Đào tạo (`ACADEMIC_MANAGER`) | `/manager` | Theo dõi và phân tích dữ liệu Đào tạo |
 | Trưởng phòng Nhân sự (`HR_MANAGER`) | `/manager` | Theo dõi và phân tích dữ liệu Nhân sự |
@@ -68,28 +68,38 @@ pnpm dev
 
 Ứng dụng mặc định chạy tại [http://localhost:3000](http://localhost:3000). Truy cập [trang đăng nhập](http://localhost:3000/login) bằng tài khoản được cấp từ backend.
 
+Để mở frontend qua ZeroTier, đặt `UNILAKE_DEV_HOST` trong `.env.local` thành IP ZeroTier của máy chạy frontend. Ví dụ, với `UNILAKE_DEV_HOST=10.96.134.223`, chạy `pnpm dev` và mở [http://10.96.134.223:3000](http://10.96.134.223:3000) từ thiết bị cùng mạng ZeroTier. Đặt `NEXT_PUBLIC_API_BASE_URL` thành URL của máy chạy backend và bật `NEXT_PUBLIC_API_PROXY=true` để trình duyệt gọi API qua frontend.
+
 ## Cấu hình kết nối API
 
 Các biến môi trường được khai báo trong `.env.local`, dựa trên [.env.local.example](.env.local.example).
 
 | Biến | Development | Production |
 | --- | --- | --- |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | URL backend thực tế dùng `https://` |
+| `NEXT_PUBLIC_API_BASE_URL` | `http://localhost:8000/api/v1` | URL backend thực tế dùng `https://` |
 
-Đây là biến URL backend duy nhất, được đọc tại `src/api/api.ts` cho cả Axios client và route handler. Nếu biến trống, ứng dụng dùng `http://localhost:8000`. Có thể cấu hình URL có hoặc không có `/api/v1` vì ứng dụng tự chuẩn hóa tiền tố. Không đặt token, mật khẩu hoặc query trong URL này vì `NEXT_PUBLIC_*` là cấu hình công khai.
+`src/api/api.ts` đọc `NEXT_PUBLIC_API_BASE_URL` cho cả Axios client và route handler. Nếu biến này trống, ứng dụng đọc `NEXT_PUBLIC_API_URL` hoặc mặc định dùng `http://localhost:8000`. Có thể cấu hình URL có hoặc không có `/api/v1` vì ứng dụng tự chuẩn hóa tiền tố. Không đặt token, mật khẩu hoặc query trong URL này vì `NEXT_PUBLIC_*` là cấu hình công khai.
 
 - **Axios:** trình duyệt gọi trực tiếp backend qua `src/api/http.ts`; login/refresh/logout và API nghiệp vụ dùng chung instance `http`, cùng URL và timeout 30 giây. Interceptor bỏ qua gắn token và refresh cho ba endpoint xác thực để tránh vòng lặp 401. Backend cần cho phép origin frontend trong CORS, cùng header `Authorization`, `Content-Type` và các method sử dụng.
 - **Next.js:** các route handler giữ `fetch` phía server để bảo toàn xử lý cookie, FormData và chuyển tiếp response stream. OpenAPI client hiện chưa được sử dụng trong giao diện, giữ proxy cùng origin `/api/proxy` và kiểu sinh tự động.
-- **HTTPS** URL cấu hình ở production phải dùng HTTPS. Development và test cho phép HTTP trên `localhost` và `127.0.0.1`.
+
+Khi chạy `pnpm dev` với backend từ xa chưa cho phép origin local qua CORS, đặt `NEXT_PUBLIC_API_PROXY=true` trong `.env.local` để Axios gọi qua `/api/proxy`.
+- **HTTPS** URL cấu hình ở production phải dùng HTTPS. Development và test cho phép HTTP trên localhost hoặc địa chỉ IPv4 nội bộ.
 
 ### Vai trò đăng nhập
 
 Frontend nhận 9 role từ backend: `ADMIN`, `DATA_ADMIN`, `VIEWER` và 6 role phòng ban
 `ADMISSIONS_MANAGER/STAFF`, `ACADEMIC_MANAGER/STAFF`, `HR_MANAGER/STAFF`.
 Ba role `*_MANAGER` dùng nhóm trang `/manager`; ba role `*_STAFF` dùng nhóm trang
-`/analyst`. Giao diện chọn phân hệ được cố định theo phòng ban. `VIEWER` chỉ có
+`/staff`. Giao diện chọn phân hệ được cố định theo phòng ban. `VIEWER` chỉ có
 dashboard theo quyền seed hiện tại. Việc cố định phân hệ trên giao diện không thay
 thế kiểm tra quyền và phạm vi dữ liệu ở backend.
+
+Các hàm gọi backend trong `src/api` được tổ chức theo nhóm giao diện
+`admin`, `admindata`, `manager`, `viewer` và `staff`. Xác thực và quản lý
+phiên nằm trong `auth`, các API nghiệp vụ dùng chung nằm trong `shared`.
+Cấu hình, HTTP client và kiểu OpenAPI nằm ở cấp `src/api`. Trang quản trị
+dữ liệu dùng lại hàm nạp tệp từ `staff/upload.ts`.
 
 Khởi động lại dev server sau khi cập nhật `.env.local`. Các biến `NEXT_PUBLIC_*` được đưa vào bundle tại thời điểm build; thay đổi các giá trị này trong môi trường production yêu cầu build lại ứng dụng.
 
@@ -149,7 +159,11 @@ Workflow [Frontend CI/CD](.github/workflows/ci-frontend.yml) áp dụng cho sự
 └── Dockerfile        # Cấu hình build và chạy container
 ```
 
-Các file kiểm thử `*.test.ts` và `*.test.tsx` được đặt cạnh mã nguồn tương ứng. `src/api/api.ts`, `src/api/http.ts` và kiểu OpenAPI ở gốc `src/api/` được dùng chung. Thư mục lệnh gọi phản ánh quyền backend. Các API trong `shared/` vẫn có thể giới hạn theo vai trò, phân hệ hoặc người được giao. Proxy backend nằm tại `src/app/api/proxy/[...path]/route.ts`.
+Các file kiểm thử `*.test.ts` và `*.test.tsx` được đặt cạnh mã nguồn tương ứng.
+Các API trong `src/api/shared` vẫn có thể giới hạn theo vai trò, phân hệ
+hoặc người được giao. Logic xử lý request phía server nằm trong
+`src/api/auth/server` và `src/api/proxy`. Các file `route.ts` trong
+`src/app/api` đăng ký handler theo quy ước Next.js App Router.
 
 ## Quản lý API contract
 
@@ -241,7 +255,7 @@ docker run --rm \
 
 Ứng dụng được cung cấp tại [http://localhost:3000](http://localhost:3000).
 
-Khi backend đổi domain, chỉ sửa `NEXT_PUBLIC_API_URL` trong `.env.local` hoặc cấu hình hosting/build Docker, rồi build lại ứng dụng. Backend cần cấu hình CORS cho origin thực tế của frontend.
+Khi backend đổi domain, cập nhật URL trong `.env.local` hoặc cấu hình hosting/build Docker. Khởi động lại dev server hoặc build lại bản production. Backend cần cấu hình CORS cho origin thực tế của frontend.
 
 ## Trạng thái tích hợp
 

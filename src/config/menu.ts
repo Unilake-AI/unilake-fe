@@ -1,5 +1,6 @@
 import { getWorkspaceForRole } from '@/config/roles'
-import type { MenuGroup, MenuItem, RoleCode, RoleWorkspace } from '@/types/auth'
+import type { MenuGroup, MenuItem } from '@/types/navigation'
+import type { RoleCode, RoleWorkspace } from '@/types/roles'
 
 /** Sáu role phòng ban dùng hai không gian làm việc theo chức năng. */
 export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
@@ -10,6 +11,7 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
         { title: 'Người dùng & Phân quyền', href: '/admin', iconName: 'Users' },
         { title: 'Cấu hình hệ thống & AI', href: '/admin/settings', iconName: 'Settings' },
         { title: 'Nhật ký hệ thống', href: '/admin/system-logs', iconName: 'ScrollText' },
+        { title: 'Yêu cầu xử lý lỗi', href: '/admin/quality-issues', iconName: 'FileWarning' },
       ],
     },
   ],
@@ -33,9 +35,11 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
       items: [
         { title: 'Cấu hình Silver (Profiles)', href: '/data/profiles', iconName: 'Settings' },
         { title: 'Làm sạch & Kiểm tra', href: '/data/cleaning', iconName: 'Play' },
+        { title: 'Xử lý Silver tự động', href: '/data/auto-pipeline', iconName: 'Workflow' },
         { title: 'Hồ sơ cách ly (Quarantine)', href: '/data/quarantine', iconName: 'FileWarning' },
         { title: 'Yêu cầu xử lý dữ liệu lỗi', href: '/data/quality', iconName: 'ShieldCheck' },
         { title: 'Phiên bản Silver (Snapshots)', href: '/data/silver', iconName: 'CheckCircle2' },
+        { title: 'Tổng hợp & Báo cáo Gold', href: '/data/gold', iconName: 'BarChart3' },
       ],
     },
     {
@@ -51,17 +55,17 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
     {
       groupTitle: 'Vận hành dữ liệu',
       items: [
-        { title: 'Tổng quan', href: '/analyst', iconName: 'LayoutDashboard' },
-        { title: 'Nạp dữ liệu', href: '/analyst/upload', iconName: 'Upload' },
-        { title: 'Lịch sử nạp dữ liệu', href: '/analyst/ingestion', iconName: 'History' },
+        { title: 'Tổng quan', href: '/staff', iconName: 'LayoutDashboard' },
+        { title: 'Nạp dữ liệu', href: '/staff/upload', iconName: 'Upload' },
+        { title: 'Lịch sử nạp dữ liệu', href: '/staff/ingestion', iconName: 'History' },
         {
           title: 'Yêu cầu xử lý dữ liệu lỗi',
-          href: '/analyst/quality-issues',
+          href: '/staff/quality-issues',
           iconName: 'ShieldCheck',
         },
         {
           title: 'Hồ sơ cá nhân / Phiên đăng nhập',
-          href: '/analyst/profile',
+          href: '/staff/profile',
           iconName: 'User',
         },
       ],
@@ -73,7 +77,9 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
       groupTitle: 'Quản lý đơn vị',
       items: [
         { title: 'Tổng quan phân hệ', href: '/manager', iconName: 'LayoutDashboard' },
-        { title: 'Phân tích & So sánh', href: '/manager/analytics', iconName: 'BarChart3' },
+        { title: 'Phân tích dữ liệu', href: '/manager/analytics', iconName: 'BarChart3' },
+        { title: 'Bộ dữ liệu phòng ban', href: '/manager/datasets', iconName: 'Database' },
+        { title: 'Yêu cầu xử lý lỗi', href: '/manager/quality-issues', iconName: 'FileWarning' },
         { title: 'Hỏi AI (NLQ)', href: '/manager/ask', iconName: 'Sparkles', badge: 'AI' },
         { title: 'Lịch sử truy vấn', href: '/manager/history', iconName: 'History' },
       ],

@@ -1,13 +1,17 @@
 import axios from 'axios'
 import Cookies from 'js-cookie'
 
-import { API_BASE_URL, API_TIMEOUT } from '@/api/api'
+import { API_BASE_URL, API_TIMEOUT, SESSION_ENDPOINTS } from '@/api/api'
 import { readRefreshToken, redirectToLoginExpired, storeSession } from '@/lib/session'
-
-import type { InternalAxiosRequestConfig } from 'axios'
+import type { RetryableRequestConfig } from '@/types/http'
 
 /** Client gọi REST API của backend (`/api/v1`), tự gắn Bearer token đã lưu khi đăng nhập. */
-export const http = axios.create({ baseURL: API_BASE_URL, timeout: API_TIMEOUT })
+const baseURL =
+  process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_API_PROXY === 'true'
+    ? '/api/proxy'
+    : API_BASE_URL
+
+export const http = axios.create({ baseURL, timeout: API_TIMEOUT })
 
 function readAccessToken(): string | undefined {
   const fromCookie = Cookies.get('access_token')
@@ -21,10 +25,7 @@ function readAccessToken(): string | undefined {
   }
 }
 
-// Các endpoint này xác thực bằng payload, không dùng access token của phiên hiện tại.
-const SESSION_ENDPOINTS = new Set(['/auth/login', '/auth/refresh', '/auth/logout'])
-
-http.interceptors.request.use((config: RetriableConfig) => {
+http.interceptors.request.use((config: RetryableRequestConfig) => {
   if (SESSION_ENDPOINTS.has(config.url ?? '')) {
     config._sessionAuthorization = false
     return config
@@ -38,11 +39,6 @@ http.interceptors.request.use((config: RetriableConfig) => {
   return config
 })
 
-type RetriableConfig = InternalAxiosRequestConfig & {
-  _retriedAfterRefresh?: boolean
-  _sessionAuthorization?: boolean
-}
-
 // Nhiều request cùng gặp 401 thì chỉ gọi /auth/refresh một lần, các request còn lại chờ chung.
 let refreshing: Promise<string | null> | null = null
 
@@ -55,7 +51,7 @@ export function refreshAccessToken(): Promise<string | null> {
     }
     try {
       // Import khi cần để tránh phụ thuộc vòng: mô-đun xác thực cũng dùng instance http này.
-      const { API_RefreshToken } = await import('@/api/shared/auth')
+      const { API_RefreshToken } = await import('@/api/auth/client')
       const data = await API_RefreshToken(refreshToken)
       storeSession(data)
       return data.access_token
@@ -74,9 +70,9 @@ http.interceptors.response.use(undefined, async (error: unknown) => {
   if (
     axios.isAxiosError(error) &&
     error.response?.status === 401 &&
-    (error.config as RetriableConfig | undefined)?._sessionAuthorization
+    (error.config as RetryableRequestConfig | undefined)?._sessionAuthorization
   ) {
-    const config = error.config as RetriableConfig
+    const config = error.config as RetryableRequestConfig
     if (!config._retriedAfterRefresh) {
       // Một 401 đến muộn sau khi request khác đã refresh: dùng token mới đã lưu.
       const currentToken = readAccessToken()
@@ -107,6 +103,32 @@ const STATUS_MESSAGES: Record<number, string> = {
 }
 
 const API_ERROR_MESSAGES = new Map([
+  ['NOTIFICATIONS_UNAVAILABLE', 'Không thể tải thông báo. Vui lòng thử lại sau.'],
+  ['NOTIFICATION_NOT_FOUND', 'Thông báo không còn nằm trong phạm vi được xem.'],
+  [
+    'MANAGER_SCOPE_REQUIRED',
+    'Cần phân công đang hiệu lực tại phòng phụ trách lĩnh vực này. Vui lòng liên hệ quản trị viên.',
+  ],
+  ['MANAGER_UNAVAILABLE', 'Không thể tải báo cáo phòng ban. Vui lòng thử lại sau.'],
+  ['GOLD_RETRY_NOT_ALLOWED', 'Chỉ chạy lại lượt Gold bị lỗi của bản Silver còn đang sử dụng.'],
+  [
+    'GOLD_SILVER_HEAD_CHANGED',
+    'Silver đã đổi phiên bản. Hãy làm mới danh sách trước khi tạo Gold.',
+  ],
+  ['GOLD_SOURCE_EVIDENCE_REQUIRED', 'Chưa đủ thông tin nguồn gốc Silver để tạo báo cáo Gold.'],
+  ['GOLD_JOB_NOT_FOUND', 'Không tìm thấy lượt Gold trong phạm vi được xem.'],
+  ['GOLD_REPORT_NOT_READY', 'Lượt Gold chưa công bố báo cáo. Vui lòng xem tiến độ xử lý.'],
+  [
+    'AUTO_PIPELINE_REVISION_CONFLICT',
+    'Cấu hình đã được thay đổi. Hãy tải lại phiên bản mới nhất trước khi lưu.',
+  ],
+  [
+    'AUTO_PIPELINE_RETRY_CONFLICT',
+    'Chỉ thử lại lượt thất bại có cấu hình đang bật và cùng phiên bản.',
+  ],
+  ['AUTO_PIPELINE_DATASET_MISMATCH', 'Cách xử lý không thuộc bộ dữ liệu đã chọn. Hãy chọn lại.'],
+  ['AUTO_PIPELINE_JOB_NOT_FOUND', 'Không tìm thấy lượt tự xử lý Silver trong phạm vi được xem.'],
+
   ['USER_INACTIVE', 'Tài khoản của bạn đang bị khóa. Vui lòng liên hệ quản trị viên.'],
   ['ROLE_REQUIRED', 'Tài khoản chưa được cấp quyền phù hợp. Vui lòng liên hệ quản trị viên.'],
   ['FORBIDDEN', 'Bạn không có quyền truy cập chức năng hoặc phạm vi dữ liệu này.'],

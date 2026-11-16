@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { formatDateTime, statusTone } from '@/components/page/page-parts'
-import type { CatalogEntry, IngestionJob } from '@/types/data'
+import type { CatalogEntry } from '@/types/catalog'
+import type { IngestionJob } from '@/types/ingestion'
+import type { QueryHistoryEntry } from '@/types/query-history'
 import { formatGrowth, growthPercent } from '@/views/dashboards/dashboard-data'
 import { filterCatalog } from '@/views/data/catalog-view'
 import { isJobActive } from '@/views/data/ingestion-view'
@@ -12,8 +14,6 @@ import {
   clearQueryHistory,
   readQueryHistory,
 } from './query-history'
-
-import type { QueryHistoryEntry } from './query-history'
 
 describe('growthPercent / formatGrowth', () => {
   it('tính phần trăm tăng giảm và định dạng kiểu Việt Nam', () => {

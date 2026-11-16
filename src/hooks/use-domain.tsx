@@ -10,15 +10,9 @@ import {
   getDomain,
   isDomainCode,
 } from '@/config/domains'
-import type { DomainCode, DomainDefinition } from '@/config/domains'
 import { getDepartmentDomain } from '@/config/roles'
-import type { RoleCode } from '@/types/auth'
-
-interface DomainContextValue {
-  domain: DomainDefinition
-  availableDomains: DomainDefinition[]
-  setDomain: (code: DomainCode) => void
-}
+import type { DomainCode, DomainContextValue } from '@/types/domains'
+import type { RoleCode } from '@/types/roles'
 
 const DomainContext = createContext<DomainContextValue | null>(null)
 

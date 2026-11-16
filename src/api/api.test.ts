@@ -16,7 +16,7 @@ describe('normalizeApiUrl', () => {
 })
 
 describe('chính sách giao thức backend', () => {
-  it.each(['http://localhost:8000', 'http://127.0.0.1:8000'])(
+  it.each(['http://localhost:8000', 'http://127.0.0.1:8000', 'http://10.96.134.207:8000'])(
     'chỉ cho phép %s trong development',
     (url) => {
       expect(normalizeApiUrl(url, 'development')).toBe(url)
@@ -32,6 +32,7 @@ describe('chính sách giao thức backend', () => {
 
   it.each([
     'http://backend.example',
+    'http://10.96.134.207.example',
     'http://localhost.evil.example',
     'ftp://backend.example',
     '/api/proxy',
@@ -43,8 +44,24 @@ describe('chính sách giao thức backend', () => {
     expect(() => normalizeApiUrl(url, 'development')).toThrow(/NEXT_PUBLIC_API_URL/)
   })
 
+  it('ưu tiên API_BASE_URL và chỉ thêm một tiền tố /api/v1', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', 'http://10.96.134.207:8000/api/v1')
+    vi.stubEnv('NEXT_PUBLIC_API_URL', 'https://backend.example')
+    vi.resetModules()
+    try {
+      await expect(import('./api')).resolves.toMatchObject({
+        API_BASE_URL: 'http://10.96.134.207:8000/api/v1',
+      })
+    } finally {
+      vi.unstubAllEnvs()
+      vi.resetModules()
+    }
+  })
+
   it.each([undefined, ''])('module dùng localhost khi cấu hình production là %j', async (value) => {
     vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', undefined)
     vi.stubEnv('NEXT_PUBLIC_API_URL', value)
     vi.resetModules()
     try {
@@ -60,6 +77,7 @@ describe('chính sách giao thức backend', () => {
 
   it('module cấu hình từ chối HTTP ngay khi khởi tạo production', async () => {
     vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', undefined)
     vi.stubEnv('NEXT_PUBLIC_API_URL', 'http://localhost:8000')
     vi.resetModules()
     try {

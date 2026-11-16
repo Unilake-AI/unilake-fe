@@ -22,13 +22,11 @@ import {
   ProgressRow,
   Tag,
 } from '@/components/page/page-parts'
-import type { DomainCode, DomainDefinition } from '@/config/domains'
 import { useDomain } from '@/hooks/use-domain'
 import { cn } from '@/lib/utils'
+import type { BusinessDomain, DomainDefinition } from '@/types/domains'
 
 import { ACADEMIC, ADMISSIONS, HR } from './dashboard-data'
-
-type BusinessDomain = Exclude<DomainCode, 'all'>
 
 const CHART_COLORS = { primary: '#4f46e5', secondary: '#0ea5e9', tertiary: '#f59e0b' }
 
@@ -58,7 +56,7 @@ function DomainTabs({
             onClick={() => onChange(d.code as BusinessDomain)}
             className={cn(
               'rounded px-3 py-1 text-xs font-medium',
-              value === d.code ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+              value === d.code ? 'bg-[#b91830] text-white' : 'text-slate-600 hover:bg-slate-100'
             )}
           >
             {d.shortLabel}
@@ -261,7 +259,7 @@ export function DomainOverviewView({ askHref }: { askHref: string }) {
         actions={
           <Link
             href={askHref}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-indigo-200 bg-indigo-50 px-3 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[#ebc5cd] bg-[#fff3f5] px-3 text-xs font-semibold text-[#a9162e] hover:bg-[#fbe4e9]"
           >
             <Sparkles className="size-3.5" aria-hidden="true" />
             Hỏi AI về dữ liệu này

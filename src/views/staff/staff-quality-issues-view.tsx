@@ -10,7 +10,6 @@ import { ArrowRight, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 import { getApiErrorMessage } from '@/api/http'
 import { API_ListDatasets } from '@/api/shared/datasets'
 import { API_GetQualityIssueStats, API_ListQualityIssues } from '@/api/shared/quality-issues'
-import type { StaffContext } from '@/api/shared/staff'
 import {
   Button,
   Card,
@@ -25,13 +24,13 @@ import {
   statusLabel,
   statusTone,
 } from '@/components/page/page-parts'
+import type { StaffQualityIssueStatusFilter } from '@/types/quality-issues'
+import type { StaffContext } from '@/types/staff-context'
 
 import { StaffContextGate } from './staff-context-gate'
 import { domainLabel } from './staff-helpers'
 
 const PAGE_SIZE = 20
-
-type IssueStatusFilter = 'ASSIGNED' | 'PENDING_VERIFICATION' | 'VERIFIED'
 
 const ISSUE_STATUS_OPTIONS = [
   { value: '', label: 'Tất cả trạng thái' },
@@ -46,13 +45,14 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
   const [offset, setOffset] = useState(0)
 
   const filterParams = {
-    status: (statusFilter as IssueStatusFilter) || undefined,
+    status: (statusFilter as StaffQualityIssueStatusFilter) || undefined,
     mine_only: mineOnly,
   }
 
   const statsQuery = useQuery({
     queryKey: ['quality-issues', 'stats', filterParams],
     queryFn: () => API_GetQualityIssueStats(filterParams),
+    refetchInterval: 15_000,
   })
 
   const issuesQuery = useQuery({
@@ -63,6 +63,7 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
         limit: PAGE_SIZE,
         offset,
       }),
+    refetchInterval: 15_000,
   })
 
   const datasetsQuery = useQuery({
@@ -168,7 +169,7 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
                 setMineOnly(e.target.checked)
                 setOffset(0)
               }}
-              className="size-4 accent-indigo-600"
+              className="size-4 accent-[#b91830]"
             />
             Chỉ hiển thị yêu cầu giao cho tôi
           </label>
@@ -231,8 +232,8 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
                       <tr key={issue.issue_id} className="hover:bg-slate-50">
                         <td className="px-3 py-2.5">
                           <Link
-                            href={`/analyst/quality-issues/${issue.issue_id}`}
-                            className="font-semibold text-indigo-600 hover:underline"
+                            href={`/staff/quality-issues/${issue.issue_id}`}
+                            className="font-semibold text-[#b91830] hover:underline"
                           >
                             {issue.title}
                           </Link>
@@ -271,8 +272,8 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
                         </td>
                         <td className="px-3 py-2.5 text-right">
                           <Link
-                            href={`/analyst/quality-issues/${issue.issue_id}`}
-                            className="inline-flex items-center gap-1 font-semibold text-indigo-600 hover:underline"
+                            href={`/staff/quality-issues/${issue.issue_id}`}
+                            className="inline-flex items-center gap-1 font-semibold text-[#b91830] hover:underline"
                           >
                             Chi tiết
                             <ArrowRight className="size-3.5" aria-hidden="true" />

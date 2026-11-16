@@ -2,239 +2,381 @@
 
 import { useState } from 'react'
 
-import { Search } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 
-import { Card, KpiCard, MockNotice, PageHeader, Tag } from '@/components/page/page-parts'
-import type { Tone } from '@/components/page/page-parts'
-import { ROLE_PRIORITY } from '@/config/roles'
-import type { RoleCode } from '@/types/auth'
+import {
+  API_ListAccounts,
+  API_FindEmployees,
+  API_Organization,
+  API_EmployeeAssignments,
+  API_LinkEmployee,
+  API_AddAssignment,
+} from '@/api/admin/users'
+import type { AccountItem } from '@/api/admin/users'
+import { getApiErrorMessage } from '@/api/http'
+import { Button, Card, PageHeader, ErrorState, LoadingState } from '@/components/page/page-parts'
 
 import { SessionsPanel } from './sessions-panel'
 
-const ROLE_TONE: Record<RoleCode, Tone> = {
-  ADMIN: 'amber',
-  DATA_ADMIN: 'emerald',
-  VIEWER: 'slate',
-  ADMISSIONS_MANAGER: 'indigo',
-  ADMISSIONS_STAFF: 'sky',
-  ACADEMIC_MANAGER: 'indigo',
-  ACADEMIC_STAFF: 'sky',
-  HR_MANAGER: 'indigo',
-  HR_STAFF: 'sky',
+const input = 'w-full rounded-lg border border-slate-300 bg-white p-2 text-sm'
+
+function AccountConfiguration({ account, close }: { account: AccountItem; close: () => void }) {
+  const client = useQueryClient()
+  const [employeeId, setEmployeeId] = useState(
+    account.employee_id ? String(account.employee_id) : ''
+  )
+  const [search, setSearch] = useState('')
+  const [offset, setOffset] = useState(0)
+  const [department, setDepartment] = useState('')
+  const [position, setPosition] = useState('')
+  const [start, setStart] = useState('')
+  const [end, setEnd] = useState('')
+  const [primary, setPrimary] = useState(false)
+  const employees = useQuery({
+    queryKey: ['account-employees', search, offset],
+    queryFn: () => API_FindEmployees(search, offset),
+  })
+  const organization = useQuery({ queryKey: ['account-organization'], queryFn: API_Organization })
+  const assignments = useQuery({
+    queryKey: ['account-assignments', employeeId],
+    queryFn: () => API_EmployeeAssignments(Number(employeeId)),
+    enabled: !!employeeId,
+  })
+  const link = useMutation({
+    mutationFn: () => API_LinkEmployee(account.user_id, Number(employeeId), account.employee_id),
+    onSuccess: async () => {
+      await client.invalidateQueries({ queryKey: ['accounts'] })
+      toast.success('Đã lưu liên kết nhân viên')
+      close()
+    },
+  })
+  const assign = useMutation({
+    mutationFn: () =>
+      API_AddAssignment({
+        employee_id: Number(employeeId),
+        department_id: Number(department),
+        position_id: Number(position),
+        start_date: start,
+        end_date: end || null,
+        is_primary: primary,
+      }),
+    onSuccess: async () => {
+      await client.invalidateQueries({ queryKey: ['account-assignments'] })
+      await client.invalidateQueries({ queryKey: ['accounts'] })
+      toast.success('Đã lưu phân công')
+    },
+  })
+  const busy = link.isPending || assign.isPending
+  return (
+    <Card title={`Cấu hình ${account.username}`} right={<Button onClick={close}>Đóng</Button>}>
+      <p className="mb-4 text-sm text-slate-600">
+        Chọn hồ sơ nhân viên thật. Phân công đang hiệu lực quyết định phạm vi phòng ban; vai trò
+        hiện tại: {account.roles.join(', ')}.
+      </p>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-3">
+          <label className="block text-sm">
+            Tìm nhân viên theo mã hoặc họ tên
+            <input
+              className={input}
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                setOffset(0)
+                setEmployeeId('')
+              }}
+            />
+          </label>
+          {employees.isError ? (
+            <ErrorState
+              message={getApiErrorMessage(
+                employees.error,
+                'Không thể hoàn tất thao tác. Vui lòng thử lại.'
+              )}
+              onRetry={() => void employees.refetch()}
+            />
+          ) : (
+            <>
+              <label className="block text-sm">
+                Nhân viên
+                <select
+                  className={input}
+                  value={employeeId}
+                  onChange={(e) => setEmployeeId(e.target.value)}
+                >
+                  <option value="">Chọn nhân viên</option>
+                  {account.employee_id &&
+                    !employees.data?.some((e) => e.employee_id === account.employee_id) && (
+                      <option value={account.employee_id}>
+                        {account.full_name} (đang liên kết)
+                      </option>
+                    )}
+                  {employees.data?.map((e) => (
+                    <option key={e.employee_id} value={e.employee_id}>
+                      {e.employee_code} — {e.full_name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="flex gap-2">
+                <Button
+                  disabled={!offset || employees.isFetching}
+                  onClick={() => {
+                    setOffset(Math.max(0, offset - 20))
+                    setEmployeeId('')
+                  }}
+                >
+                  Trước
+                </Button>
+                <Button
+                  disabled={(employees.data?.length ?? 0) < 20 || employees.isFetching}
+                  onClick={() => {
+                    setOffset(offset + 20)
+                    setEmployeeId('')
+                  }}
+                >
+                  Sau
+                </Button>
+              </div>
+            </>
+          )}
+          <Button
+            disabled={busy || !employeeId || Number(employeeId) === account.employee_id}
+            onClick={() => link.mutate()}
+          >
+            Lưu liên kết tài khoản
+          </Button>
+          {link.isError && (
+            <p role="alert" className="text-sm text-red-700">
+              {getApiErrorMessage(link.error, 'Không thể hoàn tất thao tác. Vui lòng thử lại.')}
+            </p>
+          )}
+          <p className="text-sm text-slate-500">
+            Nếu chưa có hồ sơ, cần nạp hồ sơ nhân sự chính xác trước khi liên kết.
+          </p>
+        </div>
+        <div className="space-y-3">
+          <h3 className="font-semibold">Phân công của nhân viên đã chọn</h3>
+          {assignments.isLoading && <LoadingState />}
+          {assignments.isError && (
+            <ErrorState
+              message={getApiErrorMessage(
+                assignments.error,
+                'Không thể hoàn tất thao tác. Vui lòng thử lại.'
+              )}
+              onRetry={() => void assignments.refetch()}
+            />
+          )}
+          {employeeId && assignments.data?.length === 0 && (
+            <p className="text-sm text-slate-500">Chưa có phân công.</p>
+          )}
+          {assignments.data?.map((a) => (
+            <p key={a.assignment_id} className="text-sm">
+              {a.department_name} · {a.position_name} · {a.start_date} →{' '}
+              {a.end_date ?? 'Không thời hạn'} · {a.status}
+              {a.is_primary ? ' · Chính' : ''}
+            </p>
+          ))}
+          {organization.isError ? (
+            <ErrorState
+              message={getApiErrorMessage(
+                organization.error,
+                'Không thể hoàn tất thao tác. Vui lòng thử lại.'
+              )}
+              onRetry={() => void organization.refetch()}
+            />
+          ) : (
+            <form
+              className="space-y-3"
+              onSubmit={(e) => {
+                e.preventDefault()
+                assign.mutate()
+              }}
+            >
+              <label className="block text-sm">
+                Phòng ban
+                <select
+                  required
+                  className={input}
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                >
+                  <option value="">Chọn phòng ban</option>
+                  {organization.data?.departments.map((d) => (
+                    <option key={d.department_id} value={d.department_id}>
+                      {d.department_code} — {d.department_name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-sm">
+                Chức vụ
+                <select
+                  required
+                  className={input}
+                  value={position}
+                  onChange={(e) => setPosition(e.target.value)}
+                >
+                  <option value="">Chọn chức vụ</option>
+                  {organization.data?.positions.map((p) => (
+                    <option key={p.position_id} value={p.position_id}>
+                      {p.position_name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="flex gap-3">
+                <label className="text-sm">
+                  Từ ngày
+                  <input
+                    required
+                    type="date"
+                    className={input}
+                    value={start}
+                    onChange={(e) => setStart(e.target.value)}
+                  />
+                </label>
+                <label className="text-sm">
+                  Đến ngày (tùy chọn)
+                  <input
+                    type="date"
+                    min={start}
+                    className={input}
+                    value={end}
+                    onChange={(e) => setEnd(e.target.value)}
+                  />
+                </label>
+              </div>
+              <label className="block text-sm">
+                <input
+                  type="checkbox"
+                  checked={primary}
+                  onChange={(e) => setPrimary(e.target.checked)}
+                />{' '}
+                Phân công chính
+              </label>
+              <Button type="submit" disabled={busy || !employeeId || !organization.data}>
+                Thêm phân công
+              </Button>
+              {assign.isError && (
+                <p role="alert" className="text-sm text-red-700">
+                  {getApiErrorMessage(
+                    assign.error,
+                    'Không thể hoàn tất thao tác. Vui lòng thử lại.'
+                  )}
+                </p>
+              )}
+            </form>
+          )}
+        </div>
+      </div>
+    </Card>
+  )
 }
 
-const USERS: {
-  name: string
-  email: string
-  role: RoleCode
-  domains: string
-  unit: string
-  locked: boolean
-  lastLogin: string
-}[] = [
-  {
-    name: 'GS. Đặng Quang Vinh',
-    email: 'vinh.dq@unilake.edu.vn',
-    role: 'VIEWER',
-    domains: 'Tuyển sinh · Đào tạo · Nhân sự',
-    unit: 'Ban Giám hiệu',
-    locked: false,
-    lastLogin: '10 phút trước',
-  },
-  {
-    name: 'TS. Nguyễn Văn Hùng',
-    email: 'hung.nv@unilake.edu.vn',
-    role: 'ADMISSIONS_MANAGER',
-    domains: 'Tuyển sinh',
-    unit: 'Phòng Tuyển sinh',
-    locked: false,
-    lastLogin: 'Hôm qua',
-  },
-  {
-    name: 'ThS. Trần Thị Mai Phương',
-    email: 'phuong.ttm@unilake.edu.vn',
-    role: 'ACADEMIC_STAFF',
-    domains: 'Đào tạo',
-    unit: 'Phòng Đào tạo',
-    locked: false,
-    lastLogin: '25 phút trước',
-  },
-  {
-    name: 'KS. Lê Hoàng Minh',
-    email: 'minh.lh@unilake.edu.vn',
-    role: 'DATA_ADMIN',
-    domains: 'Tuyển sinh · Đào tạo · Nhân sự',
-    unit: 'Trung tâm Dữ liệu',
-    locked: false,
-    lastLogin: '1 giờ trước',
-  },
-  {
-    name: 'KS. Nguyễn Bảo Long',
-    email: 'long.nb@unilake.edu.vn',
-    role: 'ADMIN',
-    domains: 'Tất cả',
-    unit: 'Phòng CNTT',
-    locked: false,
-    lastLogin: 'Vừa xong',
-  },
-  {
-    name: 'TS. Vũ Thị Mai Liên',
-    email: 'lien.vtm@unilake.edu.vn',
-    role: 'HR_STAFF',
-    domains: 'Nhân sự',
-    unit: 'Phòng Nhân sự',
-    locked: true,
-    lastLogin: '1 tuần trước',
-  },
-  {
-    name: 'Nguyễn Thị Minh Anh',
-    email: 'anh.ntm@unilake.edu.vn',
-    role: 'ADMISSIONS_STAFF',
-    domains: 'Tuyển sinh',
-    unit: 'Phòng Tuyển sinh',
-    locked: false,
-    lastLogin: '2 giờ trước',
-  },
-  {
-    name: 'Phạm Quốc Bảo',
-    email: 'bao.pq@unilake.edu.vn',
-    role: 'ACADEMIC_MANAGER',
-    domains: 'Đào tạo',
-    unit: 'Phòng Đào tạo',
-    locked: false,
-    lastLogin: 'Hôm qua',
-  },
-  {
-    name: 'Lê Thu Hà',
-    email: 'ha.lt@unilake.edu.vn',
-    role: 'HR_MANAGER',
-    domains: 'Nhân sự',
-    unit: 'Phòng Nhân sự',
-    locked: false,
-    lastLogin: '3 giờ trước',
-  },
-]
-
 export function UsersView() {
-  const [keyword, setKeyword] = useState('')
-  const [role, setRole] = useState<RoleCode | ''>('')
-
-  const q = keyword.trim().toLowerCase()
-  const rows = USERS.filter(
-    (user) =>
-      (!role || user.role === role) &&
-      (!q || user.name.toLowerCase().includes(q) || user.email.toLowerCase().includes(q))
-  )
-
+  const [search, setSearch] = useState('')
+  const [offset, setOffset] = useState(0)
+  const [selected, setSelected] = useState<AccountItem | null>(null)
+  const accounts = useQuery({
+    queryKey: ['accounts', search, offset],
+    queryFn: () => API_ListAccounts(search, offset),
+  })
   return (
     <div className="space-y-5">
       <PageHeader
         breadcrumb={['Quản trị hệ thống', 'Người dùng & Phân quyền']}
-        title="Người dùng & Phân quyền (RBAC)"
-        description="Quản trị tài khoản, vai trò và phạm vi phân hệ được truy cập. Hệ thống có 3 vai trò chung và 6 vai trò phòng ban."
+        title="Người dùng & Phân quyền"
+        description="Tài khoản thực tế, liên kết nhân viên và phân công phòng ban theo ngày hiệu lực."
       />
-      <MockNotice />
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <KpiCard
-          label="Tổng số tài khoản"
-          value={USERS.length}
-          hint={`${USERS.filter((u) => !u.locked).length} đang hoạt động`}
+      {selected && (
+        <AccountConfiguration
+          key={selected.user_id}
+          account={selected}
+          close={() => setSelected(null)}
         />
-        <KpiCard
-          label="Vai trò (RBAC)"
-          value={ROLE_PRIORITY.length}
-          hint="3 vai trò chung · 6 vai trò phòng ban"
-        />
-        <KpiCard
-          label="Phạm vi theo phân hệ"
-          value="BẬT"
-          hint="Phân hệ hiển thị theo role phòng ban"
-          tone="emerald"
-        />
-      </div>
-
-      <SessionsPanel />
-
-      <Card
-        title="Tài khoản"
-        subtitle={`Hiển thị ${rows.length} / ${USERS.length} tài khoản`}
-        right={
-          <div className="flex flex-wrap gap-2">
-            <label className="relative">
-              <span className="sr-only">Tìm tài khoản</span>
-              <Search
-                className="absolute left-2.5 top-2.5 size-3.5 text-slate-400"
-                aria-hidden="true"
-              />
-              <input
-                className="h-8 w-56 rounded-md border border-slate-300 pl-8 pr-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-                placeholder="Tìm theo tên, email…"
-                value={keyword}
-                onChange={(event) => setKeyword(event.target.value)}
-              />
-            </label>
-            <label>
-              <span className="sr-only">Lọc theo vai trò</span>
-              <select
-                className="h-8 rounded-md border border-slate-300 bg-white px-2 text-xs"
-                value={role}
-                onChange={(event) => setRole(event.target.value as RoleCode | '')}
+      )}
+      <Card title="Tài khoản">
+        <label className="block text-sm">
+          Tìm tài khoản
+          <input
+            className={input}
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value)
+              setOffset(0)
+            }}
+          />
+        </label>
+        {accounts.isLoading ? (
+          <LoadingState />
+        ) : accounts.isError ? (
+          <ErrorState
+            message={getApiErrorMessage(
+              accounts.error,
+              'Không thể hoàn tất thao tác. Vui lòng thử lại.'
+            )}
+            onRetry={() => void accounts.refetch()}
+          />
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr>
+                    {[
+                      'Tài khoản',
+                      'Nhân viên',
+                      'Vai trò',
+                      'Phòng đang hiệu lực',
+                      'Trạng thái',
+                      'Cấu hình',
+                    ].map((h) => (
+                      <th className="p-3" key={h}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {accounts.data?.map((a) => (
+                    <tr key={a.user_id} className="border-t">
+                      <td className="p-3">{a.username}</td>
+                      <td className="p-3">{a.full_name ?? 'Chưa liên kết'}</td>
+                      <td className="p-3">{a.roles.join(', ')}</td>
+                      <td className="p-3">
+                        {a.departments.map((d) => d.department_name).join(', ') ||
+                          'Chưa có phân công hiệu lực'}
+                      </td>
+                      <td className="p-3">{a.is_active ? 'Hoạt động' : 'Đã khóa'}</td>
+                      <td className="p-3">
+                        <Button onClick={() => setSelected(a)}>Cấu hình</Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {!accounts.data?.length && <p className="p-3 text-sm">Không tìm thấy tài khoản.</p>}
+            <div className="mt-3 flex gap-2">
+              <Button
+                disabled={!offset || accounts.isFetching}
+                onClick={() => setOffset(Math.max(0, offset - 20))}
               >
-                <option value="">Tất cả vai trò</option>
-                {ROLE_PRIORITY.map((code) => (
-                  <option key={code} value={code}>
-                    {code}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-        }
-        bodyClassName="p-0"
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[820px] text-left text-xs">
-            <thead className="bg-slate-50 font-mono text-[10px] uppercase tracking-wider text-slate-500">
-              <tr>
-                {[
-                  'Tài khoản',
-                  'Vai trò',
-                  'Phân hệ được truy cập',
-                  'Đơn vị',
-                  'Trạng thái',
-                  'Đăng nhập gần nhất',
-                ].map((h) => (
-                  <th key={h} scope="col" className="px-3 py-2 font-medium">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {rows.map((user) => (
-                <tr key={user.email}>
-                  <td className="px-3 py-2.5">
-                    <p className="font-semibold text-slate-900">{user.name}</p>
-                    <p className="font-mono text-[10px] text-slate-400">{user.email}</p>
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <Tag tone={ROLE_TONE[user.role]}>{user.role}</Tag>
-                  </td>
-                  <td className="px-3 py-2.5 text-slate-600">{user.domains}</td>
-                  <td className="px-3 py-2.5 text-slate-600">{user.unit}</td>
-                  <td className="px-3 py-2.5">
-                    <Tag tone={user.locked ? 'rose' : 'emerald'}>
-                      {user.locked ? 'Đã khóa' : 'Đang hoạt động'}
-                    </Tag>
-                  </td>
-                  <td className="px-3 py-2.5 text-slate-600">{user.lastLogin}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                Trước
+              </Button>
+              <Button
+                disabled={(accounts.data?.length ?? 0) < 20 || accounts.isFetching}
+                onClick={() => setOffset(offset + 20)}
+              >
+                Sau
+              </Button>
+            </div>
+          </>
+        )}
       </Card>
+      <SessionsPanel />
     </div>
   )
 }

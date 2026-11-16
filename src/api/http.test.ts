@@ -2,7 +2,7 @@ import { AxiosError, AxiosHeaders } from 'axios'
 import Cookies from 'js-cookie'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { API_RefreshToken } from '@/api/shared/auth'
+import { API_RefreshToken } from '@/api/auth/client'
 import { readRefreshToken, redirectToLoginExpired, storeSession } from '@/lib/session'
 
 import { getApiErrorMessage, http, shouldRetryRequest } from './http'
@@ -14,7 +14,7 @@ vi.mock('@/lib/session', () => ({
   readRefreshToken: vi.fn(),
   storeSession: vi.fn(),
 }))
-vi.mock('@/api/shared/auth', () => ({ API_RefreshToken: vi.fn() }))
+vi.mock('@/api/auth/client', () => ({ API_RefreshToken: vi.fn() }))
 
 function errorWith(status: number, data: unknown) {
   const config = { headers: new AxiosHeaders() } as InternalAxiosRequestConfig

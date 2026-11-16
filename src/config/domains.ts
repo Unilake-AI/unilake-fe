@@ -1,13 +1,4 @@
-export type DomainCode = 'all' | 'admissions' | 'academic' | 'hr'
-
-export interface DomainDefinition {
-  code: DomainCode
-  /** Tên đầy đủ hiển thị trong menu chọn phân hệ */
-  label: string
-  /** Tên ngắn hiển thị trên nút Domain Selector */
-  shortLabel: string
-  iconName: 'Layers' | 'UserPlus' | 'GraduationCap' | 'BriefcaseBusiness'
-}
+import type { DomainCode, DomainDefinition } from '@/types/domains'
 
 /** Ba phân hệ nghiệp vụ trong phạm vi V1.0, cộng lựa chọn xem tất cả. */
 export const DOMAINS: DomainDefinition[] = [

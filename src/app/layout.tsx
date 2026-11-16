@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { Inter } from 'next/font/google'
+import localFont from 'next/font/local'
 
 import { Toaster } from '@/components/ui/sonner'
 
@@ -9,9 +9,10 @@ import { Providers } from './providers'
 
 import type { Metadata } from 'next'
 
-const inter = Inter({
-  subsets: ['vietnamese', 'latin'],
-  weight: ['400', '500', '600', '700'],
+const inter = localFont({
+  src: './fonts/InterVariable.ttf',
+  weight: '100 900',
+  style: 'normal',
   variable: '--font-sans',
   display: 'swap',
 })

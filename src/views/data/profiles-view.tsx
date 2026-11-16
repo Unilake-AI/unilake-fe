@@ -7,14 +7,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, ChevronRight, Edit3, Plus, RefreshCw, X } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { API_ListDatasets, API_ListSourceSystems } from '@/api/data-operations/datasets'
+import { API_ListDatasets, API_ListSourceSystems } from '@/api/admindata/datasets'
 import {
   API_CreateProfile,
   API_GetProfile,
   API_ListProfiles,
   API_UpdateProfile,
-} from '@/api/data-operations/profiles'
-import type { SilverProfileDefinition, SilverProfileRead } from '@/api/data-operations/profiles'
+} from '@/api/admindata/profiles'
 import { getApiErrorCode, getApiErrorMessage } from '@/api/http'
 import { API_ListDataSources } from '@/api/shared/data-sources'
 import {
@@ -26,14 +25,19 @@ import {
   PageHeader,
   Tag,
 } from '@/components/page/page-parts'
+import type {
+  SilverProfileDefinition,
+  SilverProfileMappingRow,
+  SilverProfileRead,
+} from '@/types/silver-profiles'
 
 const PAGE_SIZE = 20
 
 const inputClass =
-  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30 disabled:bg-slate-50 disabled:text-slate-500'
+  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]/30 disabled:bg-slate-50 disabled:text-slate-500'
 
 const textareaClass =
-  'w-full rounded-md border border-slate-300 bg-white p-2.5 font-mono text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30'
+  'w-full rounded-md border border-slate-300 bg-white p-2.5 font-mono text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]/30'
 
 function parseJsonObject(
   raw: string,
@@ -57,11 +61,6 @@ function parseList(raw: string): string[] {
     .split(/[\n,]/)
     .map((item) => item.trim())
     .filter(Boolean)
-}
-
-interface MappingRow {
-  source: string
-  target: string
 }
 
 function ProfileFormPanel({
@@ -98,7 +97,7 @@ function ProfileFormPanel({
     def?.collapse_exact_duplicates ?? false
   )
 
-  const [mappingRows, setMappingRows] = useState<MappingRow[]>(() => {
+  const [mappingRows, setMappingRows] = useState<SilverProfileMappingRow[]>(() => {
     const entries = Object.entries(def?.field_mapping ?? {})
     return entries.length > 0
       ? entries.map(([source, target]) => ({ source, target }))
@@ -274,8 +273,12 @@ function ProfileFormPanel({
       type_options: (parsedTypeOpts.value ?? {}) as Record<string, Record<string, unknown>>,
       null_tokens: (parsedNullTokens.value ?? {}) as Record<string, string[]>,
       dictionaries: (parsedDictionaries.value ?? {}) as Record<string, Record<string, string>>,
-      reference_namespaces: (parsedNamespaces.value ?? {}) as Record<string, string>,
-      crosswalk_release: crosswalkRelease.trim() || 'v1',
+      reference_namespaces:
+        def?.identity_mode === 'source'
+          ? {}
+          : ((parsedNamespaces.value ?? {}) as Record<string, string>),
+      identity_mode: def?.identity_mode ?? 'canonical',
+      crosswalk_release: def?.identity_mode === 'source' ? null : crosswalkRelease.trim() || 'v1',
       effective_at: normalizedEffectiveAt,
       collapse_exact_duplicates: collapseDuplicates,
       source_preview_columns: parseList(previewColumnsText),
@@ -468,8 +471,13 @@ function ProfileFormPanel({
             </label>
             <input
               id="prof-crosswalk"
+              disabled={def?.identity_mode === 'source'}
               className={`${inputClass} font-mono`}
-              value={crosswalkRelease}
+              value={
+                def?.identity_mode === 'source'
+                  ? 'Giữ mã nguồn — không sử dụng đối chiếu'
+                  : crosswalkRelease
+              }
               onChange={(e) => setCrosswalkRelease(e.target.value)}
             />
           </div>
@@ -491,7 +499,7 @@ function ProfileFormPanel({
               type="checkbox"
               checked={collapseDuplicates}
               onChange={(e) => setCollapseDuplicates(e.target.checked)}
-              className="size-4 accent-indigo-600"
+              className="size-4 accent-[#b91830]"
             />
             Gộp bản ghi trùng lặp hoàn toàn (collapse_exact_duplicates)
           </label>
@@ -782,7 +790,7 @@ export function ProfilesView() {
                           setFormMode('none')
                         }}
                         className={`flex w-full items-start justify-between gap-2 px-4 py-3 text-left text-xs transition-colors ${
-                          active ? 'bg-indigo-50/70' : 'hover:bg-slate-50'
+                          active ? 'bg-[#fff3f5]/70' : 'hover:bg-slate-50'
                         }`}
                       >
                         <div className="min-w-0">
@@ -893,7 +901,7 @@ export function ProfilesView() {
                 <div>
                   <dt className="text-slate-500">Crosswalk / Trùng lặp</dt>
                   <dd className="mt-0.5 font-mono text-slate-900">
-                    {selectedProfile.definition.crosswalk_release} ·{' '}
+                    {selectedProfile.definition.crosswalk_release ?? 'Giữ mã nguồn'} ·{' '}
                     {selectedProfile.definition.collapse_exact_duplicates ? 'Có gộp' : 'Không gộp'}
                   </dd>
                 </div>
@@ -920,7 +928,7 @@ export function ProfilesView() {
                         ([src, dst]) => (
                           <tr key={src}>
                             <td className="px-3 py-1.5 font-mono text-slate-700">{src}</td>
-                            <td className="px-3 py-1.5 font-mono font-semibold text-indigo-700">
+                            <td className="px-3 py-1.5 font-mono font-semibold text-[#a9162e]">
                               {dst}
                             </td>
                           </tr>

@@ -19,12 +19,7 @@ import {
   getWorkspaceForRole,
 } from '@/config/roles'
 import { useAuth } from '@/hooks/use-auth'
-import type { RoleCode } from '@/types/auth'
-
-interface UserMenuProps {
-  /** Vai trò của không gian làm việc đang mở */
-  role: RoleCode
-}
+import type { UserMenuProps } from '@/types/layout/user-menu'
 
 export function getInitials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean)
@@ -37,6 +32,7 @@ export function UserMenu({ role }: UserMenuProps) {
   const { user, roles, logout, isLoggingOut } = useAuth()
   const roleDef = ROLE_DEFINITIONS[role]
   const displayName = user?.fullName ?? user?.username ?? 'Người dùng'
+  const username = user?.username ?? displayName
   const secondaryLine = user?.email ?? user?.username ?? 'Chưa đăng nhập'
   // Giữ thứ tự ưu tiên vai trò để danh sách không nhảy khi token đổi thứ tự.
   const switchableRoles = ROLE_PRIORITY.filter((item) => roles.includes(item))
@@ -45,23 +41,23 @@ export function UserMenu({ role }: UserMenuProps) {
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label="Mở menu người dùng"
-        className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white py-1 pl-1 pr-2 text-left transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 data-[state=open]:border-indigo-500 data-[state=open]:ring-1 data-[state=open]:ring-indigo-500"
+        className="relative flex h-[54px] min-w-0 items-center gap-2.5 rounded-[13px] border border-[#d7ddea] bg-white py-1 pl-1.5 pr-3 text-left shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830] data-[state=open]:border-[#b91830]"
       >
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-700">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e9eaff] text-xs font-bold text-[#3429c7]">
           {getInitials(displayName)}
         </span>
         <span className="hidden min-w-0 flex-col lg:flex">
           <span className="flex items-center gap-1.5">
-            <span className="max-w-40 truncate text-xs font-semibold text-slate-900">
-              {displayName}
+            <span className="max-w-28 truncate text-[13px] font-semibold text-[#17233d]">
+              {username}
             </span>
-            <span className="rounded border border-indigo-200 bg-indigo-50 px-1.5 py-px font-mono text-[10px] font-bold text-indigo-700">
+            <span className="hidden rounded border border-[#cdd1ff] bg-[#f0f0ff] px-1.5 py-px text-[10px] font-bold text-[#3429c7] xl:inline">
               [{role}]
             </span>
           </span>
-          <span className="truncate text-[10px] text-slate-500">{roleDef.name}</span>
+          <span className="truncate text-[12px] text-[#596884]">{roleDef.name}</span>
         </span>
-        <ChevronDown className="size-3.5 shrink-0 text-slate-400" />
+        <ChevronDown className="size-4 shrink-0 text-[#34486c]" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
         <div className="space-y-0.5 px-2 py-1.5">
@@ -109,7 +105,7 @@ export function UserMenu({ role }: UserMenuProps) {
         <DropdownMenuSeparator />
         {getWorkspaceForRole(role) === 'STAFF' ? (
           <DropdownMenuItem asChild className="text-slate-700">
-            <Link href="/analyst/profile">
+            <Link href="/staff/profile">
               <User className="text-slate-500" />
               Hồ sơ cá nhân / Phiên đăng nhập
             </Link>

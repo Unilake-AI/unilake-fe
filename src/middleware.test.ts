@@ -19,9 +19,9 @@ describe('middleware phân quyền theo 9 role backend', () => {
     ['ADMISSIONS_MANAGER', '/manager'],
     ['ACADEMIC_MANAGER', '/manager'],
     ['HR_MANAGER', '/manager'],
-    ['ADMISSIONS_STAFF', '/analyst'],
-    ['ACADEMIC_STAFF', '/analyst'],
-    ['HR_STAFF', '/analyst'],
+    ['ADMISSIONS_STAFF', '/staff'],
+    ['ACADEMIC_STAFF', '/staff'],
+    ['HR_STAFF', '/staff'],
   ])('đưa %s vào trang chủ đúng và chặn không gian khác', (role, home) => {
     expect(middleware(request('/', [role])).headers.get('location')).toBe(
       `http://localhost:3000${home}`
@@ -38,6 +38,17 @@ describe('middleware phân quyền theo 9 role backend', () => {
     )
     expect(middleware(request('/viewer/ask', ['VIEWER'])).headers.get('location')).toBe(
       'http://localhost:3000/viewer'
+    )
+  })
+
+  it('chuyển link cũ sang khu vực nhân viên và giữ quyền truy cập', () => {
+    const oldPath = '/analyst/ingestion?jobId=42'
+
+    expect(middleware(request(oldPath, ['HR_STAFF'])).headers.get('location')).toBe(
+      'http://localhost:3000/staff/ingestion?jobId=42'
+    )
+    expect(middleware(request(oldPath, ['HR_MANAGER'])).headers.get('location')).toBe(
+      'http://localhost:3000/manager'
     )
   })
 })

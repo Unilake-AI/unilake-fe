@@ -3,14 +3,14 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { API_UpdateDataSource } from '@/api/data-operations/data-sources'
+import { API_UpdateDataSource } from '@/api/admindata/data-sources'
 import { API_ListDataSources } from '@/api/shared/data-sources'
-import type { DataSourceItem } from '@/types/data'
+import type { DataSourceItem } from '@/types/data-sources'
 
 import { SourcesView } from './sources-view'
 
 vi.mock('@/api/shared/data-sources', () => ({ API_ListDataSources: vi.fn() }))
-vi.mock('@/api/data-operations/data-sources', () => ({ API_UpdateDataSource: vi.fn() }))
+vi.mock('@/api/admindata/data-sources', () => ({ API_UpdateDataSource: vi.fn() }))
 
 const listSources = vi.mocked(API_ListDataSources)
 const updateSource = vi.mocked(API_UpdateDataSource)

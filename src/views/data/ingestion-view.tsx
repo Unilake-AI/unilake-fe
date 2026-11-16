@@ -19,9 +19,9 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { API_RunCleaning } from '@/api/data-operations/cleaning'
-import { API_ListDatasets } from '@/api/data-operations/datasets'
-import { API_CreateIngestionJob, API_RetryIngestionJob } from '@/api/data-operations/ingestion'
+import { API_RunCleaning } from '@/api/admindata/cleaning'
+import { API_ListDatasets } from '@/api/admindata/datasets'
+import { API_CreateIngestionJob, API_RetryIngestionJob } from '@/api/admindata/ingestion'
 import { getApiErrorMessage, getErrorMessageForCode } from '@/api/http'
 import { API_ListDataSources } from '@/api/shared/data-sources'
 import {
@@ -30,9 +30,9 @@ import {
   API_GetIngestionStats,
   API_ListIngestionAttempts,
   API_ListIngestionJobs,
-  API_UploadIngestion,
 } from '@/api/shared/ingestion'
-import type { IngestionJob, UploadDomain } from '@/api/shared/ingestion'
+import { API_UploadIngestion } from '@/api/staff/upload'
+import { AutoSilverForIngestion } from '@/components/data/auto-silver-jobs'
 import {
   Button,
   Card,
@@ -55,6 +55,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import type { IngestionJob, IngestionJobStatusFilter } from '@/types/ingestion'
+import type { UploadDomain } from '@/types/staff-upload'
 import {
   CSV_DELIMITER_OPTIONS,
   CSV_ENCODING_OPTIONS,
@@ -79,7 +81,7 @@ const PAGE_SIZE = 20
 const INGESTION_FAILURE = 'Không thể nạp dữ liệu. Vui lòng kiểm tra nguồn và thử lại.'
 
 const inputClass =
-  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30'
+  'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]/30'
 
 const JOB_STATUS_OPTIONS = [
   { value: '', label: 'Tất cả trạng thái' },
@@ -90,8 +92,6 @@ const JOB_STATUS_OPTIONS = [
   { value: 'FAILED', label: 'FAILED' },
   { value: 'REJECTED', label: 'REJECTED' },
 ] as const
-
-type JobStatusFilter = 'QUEUED' | 'RETRY_WAIT' | 'RUNNING' | 'SUCCESS' | 'FAILED' | 'REJECTED'
 
 export { isJobActive }
 
@@ -217,11 +217,11 @@ function JobDetails({
           <div className="flex flex-wrap items-center justify-between gap-2 text-emerald-900">
             <span className="inline-flex items-center gap-1.5 font-medium">
               <CheckCircle2 className="size-4 text-emerald-600" aria-hidden="true" />
-              Đã lưu dữ liệu vào Bronze (chưa tự động xuất bản sang Silver).
+              Đã lưu dữ liệu vào Bronze. Theo dõi kết quả xử lý Silver riêng ở bên dưới.
             </span>
             <Link
               href={`/data/cleaning?jobId=${jobId}`}
-              className="font-semibold text-indigo-700 hover:underline"
+              className="font-semibold text-[#a9162e] hover:underline"
             >
               Mở Cleaning &amp; Preview đầy đủ
             </Link>
@@ -286,6 +286,8 @@ function JobDetails({
           message={getApiErrorMessage(cleaning.error, 'Không chạy được tác vụ làm sạch.')}
         />
       )}
+      {status === 'SUCCESS' && <AutoSilverForIngestion ingestionJobId={jobId} canManage />}
+
       {cleaning.data && (
         <p role="status" className="text-slate-700">
           <Tag tone={statusTone(cleaning.data.status)}>{statusLabel(cleaning.data.status)}</Tag> ·{' '}
@@ -335,7 +337,7 @@ function JobDetails({
                       <button
                         type="button"
                         onClick={() => onSelectJob(attempt.ingestion_job_id)}
-                        className="text-indigo-600 hover:underline"
+                        className="text-[#b91830] hover:underline"
                       >
                         #{attempt.ingestion_job_id}
                       </button>
@@ -552,7 +554,7 @@ function RunJobPanel({
           <button
             type="submit"
             disabled={run.isPending}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md bg-indigo-600 px-3 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-70"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#b91830] px-3 text-xs font-semibold text-white hover:bg-[#9e1429] disabled:opacity-70"
           >
             <Play className="size-3.5" aria-hidden="true" />
             {run.isPending ? 'Đang gửi…' : 'Chạy nạp dữ liệu'}
@@ -801,7 +803,7 @@ function UploadFilePanel({
             type="file"
             accept=".csv,.xlsx,.xlsm"
             onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
-            className="block w-full cursor-pointer rounded-md border border-dashed border-slate-300 bg-slate-50 p-3 text-xs text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-indigo-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
+            className="block w-full cursor-pointer rounded-md border border-dashed border-slate-300 bg-slate-50 p-3 text-xs text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-[#b91830] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
           />
         </div>
 
@@ -812,7 +814,7 @@ function UploadFilePanel({
                 type="checkbox"
                 checked={customizeParser}
                 onChange={(e) => setCustomizeParser(e.target.checked)}
-                className="size-4 accent-indigo-600"
+                className="size-4 accent-[#b91830]"
               />
               Tùy chỉnh cấu hình đọc tệp (Parser options)
             </label>
@@ -904,7 +906,7 @@ function UploadFilePanel({
             </div>
             <div className="h-2 rounded-full bg-slate-100">
               <div
-                className="h-full rounded-full bg-indigo-600"
+                className="h-full rounded-full bg-[#b91830]"
                 style={{ width: `${uploadProgress}%` }}
               />
             </div>
@@ -981,7 +983,7 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
       API_ListIngestionJobs({
         limit: PAGE_SIZE,
         offset,
-        status: (statusFilter as JobStatusFilter) || undefined,
+        status: (statusFilter as IngestionJobStatusFilter) || undefined,
         dataset_id: datasetFilter ? Number(datasetFilter) : undefined,
         data_source_id: sourceFilter ? Number(sourceFilter) : undefined,
         mine_only: mineOnly || undefined,
@@ -1160,7 +1162,7 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
                 setMineOnly(e.target.checked)
                 setOffset(0)
               }}
-              className="size-4 accent-indigo-600"
+              className="size-4 accent-[#b91830]"
             />
             Chỉ lần nạp của tôi
           </label>
@@ -1214,11 +1216,11 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
                     const dsName = datasetNameMap.get(job.dataset_id)
                     return (
                       <Fragment key={job.ingestion_job_id}>
-                        <tr className={selected ? 'bg-indigo-50/50' : 'hover:bg-slate-50'}>
+                        <tr className={selected ? 'bg-[#fff3f5]/50' : 'hover:bg-slate-50'}>
                           <td className="px-3 py-2.5">
                             <button
                               type="button"
-                              className="font-mono font-semibold text-indigo-700 hover:underline"
+                              className="font-mono font-semibold text-[#a9162e] hover:underline"
                               aria-expanded={selected}
                               onClick={() =>
                                 setSelectedJobId(selected ? null : job.ingestion_job_id)

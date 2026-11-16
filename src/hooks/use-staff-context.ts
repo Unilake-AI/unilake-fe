@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 
-import { API_GetStaffContext } from '@/api/shared/staff'
+import { API_GetStaffContext } from '@/api/staff/context'
 
 export const STAFF_CONTEXT_QUERY_KEY = ['staff', 'context'] as const
 
@@ -12,6 +12,7 @@ export function useStaffContext() {
     queryKey: STAFF_CONTEXT_QUERY_KEY,
     queryFn: API_GetStaffContext,
     staleTime: 60_000,
+    refetchInterval: 15_000,
     retry: (failureCount, error) => {
       if (
         axios.isAxiosError(error) &&

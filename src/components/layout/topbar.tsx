@@ -3,35 +3,44 @@
 import Image from 'next/image'
 import Link from 'next/link'
 
-import { Bell, Building2, ChevronDown, Menu, Sparkles } from 'lucide-react'
+import { Building2, ChevronDown, Menu, Sparkles } from 'lucide-react'
 
+import campusImage from '@/assets/login/duy-tan-campus-source.png'
 import { ASK_AI_PATHS } from '@/config/menu'
 import { getWorkspaceForRole } from '@/config/roles'
-import type { RoleCode } from '@/types/auth'
+import type { TopbarProps } from '@/types/layout/topbar'
 
 import { DomainSelector } from './domain-selector'
+import { NotificationsMenu } from './notifications-menu'
 import { UserMenu } from './user-menu'
-
-interface TopbarProps {
-  role: RoleCode
-  onOpenMobile?: () => void
-}
 
 export function Topbar({ role, onOpenMobile }: TopbarProps) {
   const askAiPath = ASK_AI_PATHS[getWorkspaceForRole(role)]
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-3 sm:gap-3 md:px-4">
+    <header className="sticky top-0 z-30 flex min-h-[68px] shrink-0 items-center gap-2 border-b border-[#e2e6ef] bg-white px-3 shadow-[0_2px_12px_rgba(16,27,50,.05)] sm:gap-3 md:px-5">
+      <div
+        className="pointer-events-none absolute inset-y-0 left-1/2 right-1/4 hidden overflow-hidden lg:block"
+        aria-hidden="true"
+      >
+        <Image
+          src={campusImage}
+          alt=""
+          fill
+          sizes="500px"
+          className="object-cover object-[center_40%] opacity-[.13] [mask-image:linear-gradient(to_right,transparent,black_35%,transparent)]"
+        />
+      </div>
       <button
         type="button"
         onClick={onOpenMobile}
-        className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-700 transition-colors hover:bg-slate-100 md:hidden"
+        className="relative flex size-10 shrink-0 items-center justify-center rounded-lg border border-[#cbd4e3] text-[#17233d] transition-colors hover:bg-slate-100 md:hidden"
         aria-label="Mở menu điều hướng"
       >
         <Menu className="size-4" />
       </button>
 
-      <div className="flex shrink-0 items-center gap-1.5">
+      <div className="relative flex shrink-0 items-center gap-1.5 md:hidden">
         <div className="flex size-10 items-center justify-center overflow-hidden rounded-lg bg-slate-50 sm:hidden">
           <Image
             src="/logo.png"
@@ -56,14 +65,17 @@ export function Topbar({ role, onOpenMobile }: TopbarProps) {
         </span>
       </div>
 
-      <div className="hidden h-6 w-px shrink-0 bg-slate-200 sm:block" />
-
       <DomainSelector />
 
-      <div className="hidden h-8 shrink-0 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-700 xl:flex">
-        <Building2 className="size-3.5 text-slate-500" />
+      <div
+        role="note"
+        aria-label="Phạm vi đơn vị: Toàn trường (Tất cả đơn vị)"
+        title="Chưa có dữ liệu đơn vị để thay đổi phạm vi"
+        className="relative hidden h-10 shrink-0 items-center gap-2 rounded-[9px] border border-[#cbd4e3] bg-white px-3 text-[13px] font-semibold text-[#17233d] shadow-sm xl:flex"
+      >
+        <Building2 className="size-4 text-[#34486c]" />
         Toàn trường (Tất cả đơn vị)
-        <ChevronDown className="size-3.5 text-slate-400" />
+        <ChevronDown className="size-4 text-[#34486c]" />
       </div>
 
       <div className="flex-1" />
@@ -71,7 +83,7 @@ export function Topbar({ role, onOpenMobile }: TopbarProps) {
       {askAiPath && (
         <Link
           href={askAiPath}
-          className="flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-indigo-200 bg-indigo-50 px-3 text-xs font-semibold text-indigo-700 transition-colors hover:bg-indigo-100"
+          className="relative hidden h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[#e4bec6] bg-[#fff7f8] px-3 text-xs font-semibold text-[#b91830] transition-colors hover:bg-[#fbe9ed] sm:flex"
         >
           <Sparkles className="size-3.5" />
           <span className="hidden sm:inline">Ask AI (NLQ)</span>
@@ -79,13 +91,11 @@ export function Topbar({ role, onOpenMobile }: TopbarProps) {
         </Link>
       )}
 
-      <button
-        type="button"
-        className="relative hidden size-8 shrink-0 items-center justify-center rounded-md text-slate-600 transition-colors hover:bg-slate-100 sm:flex"
-        aria-label="Thông báo hệ thống"
-      >
-        <Bell className="size-4" />
-      </button>
+      {getWorkspaceForRole(role) !== 'VIEWER' && (
+        <NotificationsMenu
+          workspace={getWorkspaceForRole(role) as 'ADMIN' | 'DATA_ADMIN' | 'MANAGER' | 'STAFF'}
+        />
+      )}
 
       <UserMenu role={role} />
     </header>

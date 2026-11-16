@@ -33,16 +33,16 @@ describe('role theo backend seed', () => {
     ['ADMISSIONS_MANAGER', 'MANAGER', 'admissions', '/manager'],
     ['ACADEMIC_MANAGER', 'MANAGER', 'academic', '/manager'],
     ['HR_MANAGER', 'MANAGER', 'hr', '/manager'],
-    ['ADMISSIONS_STAFF', 'STAFF', 'admissions', '/analyst'],
-    ['ACADEMIC_STAFF', 'STAFF', 'academic', '/analyst'],
-    ['HR_STAFF', 'STAFF', 'hr', '/analyst'],
+    ['ADMISSIONS_STAFF', 'STAFF', 'admissions', '/staff'],
+    ['ACADEMIC_STAFF', 'STAFF', 'academic', '/staff'],
+    ['HR_STAFF', 'STAFF', 'hr', '/staff'],
   ] as const)('định tuyến %s vào đúng không gian và phân hệ', (role, workspace, domain, home) => {
     expect(getWorkspaceForRole(role)).toBe(workspace)
     expect(getDepartmentDomain(role)).toBe(domain)
     expect(getRoleForWorkspace([role], workspace)).toBe(role)
     expect(getDefaultHomeForRoles([role])).toBe(home)
     expect(hasAccessToRoute(home, [role])).toBe(true)
-    expect(hasAccessToRoute(home === '/manager' ? '/analyst' : '/manager', [role])).toBe(false)
+    expect(hasAccessToRoute(home === '/manager' ? '/staff' : '/manager', [role])).toBe(false)
   })
 
   it('không cho role phòng ban vào trang quản trị hoặc Ban Giám hiệu', () => {

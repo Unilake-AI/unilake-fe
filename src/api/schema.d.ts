@@ -89,6 +89,108 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/users': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Accounts */
+    get: operations['list_accounts_api_v1_users_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/users/employees': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Employees */
+    get: operations['list_employees_api_v1_users_employees_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/users/organization': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Organization */
+    get: operations['organization_api_v1_users_organization_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/users/employees/{employee_id}/assignments': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Assignments */
+    get: operations['assignments_api_v1_users_employees__employee_id__assignments_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/users/{user_id}/employee': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /** Link Employee */
+    patch: operations['link_employee_api_v1_users__user_id__employee_patch']
+    trace?: never
+  }
+  '/api/v1/users/assignments': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Add Assignment */
+    post: operations['add_assignment_api_v1_users_assignments_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/datasources': {
     parameters: {
       query?: never
@@ -203,6 +305,40 @@ export interface paths {
     options?: never
     head?: never
     patch?: never
+    trace?: never
+  }
+  '/api/v1/dataset-owner-departments': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Owner Departments */
+    get: operations['owner_departments_api_v1_dataset_owner_departments_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/datasets/{dataset_id}/ownership': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /** Update Ownership */
+    patch: operations['update_ownership_api_v1_datasets__dataset_id__ownership_patch']
     trace?: never
   }
   '/api/v1/ingestion/jobs': {
@@ -385,6 +521,296 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/pipeline/auto/overview': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Giám sát Silver tự động trên toàn hệ thống */
+    get: operations['overview_api_v1_pipeline_auto_overview_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/auto/datasets/{dataset_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Xem cấu hình tự xử lý Silver */
+    get: operations['get_policy_api_v1_pipeline_auto_datasets__dataset_id__get']
+    /** Bật hoặc cập nhật quy định tự xử lý Silver của bộ dữ liệu */
+    put: operations['put_policy_api_v1_pipeline_auto_datasets__dataset_id__put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/auto/jobs': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Theo dõi các lượt tự xử lý Silver */
+    get: operations['jobs_api_v1_pipeline_auto_jobs_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/auto/jobs/{job_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Xem kết quả tự xử lý Silver */
+    get: operations['get_job_api_v1_pipeline_auto_jobs__job_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/auto/jobs/{job_id}/attempts': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Xem lịch sử các lần thử xử lý Silver */
+    get: operations['attempts_api_v1_pipeline_auto_jobs__job_id__attempts_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/auto/jobs/{job_id}/retry': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Yêu cầu thử lại một lượt Silver đã thất bại */
+    post: operations['retry_api_v1_pipeline_auto_jobs__job_id__retry_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/auto/workers': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Xem các Silver Worker và thời điểm liên lạc gần nhất */
+    get: operations['workers_api_v1_pipeline_auto_workers_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/gold/recipes': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Xem các phép tổng hợp Gold đang hỗ trợ */
+    get: operations['recipes_api_v1_pipeline_gold_recipes_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/gold/sources': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Xem Silver hiện hành và tiến độ cập nhật Gold */
+    get: operations['sources_api_v1_pipeline_gold_sources_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/gold/refresh': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Tạo lượt Gold cho bản Silver đang sử dụng */
+    post: operations['refresh_api_v1_pipeline_gold_refresh_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/gold/jobs': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Xem lịch sử xử lý Gold */
+    get: operations['jobs_api_v1_pipeline_gold_jobs_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/gold/jobs/{job_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Xem kết quả và nguồn gốc Silver của lượt Gold */
+    get: operations['job_api_v1_pipeline_gold_jobs__job_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/gold/jobs/{job_id}/retry': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Yêu cầu chạy lại lượt Gold bị lỗi */
+    post: operations['retry_api_v1_pipeline_gold_jobs__job_id__retry_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/gold/metrics': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Xem số liệu Gold hiện hành trong phạm vi được cấp quyền */
+    get: operations['metrics_api_v1_pipeline_gold_metrics_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/gold/jobs/{job_id}/report': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Tải toàn bộ số liệu của một bản Gold dưới dạng CSV */
+    get: operations['report_api_v1_pipeline_gold_jobs__job_id__report_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/gold/workers': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Xem bộ xử lý Gold và thời điểm còn hoạt động */
+    get: operations['workers_api_v1_pipeline_gold_workers_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/gold/jobs/{job_id}/attempts': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Xem lịch sử từng lần thực hiện lượt Gold */
+    get: operations['attempts_api_v1_pipeline_gold_jobs__job_id__attempts_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/pipeline/profiles': {
     parameters: {
       query?: never
@@ -415,6 +841,91 @@ export interface paths {
     /** Sửa cấu hình nguồn Silver */
     put: operations['update_profile_api_v1_pipeline_profiles__profile_id__put']
     post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/profiles/owners/grants': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Grant Owner */
+    post: operations['grant_owner_api_v1_pipeline_profiles_owners_grants_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/profiles/owners/grants/{grant_id}/revoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Revoke Owner */
+    post: operations['revoke_owner_api_v1_pipeline_profiles_owners_grants__grant_id__revoke_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/profiles/{profile_id}/revisions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Profile History */
+    get: operations['profile_history_api_v1_pipeline_profiles__profile_id__revisions_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/profiles/{profile_id}/approve': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Approve Profile */
+    post: operations['approve_profile_api_v1_pipeline_profiles__profile_id__approve_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/profiles/{profile_id}/revisions/{revision}/revoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Revoke Approval */
+    post: operations['revoke_approval_api_v1_pipeline_profiles__profile_id__revisions__revision__revoke_post']
     delete?: never
     options?: never
     head?: never
@@ -551,6 +1062,57 @@ export interface paths {
     get: operations['get_cleaning_report_api_v1_cleaning_runs__run_id__report_get']
     put?: never
     post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/cleaning/ingestion-jobs/{ingestion_job_id}/setup': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Đọc file Bronze và gợi ý cách xử lý */
+    get: operations['get_setup_api_v1_pipeline_cleaning_ingestion_jobs__ingestion_job_id__setup_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/cleaning/ingestion-jobs/{ingestion_job_id}/setup/preview': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Xem trước cách xử lý được đề xuất, chưa lưu cấu hình */
+    post: operations['preview_api_v1_pipeline_cleaning_ingestion_jobs__ingestion_job_id__setup_preview_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/cleaning/ingestion-jobs/{ingestion_job_id}/setup/confirm': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Xác nhận và lưu cách xử lý đã xem trước */
+    post: operations['confirm_api_v1_pipeline_cleaning_ingestion_jobs__ingestion_job_id__setup_confirm_post']
     delete?: never
     options?: never
     head?: never
@@ -694,6 +1256,40 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/data-quality-issues/return-preview': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Tự xác định người nạp file để quản trị xem trước khi gửi trả */
+    post: operations['preview_upload_return_api_v1_data_quality_issues_return_preview_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/data-quality-issues/return-to-uploader': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Quản trị duyệt trả hồ sơ lỗi về người đã nạp file */
+    post: operations['approve_upload_return_api_v1_data_quality_issues_return_to_uploader_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/data-quality-issues/{issue_id}': {
     parameters: {
       query?: never
@@ -703,6 +1299,23 @@ export interface paths {
     }
     /** Get Issue */
     get: operations['get_issue_api_v1_data_quality_issues__issue_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/data-quality-issues/{issue_id}/comparison': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Đối chiếu dữ liệu trước và sau khi sửa theo khóa nghiệp vụ cho quản trị dữ liệu */
+    get: operations['compare_issue_api_v1_data_quality_issues__issue_id__comparison_get']
     put?: never
     post?: never
     delete?: never
@@ -888,6 +1501,176 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/manager/context': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Context */
+    get: operations['context_api_v1_manager_context_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/manager/overview': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Overview */
+    get: operations['overview_api_v1_manager_overview_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/manager/analytics': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Analytics */
+    get: operations['analytics_api_v1_manager_analytics_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/manager/datasets': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Datasets */
+    get: operations['datasets_api_v1_manager_datasets_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/manager/datasets/{dataset_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Dataset Detail */
+    get: operations['dataset_detail_api_v1_manager_datasets__dataset_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/manager/issues': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Issues */
+    get: operations['issues_api_v1_manager_issues_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/manager/issues/stats': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Issue Stats */
+    get: operations['issue_stats_api_v1_manager_issues_stats_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/manager/issues/{issue_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Issue Detail */
+    get: operations['issue_detail_api_v1_manager_issues__issue_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/notifications': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Notifications */
+    get: operations['notifications_api_v1_notifications_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/notifications/read': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Mark Read */
+    post: operations['mark_read_api_v1_notifications_read_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/': {
     parameters: {
       query?: never
@@ -931,6 +1714,18 @@ export interface components {
       /** Expected Current Snapshot */
       expected_current_snapshot: string | null
     }
+    /** ApproveUploadReturn */
+    ApproveUploadReturn: {
+      /** Quarantine Record Ids */
+      quarantine_record_ids: string[]
+      /** Title */
+      title: string
+      /**
+       * Description
+       * @default
+       */
+      description?: string
+    }
     /** AssignIssue */
     AssignIssue: {
       /** Assignee User Id */
@@ -944,6 +1739,54 @@ export interface components {
       username: string
       /** Full Name */
       full_name: string
+    }
+    /** AssignmentCreate */
+    AssignmentCreate: {
+      /** Employee Id */
+      employee_id: number
+      /** Department Id */
+      department_id: number
+      /** Position Id */
+      position_id: number
+      /**
+       * Start Date
+       * Format: date
+       */
+      start_date: string
+      /** End Date */
+      end_date?: string | null
+      /**
+       * Is Primary
+       * @default false
+       */
+      is_primary?: boolean
+    }
+    /** AutoPolicyRequest */
+    AutoPolicyRequest: {
+      /** Expected Revision */
+      expected_revision: number
+      /**
+       * Enabled
+       * @default false
+       */
+      enabled?: boolean
+      /** Profile Id */
+      profile_id: string
+      /**
+       * Allow Partial Publication
+       * @default false
+       */
+      allow_partial_publication?: boolean
+      /**
+       * Max Attempts
+       * @default 3
+       */
+      max_attempts?: number
+      /**
+       * Retry Delay Seconds
+       * @default 30
+       */
+      retry_delay_seconds?: number
     }
     /** Body_upload_ingestion_api_v1_ingestion_uploads_post */
     Body_upload_ingestion_api_v1_ingestion_uploads_post: {
@@ -1041,6 +1884,60 @@ export interface components {
       /** Tables */
       tables?: components['schemas']['CatalogTableSchema'][] | null
     }
+    /**
+     * CleaningChoices
+     * @description Giao diện chỉ gửi lựa chọn dễ hiểu; thông tin nguồn được lấy từ lần nạp đã chọn.
+     */
+    CleaningChoices: {
+      /** Analysis Fingerprint */
+      analysis_fingerprint: string
+      /** Entity */
+      entity: string
+      /**
+       * Identity Mode
+       * @default source
+       * @enum {string}
+       */
+      identity_mode?: 'source' | 'canonical'
+      /** Field Mapping */
+      field_mapping: {
+        [key: string]: string
+      }
+      /** Ignored Columns */
+      ignored_columns?: string[]
+      /** Date Formats */
+      date_formats?: {
+        [key: string]: 'YMD' | 'DMY' | 'MDY'
+      }
+      /** Null Tokens */
+      null_tokens?: string[]
+      /**
+       * Trim Text
+       * @default false
+       */
+      trim_text?: boolean
+      /**
+       * Collapse Exact Duplicates
+       * @default false
+       */
+      collapse_exact_duplicates?: boolean
+      /** Crosswalk Release */
+      crosswalk_release?: string | null
+      /** Reference Namespaces */
+      reference_namespaces?: {
+        [key: string]: string
+      }
+      /** Field Types */
+      field_types?: {
+        [key: string]: 'string' | 'integer' | 'decimal' | 'date' | 'timestamp' | 'boolean'
+      }
+      /** Identifier Fields */
+      identifier_fields?: string[]
+      /** Required Fields */
+      required_fields?: string[]
+      /** Primary Key */
+      primary_key?: string[]
+    }
     /** CleaningPreviewRequest */
     CleaningPreviewRequest: {
       /** Profile Id */
@@ -1100,6 +1997,10 @@ export interface components {
       silver_snapshot_id: string | null
       /** Report Available */
       report_available: boolean
+      /** Profile Evidence */
+      profile_evidence?: {
+        [key: string]: unknown
+      } | null
       /** Error Code */
       error_code: string | null
       /**
@@ -1109,6 +2010,121 @@ export interface components {
       started_at: string
       /** Finished At */
       finished_at: string | null
+    }
+    /** ComparisonCleaningRunInfo */
+    ComparisonCleaningRunInfo: {
+      /**
+       * Cleaning Run Id
+       * Format: uuid
+       */
+      cleaning_run_id: string
+      /** Ingestion Job Id */
+      ingestion_job_id: number
+      /** Dataset Id */
+      dataset_id: number
+      /** Domain */
+      domain: string
+      /** Entity */
+      entity: string
+      /** Bronze Version */
+      bronze_version: string
+      /** Cleaning Status */
+      cleaning_status: string
+      /** Publication Status */
+      publication_status: string
+      /** Records Read */
+      records_read: number | null
+      /** Records Passed */
+      records_passed: number | null
+      /** Records Quarantined */
+      records_quarantined: number | null
+      /** Records Collapsed */
+      records_collapsed: number | null
+      /** Records Published */
+      records_published: number
+      /** Silver Snapshot Id */
+      silver_snapshot_id: string | null
+      /**
+       * Started At
+       * Format: date-time
+       */
+      started_at: string
+      /** Finished At */
+      finished_at: string | null
+    }
+    /** ComparisonRecordItem */
+    ComparisonRecordItem: {
+      /**
+       * Record Id
+       * Format: uuid
+       */
+      record_id: string
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'RESOLVED' | 'STILL_INVALID' | 'UNMATCHED' | 'MANUAL_REVIEW_REQUIRED'
+      /** Reason */
+      reason?: string | null
+      /** Business Key Fields */
+      business_key_fields: string[]
+      /** Business Key */
+      business_key?: {
+        [key: string]: unknown
+      } | null
+      /** Old Locator */
+      old_locator: string
+      /** Old Record Position */
+      old_record_position: number
+      /** Old Bronze Version */
+      old_bronze_version: string
+      /** New Locator */
+      new_locator?: string | null
+      /** New Record Position */
+      new_record_position?: number | null
+      /** New Bronze Version */
+      new_bronze_version?: string | null
+      /** Original Error Codes */
+      original_error_codes: string[]
+      /** Original Issues */
+      original_issues: {
+        [key: string]: unknown
+      }[]
+      /** Remaining Error Codes */
+      remaining_error_codes: string[]
+      /** Remaining Issues */
+      remaining_issues: {
+        [key: string]: unknown
+      }[]
+      /** Old Values */
+      old_values?: {
+        [key: string]: unknown
+      } | null
+      /** New Values */
+      new_values?: {
+        [key: string]: unknown
+      } | null
+      /** Changed Fields */
+      changed_fields: string[]
+    }
+    /** ComparisonSummary */
+    ComparisonSummary: {
+      /** Total */
+      total: number
+      /** Resolved */
+      resolved: number
+      /** Still Invalid */
+      still_invalid: number
+      /** Unmatched */
+      unmatched: number
+      /** Manual Review Required */
+      manual_review_required: number
+    }
+    /** ConfirmCleaningChoices */
+    ConfirmCleaningChoices: {
+      choices: components['schemas']['CleaningChoices']
+      /** Confirmation Token */
+      confirmation_token: string
     }
     /** CreateIssue */
     CreateIssue: {
@@ -1249,6 +2265,24 @@ export interface components {
       /** Description */
       description?: string | null
     }
+    /** DatasetOwnership */
+    DatasetOwnership: {
+      /** Owner Department Id */
+      owner_department_id: number
+      /** Expected Owner Department Id */
+      expected_owner_department_id: number | null
+    }
+    /** DatasetPage */
+    DatasetPage: {
+      /** Items */
+      items: components['schemas']['ManagerDataset'][]
+      /** Total */
+      total: number
+      /** Limit */
+      limit: number
+      /** Offset */
+      offset: number
+    }
     /**
      * DatasetRead
      * @description Payload trả về metadata của dataset đã đăng ký.
@@ -1303,6 +2337,16 @@ export interface components {
       name: string
     }
     /**
+     * EmployeeLink
+     * @description Liên kết tài khoản với hồ sơ nhân viên có thật; kiểm tra bản cũ để tránh ghi đè.
+     */
+    EmployeeLink: {
+      /** Employee Id */
+      employee_id: number
+      /** Expected Employee Id */
+      expected_employee_id: number | null
+    }
+    /**
      * ErrorBody
      * @description Đối tượng lỗi chuẩn bên trong cấu trúc lỗi API.
      */
@@ -1350,6 +2394,59 @@ export interface components {
        * @default
        */
       description?: string
+    }
+    /** GoldMetric */
+    GoldMetric: {
+      /** Dataset Id */
+      dataset_id: number
+      /** Dataset Name */
+      dataset_name: string
+      /** Domain */
+      domain: string
+      /** Scope */
+      scope: string
+      /** Gold Snapshot Id */
+      gold_snapshot_id: string
+      /** Silver Snapshot Id */
+      silver_snapshot_id: string
+      /** Recipe Version */
+      recipe_version: string
+      /**
+       * Finished At
+       * Format: date-time
+       */
+      finished_at: string
+      /** Entity */
+      entity: string
+      /** Metric */
+      metric: string
+      /** Dimensions */
+      dimensions: {
+        [key: string]: unknown
+      }
+      /** Value */
+      value: number
+      /**
+       * Unit
+       * @default records
+       * @constant
+       */
+      unit?: 'records'
+    }
+    /** GoldSource */
+    GoldSource: {
+      /** Scope */
+      scope: string
+      /** Silver Snapshot Id */
+      silver_snapshot_id: string
+      /** Job Id */
+      job_id: string | null
+      /** Sync Status */
+      sync_status: string
+      /** Finished At */
+      finished_at: string | null
+      /** Error Code */
+      error_code: string | null
     }
     /** HTTPValidationError */
     HTTPValidationError: {
@@ -1483,6 +2580,40 @@ export interface components {
        */
       last_heartbeat_at: string
     }
+    /** IssueComparisonResponse */
+    IssueComparisonResponse: {
+      /**
+       * Issue Id
+       * Format: uuid
+       */
+      issue_id: string
+      /** Dataset Id */
+      dataset_id: number
+      /** Domain */
+      domain: string
+      /** Entity */
+      entity: string
+      /**
+       * Issue Status
+       * @enum {string}
+       */
+      issue_status: 'ASSIGNED' | 'PENDING_VERIFICATION' | 'VERIFIED'
+      /** Resolution Job Id */
+      resolution_job_id: number | null
+      cleaning_run: components['schemas']['ComparisonCleaningRunInfo']
+      /** Business Key Fields */
+      business_key_fields: string[]
+      summary: components['schemas']['ComparisonSummary']
+      /** Records */
+      records: components['schemas']['ComparisonRecordItem'][]
+      /**
+       * Manual Verification Required
+       * @default true
+       */
+      manual_verification_required?: boolean
+      /** Note */
+      note: string
+    }
     /** IssueDepartmentChoice */
     IssueDepartmentChoice: {
       /** Department Id */
@@ -1505,6 +2636,8 @@ export interface components {
       department_id: number
       /** Domain */
       domain: string
+      /** Department Name */
+      department_name?: string | null
       /** Title */
       title: string
       /** Description */
@@ -1518,6 +2651,14 @@ export interface components {
       created_by: number
       /** Assignee User Id */
       assignee_user_id: number | null
+      /**
+       * Assignment Mode
+       * @default DEPARTMENT
+       * @enum {string}
+       */
+      assignment_mode?: 'DEPARTMENT' | 'SOURCE_UPLOADER'
+      /** Origin Upload Job Id */
+      origin_upload_job_id?: number | null
       /** Resolution Job Id */
       resolution_job_id: number | null
       /** Verification Run Id */
@@ -1608,6 +2749,8 @@ export interface components {
       department_id: number
       /** Domain */
       domain: string
+      /** Department Name */
+      department_name?: string | null
       /** Title */
       title: string
       /** Description */
@@ -1621,6 +2764,14 @@ export interface components {
       created_by: number
       /** Assignee User Id */
       assignee_user_id: number | null
+      /**
+       * Assignment Mode
+       * @default DEPARTMENT
+       * @enum {string}
+       */
+      assignment_mode?: 'DEPARTMENT' | 'SOURCE_UPLOADER'
+      /** Origin Upload Job Id */
+      origin_upload_job_id?: number | null
       /** Resolution Job Id */
       resolution_job_id: number | null
       /** Verification Run Id */
@@ -1737,6 +2888,72 @@ export interface components {
       /** Refresh Token */
       refresh_token?: string | null
     }
+    /** ManagerContext */
+    ManagerContext: {
+      /** User Id */
+      user_id: number
+      /** Roles */
+      roles: string[]
+      /** Domains */
+      domains: components['schemas']['DomainChoice'][]
+      /** Departments */
+      departments: components['schemas']['DepartmentChoice'][]
+      /** Default Domain */
+      default_domain: string | null
+      /** Needs Department Assignment */
+      needs_department_assignment: boolean
+      /**
+       * Data Layer
+       * @default GOLD
+       * @constant
+       */
+      data_layer?: 'GOLD'
+      /** Note */
+      note: string
+    }
+    /** ManagerDataset */
+    ManagerDataset: {
+      /** Dataset Id */
+      dataset_id: number
+      /** Dataset Code */
+      dataset_code: string
+      /** Dataset Name */
+      dataset_name: string
+      /** Domain */
+      domain: string
+      /** Owner Department Id */
+      owner_department_id: number
+      /** Description */
+      description: string | null
+      /** Sources */
+      sources: components['schemas']['GoldSource'][]
+    }
+    /** ManagerOverview */
+    ManagerOverview: {
+      /**
+       * Data Layer
+       * @default GOLD
+       * @constant
+       */
+      data_layer?: 'GOLD'
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'READY' | 'PARTIAL' | 'PENDING' | 'NO_DATA'
+      /** Datasets */
+      datasets: number
+      sources: components['schemas']['SourceStats']
+      /** Last Updated At */
+      last_updated_at: string | null
+      kpis: components['schemas']['MetricPage']
+      issues: components['schemas']['IssueStats']
+      /**
+       * Note
+       * @default Số bản ghi theo từng nguồn Gold; không cộng thành số người duy nhất.
+       */
+      note?: string
+    }
     /** ManualCleaningRequest */
     ManualCleaningRequest: {
       /** Profile Id */
@@ -1746,6 +2963,11 @@ export interface components {
        * @default active
        */
       base_snapshot?: string | null
+      /**
+       * Allow Partial Publication
+       * @default true
+       */
+      allow_partial_publication?: boolean
     }
     /** ManualCleaningResponse */
     ManualCleaningResponse: {
@@ -1783,6 +3005,23 @@ export interface components {
       quarantine_report?: {
         [key: string]: unknown
       } | null
+      /** Profile Id */
+      profile_id?: string | null
+      /** Profile Fingerprint */
+      profile_fingerprint?: string | null
+      /** Profile Approval */
+      profile_approval?: {
+        [key: string]: unknown
+      } | null
+      /** Partial Key Check */
+      partial_key_check?: {
+        [key: string]: unknown
+      } | null
+    }
+    /** MarkNotificationsRead */
+    MarkNotificationsRead: {
+      /** Event Ids */
+      event_ids: number[]
     }
     /**
      * MessageResponse
@@ -1791,6 +3030,17 @@ export interface components {
     MessageResponse: {
       /** Message */
       message: string
+    }
+    /** MetricPage */
+    MetricPage: {
+      /** Items */
+      items: components['schemas']['GoldMetric'][]
+      /** Total */
+      total: number
+      /** Limit */
+      limit: number
+      /** Offset */
+      offset: number
     }
     /**
      * NaturalLanguageQueryRequest
@@ -1815,6 +3065,57 @@ export interface components {
         [key: string]: unknown
       }[]
     }
+    /** NotificationPage */
+    NotificationPage: {
+      /** Items */
+      items: components['schemas']['NotificationRead'][]
+      /** Total */
+      total: number
+      /** Unread Count */
+      unread_count: number
+      /** Limit */
+      limit: number
+      /** Offset */
+      offset: number
+    }
+    /** NotificationRead */
+    NotificationRead: {
+      /** Event Id */
+      event_id: number
+      /**
+       * Issue Id
+       * Format: uuid
+       */
+      issue_id: string
+      /** Title */
+      title: string
+      /** Domain */
+      domain: string
+      /** Department Name */
+      department_name: string
+      /** Event Type */
+      event_type: string
+      /** To Status */
+      to_status: string
+      /** Actor Id */
+      actor_id: number
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      /** Read At */
+      read_at: string | null
+    }
+    /** OwnerGrant */
+    OwnerGrant: {
+      /** Domain */
+      domain: string
+      /** User Id */
+      user_id: number
+      /** Reason */
+      reason: string
+    }
     /** ProfileCreate */
     ProfileCreate: {
       /** Profile Id */
@@ -1832,6 +3133,11 @@ export interface components {
       revision: number
       /** Storage */
       storage: string
+      /**
+       * Approval Status
+       * @default NEEDS_DOMAIN_OWNER_APPROVAL
+       */
+      approval_status?: string
     }
     /** ProfileUpdate */
     ProfileUpdate: {
@@ -1926,6 +3232,14 @@ export interface components {
         [key: string]: unknown
       }[]
     }
+    /** RefreshRequest */
+    RefreshRequest: {
+      /**
+       * Silver Snapshot Id
+       * Format: uuid
+       */
+      silver_snapshot_id: string
+    }
     /**
      * RefreshTokenRequest
      * @description Dữ liệu yêu cầu cấp access token mới bằng refresh token.
@@ -1933,6 +3247,27 @@ export interface components {
     RefreshTokenRequest: {
       /** Refresh Token */
       refresh_token: string
+    }
+    /** ReviewRequest */
+    ReviewRequest: {
+      /** Expected Revision */
+      expected_revision: number
+      /** Expected Fingerprint */
+      expected_fingerprint: string
+      /**
+       * Grant Id
+       * Format: uuid
+       */
+      grant_id: string
+      /** Evidence */
+      evidence: string
+      /** Allow Partial Publication */
+      allow_partial_publication: boolean
+    }
+    /** RevokeRequest */
+    RevokeRequest: {
+      /** Reason */
+      reason: string
     }
     /**
      * RoleCode
@@ -2035,8 +3370,14 @@ export interface components {
       reference_namespaces?: {
         [key: string]: string
       }
+      /**
+       * Identity Mode
+       * @default canonical
+       * @enum {string}
+       */
+      identity_mode?: 'canonical' | 'source'
       /** Crosswalk Release */
-      crosswalk_release: string
+      crosswalk_release?: string | null
       /**
        * Effective At
        * Format: date-time
@@ -2049,6 +3390,49 @@ export interface components {
       collapse_exact_duplicates?: boolean
       /** Source Preview Columns */
       source_preview_columns?: string[]
+    }
+    /** SourceStats */
+    SourceStats: {
+      /**
+       * Total
+       * @default 0
+       */
+      total?: number
+      /**
+       * Current
+       * @default 0
+       */
+      current?: number
+      /**
+       * Not Started
+       * @default 0
+       */
+      not_started?: number
+      /**
+       * Queued
+       * @default 0
+       */
+      queued?: number
+      /**
+       * Running
+       * @default 0
+       */
+      running?: number
+      /**
+       * Retry Wait
+       * @default 0
+       */
+      retry_wait?: number
+      /**
+       * Failed
+       * @default 0
+       */
+      failed?: number
+      /**
+       * Superseded
+       * @default 0
+       */
+      superseded?: number
     }
     /**
      * SourceSystemRead
@@ -2126,6 +3510,24 @@ export interface components {
       note: string
       /** Confirmed Record Ids */
       confirmed_record_ids?: string[]
+    }
+    /** UploadReturnPreview */
+    UploadReturnPreview: {
+      department: components['schemas']['IssueDepartmentChoice']
+      assignee: components['schemas']['AssigneeChoice']
+      /** Source Table */
+      source_table: string
+      /** Origin Upload Job Id */
+      origin_upload_job_id: number
+      /** Existing Issue Id */
+      existing_issue_id?: string | null
+      /** Note */
+      note: string
+    }
+    /** UploadReturnSelection */
+    UploadReturnSelection: {
+      /** Quarantine Record Ids */
+      quarantine_record_ids: string[]
     }
     /**
      * UserProfileDTO
@@ -2297,6 +3699,199 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['MessageResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_accounts_api_v1_users_get: {
+    parameters: {
+      query?: {
+        search?: string
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }[]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_employees_api_v1_users_employees_get: {
+    parameters: {
+      query?: {
+        search?: string
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }[]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  organization_api_v1_users_organization_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+    }
+  }
+  assignments_api_v1_users_employees__employee_id__assignments_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        employee_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }[]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  link_employee_api_v1_users__user_id__employee_patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        user_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EmployeeLink']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  add_assignment_api_v1_users_assignments_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AssignmentCreate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: string
+          }
         }
       }
       /** @description Validation Error */
@@ -2706,6 +4301,63 @@ export interface operations {
       }
     }
   }
+  owner_departments_api_v1_dataset_owner_departments_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }[]
+        }
+      }
+    }
+  }
+  update_ownership_api_v1_datasets__dataset_id__ownership_patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        dataset_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DatasetOwnership']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DatasetRead']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   list_jobs_api_v1_ingestion_jobs_get: {
     parameters: {
       query?: {
@@ -3035,11 +4687,579 @@ export interface operations {
       }
     }
   }
+  overview_api_v1_pipeline_auto_overview_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+    }
+  }
+  get_policy_api_v1_pipeline_auto_datasets__dataset_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        dataset_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  put_policy_api_v1_pipeline_auto_datasets__dataset_id__put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        dataset_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AutoPolicyRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  jobs_api_v1_pipeline_auto_jobs_get: {
+    parameters: {
+      query?: {
+        dataset_id?: number | null
+        ingestion_job_id?: number | null
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }[]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_job_api_v1_pipeline_auto_jobs__job_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        job_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  attempts_api_v1_pipeline_auto_jobs__job_id__attempts_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        job_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }[]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  retry_api_v1_pipeline_auto_jobs__job_id__retry_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        job_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  workers_api_v1_pipeline_auto_workers_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }[]
+        }
+      }
+    }
+  }
+  recipes_api_v1_pipeline_gold_recipes_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+    }
+  }
+  sources_api_v1_pipeline_gold_sources_get: {
+    parameters: {
+      query?: {
+        domain?: ('hr' | 'academic' | 'admissions') | null
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }[]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  refresh_api_v1_pipeline_gold_refresh_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RefreshRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  jobs_api_v1_pipeline_gold_jobs_get: {
+    parameters: {
+      query?: {
+        domain?: ('hr' | 'academic' | 'admissions') | null
+        dataset_id?: number | null
+        status?:
+          ('QUEUED' | 'RUNNING' | 'RETRY_WAIT' | 'SUCCEEDED' | 'FAILED' | 'SUPERSEDED') | null
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }[]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  job_api_v1_pipeline_gold_jobs__job_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        job_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  retry_api_v1_pipeline_gold_jobs__job_id__retry_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        job_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  metrics_api_v1_pipeline_gold_metrics_get: {
+    parameters: {
+      query?: {
+        domain?: ('hr' | 'academic' | 'admissions') | null
+        dataset_id?: number | null
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }[]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  report_api_v1_pipeline_gold_jobs__job_id__report_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        job_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  workers_api_v1_pipeline_gold_workers_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }[]
+        }
+      }
+    }
+  }
+  attempts_api_v1_pipeline_gold_jobs__job_id__attempts_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        job_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }[]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   list_profiles_api_v1_pipeline_profiles_get: {
     parameters: {
       query?: {
         limit?: number
         offset?: number
+        dataset_id?: number | null
       }
       header?: never
       path?: never
@@ -3153,6 +5373,186 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ProfileRead']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  grant_owner_api_v1_pipeline_profiles_owners_grants_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['OwnerGrant']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: string
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  revoke_owner_api_v1_pipeline_profiles_owners_grants__grant_id__revoke_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        grant_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RevokeRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: string
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  profile_history_api_v1_pipeline_profiles__profile_id__revisions_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        profile_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  approve_profile_api_v1_pipeline_profiles__profile_id__approve_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        profile_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ReviewRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: string
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  revoke_approval_api_v1_pipeline_profiles__profile_id__revisions__revision__revoke_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        profile_id: string
+        revision: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RevokeRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: string
+          }
         }
       }
       /** @description Validation Error */
@@ -3445,6 +5845,113 @@ export interface operations {
           'application/json': {
             [key: string]: unknown
           }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_setup_api_v1_pipeline_cleaning_ingestion_jobs__ingestion_job_id__setup_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        ingestion_job_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  preview_api_v1_pipeline_cleaning_ingestion_jobs__ingestion_job_id__setup_preview_post: {
+    parameters: {
+      query?: {
+        limit?: number
+      }
+      header?: never
+      path: {
+        ingestion_job_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CleaningChoices']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  confirm_api_v1_pipeline_cleaning_ingestion_jobs__ingestion_job_id__setup_confirm_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        ingestion_job_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ConfirmCleaningChoices']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProfileRead']
         }
       }
       /** @description Validation Error */
@@ -3753,6 +6260,72 @@ export interface operations {
       }
     }
   }
+  preview_upload_return_api_v1_data_quality_issues_return_preview_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UploadReturnSelection']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UploadReturnPreview']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  approve_upload_return_api_v1_data_quality_issues_return_to_uploader_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ApproveUploadReturn']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['IssueDetail']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   get_issue_api_v1_data_quality_issues__issue_id__get: {
     parameters: {
       query?: never
@@ -3771,6 +6344,40 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['IssueDetail']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  compare_issue_api_v1_data_quality_issues__issue_id__comparison_get: {
+    parameters: {
+      query?: {
+        /** @description Mã lượt Cleaning cần đối chiếu; bỏ trống để chọn lượt mới nhất của bản sửa */
+        cleaning_run_id?: string | null
+      }
+      header?: never
+      path: {
+        issue_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['IssueComparisonResponse']
         }
       }
       /** @description Validation Error */
@@ -3998,6 +6605,15 @@ export interface operations {
           'application/json': components['schemas']['ErrorResponse']
         }
       }
+      /** @description Chưa áp dụng migration Data Catalog. */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   create_catalog_api_v1_governance_catalog_post: {
@@ -4069,6 +6685,15 @@ export interface operations {
       }
       /** @description Internal server error. */
       500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Chưa áp dụng migration Data Catalog. */
+      503: {
         headers: {
           [name: string]: unknown
         }
@@ -4153,6 +6778,15 @@ export interface operations {
           'application/json': components['schemas']['ErrorResponse']
         }
       }
+      /** @description Chưa áp dụng migration Data Catalog. */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   delete_catalog_api_v1_governance_catalog__domain_id___dataset__delete: {
@@ -4221,6 +6855,15 @@ export interface operations {
       }
       /** @description Internal server error. */
       500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Chưa áp dụng migration Data Catalog. */
+      503: {
         headers: {
           [name: string]: unknown
         }
@@ -4309,6 +6952,15 @@ export interface operations {
           'application/json': components['schemas']['ErrorResponse']
         }
       }
+      /** @description Chưa áp dụng migration Data Catalog. */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   get_lineage_api_v1_governance_lineage_get: {
@@ -4387,6 +7039,15 @@ export interface operations {
           'application/json': components['schemas']['ErrorResponse']
         }
       }
+      /** @description Chưa áp dụng migration Data Catalog. */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   ask_nlq_api_v1_nlq_ask_post: {
@@ -4438,6 +7099,693 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['StaffContext']
+        }
+      }
+    }
+  }
+  context_api_v1_manager_context_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ManagerContext']
+        }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  overview_api_v1_manager_overview_get: {
+    parameters: {
+      query?: {
+        domain?: ('hr' | 'academic' | 'admissions') | null
+        dataset_id?: number | null
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ManagerOverview']
+        }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  analytics_api_v1_manager_analytics_get: {
+    parameters: {
+      query?: {
+        domain?: ('hr' | 'academic' | 'admissions') | null
+        dataset_id?: number | null
+        limit?: number
+        offset?: number
+        entity?: string | null
+        metric?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MetricPage']
+        }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  datasets_api_v1_manager_datasets_get: {
+    parameters: {
+      query?: {
+        domain?: ('hr' | 'academic' | 'admissions') | null
+        dataset_id?: number | null
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DatasetPage']
+        }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  dataset_detail_api_v1_manager_datasets__dataset_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        dataset_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ManagerDataset']
+        }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  issues_api_v1_manager_issues_get: {
+    parameters: {
+      query?: {
+        department_id?: number | null
+        assignee_user_id?: number | null
+        status?: ('ASSIGNED' | 'PENDING_VERIFICATION' | 'VERIFIED') | null
+        mine_only?: boolean
+        limit?: number
+        offset?: number
+        domain?: ('hr' | 'academic' | 'admissions') | null
+        dataset_id?: number | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['IssueRead'][]
+        }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  issue_stats_api_v1_manager_issues_stats_get: {
+    parameters: {
+      query?: {
+        department_id?: number | null
+        assignee_user_id?: number | null
+        status?: ('ASSIGNED' | 'PENDING_VERIFICATION' | 'VERIFIED') | null
+        mine_only?: boolean
+        limit?: number
+        offset?: number
+        domain?: ('hr' | 'academic' | 'admissions') | null
+        dataset_id?: number | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['IssueStats']
+        }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  issue_detail_api_v1_manager_issues__issue_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        issue_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['IssueDetail']
+        }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  notifications_api_v1_notifications_get: {
+    parameters: {
+      query?: {
+        workspace?: ('ADMIN' | 'DATA_ADMIN' | 'MANAGER' | 'STAFF') | null
+        unread_only?: boolean
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NotificationPage']
+        }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  mark_read_api_v1_notifications_read_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MarkNotificationsRead']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }

@@ -4,7 +4,7 @@ import { AxiosError, AxiosHeaders } from 'axios'
 import Cookies from 'js-cookie'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { API_SignIn } from '@/api/shared/auth'
+import { API_SignIn } from '@/api/auth/client'
 import type { LoginResponse } from '@/types/auth'
 
 import { LoginView, loginSchema } from './login-view'
@@ -16,7 +16,7 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push, refresh }),
 }))
 
-vi.mock('@/api/shared/auth', () => ({
+vi.mock('@/api/auth/client', () => ({
   API_SignIn: vi.fn(),
 }))
 
@@ -45,7 +45,7 @@ function axiosError(status: number, data: unknown): AxiosError {
 async function fillAndSubmit(username: string, password: string) {
   const user = userEvent.setup()
   if (username) {
-    await user.type(screen.getByLabelText('Email hoặc tên đăng nhập'), username)
+    await user.type(screen.getByLabelText('Tên đăng nhập hoặc email'), username)
   }
   if (password) {
     await user.type(screen.getByLabelText('Mật khẩu'), password)
@@ -95,7 +95,7 @@ describe('LoginView', () => {
 
     expect(await screen.findByText('Vui lòng nhập tên đăng nhập hoặc email.')).toBeInTheDocument()
     expect(screen.getByText('Vui lòng nhập mật khẩu.')).toBeInTheDocument()
-    expect(screen.getByLabelText('Email hoặc tên đăng nhập')).toHaveAttribute(
+    expect(screen.getByLabelText('Tên đăng nhập hoặc email')).toHaveAttribute(
       'aria-invalid',
       'true'
     )
@@ -138,9 +138,9 @@ describe('LoginView', () => {
     ['admissions_manager', '/manager'],
     ['academic_manager', '/manager'],
     ['hr_manager', '/manager'],
-    ['admissions_staff', '/analyst'],
-    ['academic_staff', '/analyst'],
-    ['hr_staff', '/analyst'],
+    ['admissions_staff', '/staff'],
+    ['academic_staff', '/staff'],
+    ['hr_staff', '/staff'],
     ['viewer', '/viewer'],
   ])('đưa %s vào đúng không gian làm việc', async (role, home) => {
     signIn.mockResolvedValueOnce(loginResponse(role))
