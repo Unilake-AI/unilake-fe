@@ -1014,7 +1014,7 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
       <PageHeader
         breadcrumb={['Quản trị dữ liệu', 'Nạp dữ liệu']}
         title="Giám sát nạp dữ liệu (Ingestion)"
-        description="Hỗ trợ tải tệp trực tiếp hoặc thu thập từ nguồn đăng ký vào tầng Bronze, theo dõi trạng thái và chạy lại job upload đủ điều kiện."
+        description="Theo dõi trạng thái và chạy lại job upload đủ điều kiện vào tầng Bronze."
         actions={
           <>
             <Link
@@ -1039,37 +1039,9 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
             >
               Làm mới
             </Button>
-            <Button
-              variant="soft"
-              onClick={() => setActivePanel(activePanel === 'upload' ? 'none' : 'upload')}
-              icon={<Upload className="size-3.5" aria-hidden="true" />}
-            >
-              Tải tệp lên
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => setActivePanel(activePanel === 'run' ? 'none' : 'run')}
-              icon={<Play className="size-3.5" aria-hidden="true" />}
-            >
-              Chạy từ nguồn
-            </Button>
           </>
         }
       />
-
-      {activePanel === 'upload' && (
-        <UploadFilePanel
-          onClose={() => setActivePanel('none')}
-          onCreated={(job) => setSelectedJobId(job.ingestion_job_id)}
-        />
-      )}
-
-      {activePanel === 'run' && (
-        <RunJobPanel
-          onClose={() => setActivePanel('none')}
-          onCreated={(job) => setSelectedJobId(job.ingestion_job_id)}
-        />
-      )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
         <KpiCard
@@ -1198,7 +1170,7 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
         ) : list.length === 0 ? (
           <EmptyState
             title="Chưa có lần nạp dữ liệu nào"
-            description="Hãy tải tệp lên hoặc chạy nạp từ nguồn dữ liệu đã đăng ký."
+            description="Dữ liệu do Staff các phòng ban nạp sẽ hiển thị tại đây để giám sát."
           />
         ) : (
           <>

@@ -23,7 +23,7 @@ const context = (domain = 'hr', code = 'PNS') => ({
   ],
   departments: [{ department_id: 7, department_code: code, department_name: 'Phòng phụ trách' }],
   default_domain: domain,
-  needs_department_assignment: false,
+  needs_department_configuration: false,
   data_layer: 'GOLD',
   note: '',
 })
@@ -67,6 +67,8 @@ const dataset = {
       sync_status: 'CURRENT',
       finished_at: '2026-11-16T01:00:00Z',
       error_code: null,
+      database_sync_status: 'BLOCKED',
+      database_sync_error: 'GOLD_SYNC_REFERENCE_MISSING',
     },
   ],
 }
@@ -154,13 +156,47 @@ describe('ManagerReportsView', () => {
     client.clear()
   })
 
-  it('không gọi API dữ liệu khi chưa có phân công', async () => {
+  it('tổng quan phân biệt báo cáo đã cập nhật với dữ liệu nghiệp vụ bị chặn', async () => {
+    const { client } = setup('overview', (config) =>
+      config.url === '/manager/context'
+        ? context()
+        : {
+            ...overview,
+            database_sync: {
+              total: 1,
+              synced: 0,
+              blocked: 1,
+              queued: 0,
+              running: 0,
+              failed: 0,
+              not_started: 0,
+            },
+          }
+    )
+    expect(await screen.findByText('1 nguồn cần bổ sung dữ liệu')).toBeInTheDocument()
+    expect(screen.getByText('Dữ liệu đã cập nhật')).toBeInTheDocument()
+    client.clear()
+  })
+
+  it('role xác định phòng và không yêu cầu phân công nhân sự', async () => {
+    const { client } = setup('overview', (config) =>
+      config.url === '/manager/context'
+        ? { ...context(), needs_department_assignment: true, needs_department_configuration: false }
+        : overview
+    )
+    expect(await screen.findByText('1.234')).toBeInTheDocument()
+    expect(screen.queryByText('Cần cấu hình phòng theo vai trò')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Một số lĩnh vực chưa có phân công/)).not.toBeInTheDocument()
+    client.clear()
+  })
+
+  it('không gọi API dữ liệu khi phòng theo vai trò chưa được cấu hình', async () => {
     const { calls, client } = setup('overview', () => ({
       ...context(),
       departments: [],
-      needs_department_assignment: true,
+      needs_department_configuration: true,
     }))
-    expect(await screen.findByText('Cần phân công đang hiệu lực')).toBeInTheDocument()
+    expect(await screen.findByText('Cần cấu hình phòng theo vai trò')).toBeInTheDocument()
     expect(calls.map((call) => call.url)).toEqual(['/manager/context'])
     client.clear()
   })
@@ -227,7 +263,11 @@ describe('ManagerReportsView', () => {
   it('tải chi tiết bộ dữ liệu khi được chọn', async () => {
     const { calls, client } = setup('datasets')
     fireEvent.click(await screen.findByRole('button', { name: 'Xem Báo cáo nhân sự' }))
-    expect(await screen.findByText('Đã đồng bộ')).toBeInTheDocument()
+    expect(await screen.findByText('Báo cáo Gold: Đã đồng bộ')).toBeInTheDocument()
+    expect(screen.getByText('Dữ liệu nghiệp vụ: Cần bổ sung dữ liệu')).toBeInTheDocument()
+    expect(
+      screen.getByText('Thiếu dữ liệu liên kết. Liên hệ quản trị dữ liệu để bổ sung.')
+    ).toBeInTheDocument()
     expect(calls.some((call) => call.url === '/manager/datasets/31')).toBe(true)
     client.clear()
   })
@@ -255,7 +295,9 @@ describe('ManagerReportsView', () => {
           })
     )
     const alert = await screen.findByRole('alert')
-    expect(within(alert).getByText(/Cần phân công đang hiệu lực/)).toBeInTheDocument()
+    expect(
+      within(alert).getByText(/Vai trò quản lý hoặc cấu hình phòng phụ trách chưa phù hợp/)
+    ).toBeInTheDocument()
     expect(screen.queryByText('1.234')).not.toBeInTheDocument()
     client.clear()
   })

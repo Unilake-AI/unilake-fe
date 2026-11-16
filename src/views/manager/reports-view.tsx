@@ -27,12 +27,14 @@ import {
   formatDateTime,
 } from '@/components/page/page-parts'
 
+import { BusinessSync, ManagerRecords, databaseStatus, databaseError } from './records-view'
 import { ManagerGate, MetricList, Paging, inputClass, label, number } from './report-parts'
 
-type Mode = 'overview' | 'analytics' | 'datasets' | 'issues'
+type Mode = 'overview' | 'analytics' | 'datasets' | 'issues' | 'records'
 type Domain = 'hr' | 'academic' | 'admissions'
 const titles = {
   overview: 'Tổng quan phân hệ',
+  records: 'Dữ liệu nghiệp vụ phòng ban',
   analytics: 'Phân tích dữ liệu',
   datasets: 'Bộ dữ liệu phòng ban',
   issues: 'Yêu cầu sửa dữ liệu',
@@ -46,7 +48,7 @@ export function ManagerReportsView({ mode = 'overview' }: { mode?: Mode }) {
     <ManagerGate>
       {(context) => (
         <ManagerWorkspace
-          key={JSON.stringify([context.roles, context.departments])}
+          key={JSON.stringify([context.user_id, context.roles, context.departments])}
           context={context}
           mode={mode}
         />
@@ -97,19 +99,20 @@ function ManagerWorkspace({ context, mode }: { context: ManagerContext; mode: Mo
         </span>
       </div>
       <div key={domain}>
-        {mode === 'overview' && <Overview domain={domain} />}
-        {mode === 'analytics' && <Analytics domain={domain} />}
-        {mode === 'datasets' && <Datasets domain={domain} />}
-        {mode === 'issues' && <Issues domain={domain} />}
+        {mode === 'overview' && <Overview domain={domain} userId={context.user_id} />}
+        {mode === 'analytics' && <Analytics domain={domain} userId={context.user_id} />}
+        {mode === 'datasets' && <Datasets domain={domain} userId={context.user_id} />}
+        {mode === 'issues' && <Issues domain={domain} userId={context.user_id} />}
+        {mode === 'records' && <ManagerRecords domain={domain} userId={context.user_id} />}
       </div>
     </div>
   )
 }
 
-function Overview({ domain }: { domain: Domain }) {
+function Overview({ domain, userId }: { domain: Domain; userId: number }) {
   const [page, setPage] = useState(0)
   const query = useQuery({
-    queryKey: ['manager', 'overview', domain, page],
+    queryKey: ['manager', 'overview', userId, domain, page],
     queryFn: () => API_ManagerOverview({ domain, limit: size, offset: page * size }),
     ...polling,
   })
@@ -135,6 +138,7 @@ function Overview({ domain }: { domain: Domain }) {
           {number(data.sources.failed ?? 0)} nguồn lỗi
         </p>
       </div>
+      {data.database_sync && <BusinessSync stats={data.database_sync} />}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard label="Bộ dữ liệu được quản lý" value={number(data.datasets)} />
         <KpiCard label="Yêu cầu cần xử lý" value={number(data.issues.assigned)} tone="amber" />
@@ -152,12 +156,15 @@ function Overview({ domain }: { domain: Domain }) {
   )
 }
 
-function Analytics({ domain }: { domain: Domain }) {
+function Analytics({ domain, userId }: { domain: Domain; userId: number }) {
   const [entity, setEntity] = useState('')
   const [metric, setMetric] = useState('record_count')
   const [dataset, setDataset] = useState('')
   const [page, setPage] = useState(0)
-  const recipes = useQuery({ queryKey: ['manager', 'recipes'], queryFn: API_ManagerRecipes })
+  const recipes = useQuery({
+    queryKey: ['manager', 'recipes', userId],
+    queryFn: API_ManagerRecipes,
+  })
   const fields = recipes.data?.dimensions[domain] ?? {}
   const params: AnalyticsFilters = {
     domain,
@@ -168,7 +175,7 @@ function Analytics({ domain }: { domain: Domain }) {
     offset: page * size,
   }
   const query = useQuery({
-    queryKey: ['manager', 'analytics', params],
+    queryKey: ['manager', 'analytics', userId, params],
     queryFn: () => API_ManagerAnalytics(params),
     ...polling,
   })
@@ -303,16 +310,16 @@ function Analytics({ domain }: { domain: Domain }) {
   )
 }
 
-function Datasets({ domain }: { domain: Domain }) {
+function Datasets({ domain, userId }: { domain: Domain; userId: number }) {
   const [page, setPage] = useState(0)
   const [selected, setSelected] = useState<number | null>(null)
   const query = useQuery({
-    queryKey: ['manager', 'datasets', domain, page],
+    queryKey: ['manager', 'datasets', userId, domain, page],
     queryFn: () => API_ManagerDatasets({ domain, limit: size, offset: page * size }),
     ...polling,
   })
   const detail = useQuery({
-    queryKey: ['manager', 'dataset', selected],
+    queryKey: ['manager', 'dataset', userId, selected],
     queryFn: () => API_ManagerDataset(selected!),
     enabled: selected !== null,
     ...polling,
@@ -380,7 +387,17 @@ function Datasets({ domain }: { domain: Domain }) {
                 <div className="space-y-3">
                   {detail.data.sources.map((source) => (
                     <div key={source.scope} className="rounded-xl border p-4">
-                      <p className="text-sm font-semibold">{label(source.sync_status)}</p>
+                      <p className="text-sm font-semibold">
+                        Báo cáo Gold: {label(source.sync_status)}
+                      </p>
+                      <p className="mt-1 text-sm">
+                        Dữ liệu nghiệp vụ: {databaseStatus(source.database_sync_status)}
+                      </p>
+                      {source.database_sync_error && (
+                        <p className="mt-2 text-xs text-amber-800">
+                          {databaseError(source.database_sync_error)}
+                        </p>
+                      )}
                       <p className="mt-1 break-all text-xs text-slate-500">Nguồn: {source.scope}</p>
                       <p className="mt-1 text-xs text-slate-500">
                         Công bố: {formatDateTime(source.finished_at)}
@@ -402,7 +419,7 @@ function Datasets({ domain }: { domain: Domain }) {
   )
 }
 
-function Issues({ domain }: { domain: Domain }) {
+function Issues({ domain, userId }: { domain: Domain; userId: number }) {
   const [page, setPage] = useState(0)
   const [status, setStatus] = useState('')
   const [selected, setSelected] = useState('')
@@ -413,17 +430,17 @@ function Issues({ domain }: { domain: Domain }) {
     offset: page * size,
   }
   const query = useQuery({
-    queryKey: ['manager', 'issues', params],
+    queryKey: ['manager', 'issues', userId, params],
     queryFn: () => API_ManagerIssues(params),
     ...polling,
   })
   const stats = useQuery({
-    queryKey: ['manager', 'issue-stats', domain, status],
+    queryKey: ['manager', 'issue-stats', userId, domain, status],
     queryFn: () => API_ManagerIssueStats({ domain, status: params.status }),
     ...polling,
   })
   const detail = useQuery({
-    queryKey: ['manager', 'issue', selected],
+    queryKey: ['manager', 'issue', userId, selected],
     queryFn: () => API_ManagerIssue(selected),
     enabled: Boolean(selected),
     ...polling,

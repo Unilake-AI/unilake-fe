@@ -60,6 +60,7 @@ export interface AutoSilverWorker {
   worker_id: string
   current_job_id: string | null
   last_heartbeat_at: string
+  healthy?: boolean
 }
 
 export interface AutoSilverJobFilters {
