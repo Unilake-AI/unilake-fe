@@ -1,7 +1,11 @@
-import { AutoPipelineView } from '@/views/data/auto-pipeline-view'
+import { redirect } from 'next/navigation'
 
-export const metadata = { title: 'Xử lý Silver tự động | UniLake AI' }
-
-export default function AutoPipelinePage() {
-  return <AutoPipelineView />
+export default async function AutoPipelineRedirectPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ jobId?: string }>
+}) {
+  const params = await searchParams
+  const qs = params.jobId ? `?jobId=${params.jobId}` : ''
+  redirect(`/data/pipeline${qs}`)
 }

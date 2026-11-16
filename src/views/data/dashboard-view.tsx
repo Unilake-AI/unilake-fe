@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
+
 import Link from 'next/link'
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowRight, RefreshCw } from 'lucide-react'
 
 import { API_ListCleaningRuns } from '@/api/admindata/cleaning'
@@ -30,31 +32,41 @@ import {
 } from '@/components/page/page-parts'
 
 import { domainLabel, formatSeconds, jobTypeLabel } from './data-helpers'
+import { PipelineDashboard } from './pipeline-dashboard'
 
 export function DataDashboardView() {
+  const [refresh, setRefresh] = useState(true)
+  const queryClient = useQueryClient()
+  const refetchInterval = refresh ? 5000 : false
   const statsQuery = useQuery({
     queryKey: ['ingestion-jobs', 'stats'],
     queryFn: API_GetIngestionStats,
+    refetchInterval,
   })
   const metricsQuery = useQuery({
     queryKey: ['ingestion-jobs', 'metrics'],
     queryFn: API_GetIngestionMetrics,
+    refetchInterval,
   })
   const jobsQuery = useQuery({
     queryKey: ['ingestion-jobs', 'dashboard-recent'],
     queryFn: () => API_ListIngestionJobs({ limit: 5, offset: 0 }),
+    refetchInterval,
   })
   const workersQuery = useQuery({
     queryKey: ['ingestion-workers'],
     queryFn: API_ListIngestionWorkers,
+    refetchInterval,
   })
   const issueStatsQuery = useQuery({
     queryKey: ['quality-issues', 'stats', 'admin-dashboard'],
     queryFn: () => API_GetQualityIssueStats(),
+    refetchInterval,
   })
   const cleaningQuery = useQuery({
     queryKey: ['cleaning-runs', 'dashboard-recent'],
     queryFn: () => API_ListCleaningRuns({ limit: 5, offset: 0 }),
+    refetchInterval,
   })
 
   const isRefreshing =
@@ -66,6 +78,7 @@ export function DataDashboardView() {
     cleaningQuery.isFetching
 
   function refreshAll() {
+    void queryClient.invalidateQueries({ queryKey: ['auto-silver', 'dashboard'] })
     void statsQuery.refetch()
     void metricsQuery.refetch()
     void jobsQuery.refetch()
@@ -83,10 +96,18 @@ export function DataDashboardView() {
     <div className="space-y-5">
       <PageHeader
         breadcrumb={['Quản trị dữ liệu', 'Tổng quan']}
-        title="Bảng điều khiển vận hành Data Lake"
-        description="Theo dõi số liệu thực tế từ hệ thống Ingestion, Worker, Cleaning Pipeline và Yêu cầu xử lý dữ liệu lỗi."
+        title="Tổng quan hệ thống dữ liệu"
+        description="Giám sát dữ liệu staff nạp từ Bronze đến Silver, hàng đợi xử lý và các lỗi cần giải quyết."
         actions={
           <>
+            <label className="flex items-center gap-2 text-xs">
+              <input
+                type="checkbox"
+                checked={refresh}
+                onChange={(event) => setRefresh(event.target.checked)}
+              />
+              Tự cập nhật mỗi 5 giây
+            </label>
             <Button
               onClick={refreshAll}
               disabled={isRefreshing}
@@ -109,6 +130,8 @@ export function DataDashboardView() {
           </>
         }
       />
+
+      <PipelineDashboard refresh={refresh} />
 
       {/* Thống kê Ingestion toàn hệ thống */}
       <section aria-labelledby="dash-ingestion-heading" className="space-y-3">
@@ -291,32 +314,6 @@ export function DataDashboardView() {
           )}
         </Card>
       </div>
-
-      {/* Lối tắt vận hành nhanh */}
-      <Card title="Lối tắt quy trình vận hành">
-        <div className="flex flex-wrap gap-2 text-xs">
-          {[
-            { href: '/data/sources', label: 'Nguồn dữ liệu' },
-            { href: '/data/datasets', label: 'Bộ dữ liệu Bronze' },
-            { href: '/data/ingestion', label: 'Nạp dữ liệu' },
-            { href: '/data/profiles', label: 'Cấu hình Silver (Profiles)' },
-            { href: '/data/cleaning', label: 'Làm sạch & Kiểm tra' },
-            { href: '/data/quarantine', label: 'Hồ sơ cách ly' },
-            { href: '/data/silver', label: 'Phiên bản Silver' },
-            { href: '/data/catalog', label: 'Data Catalog' },
-            { href: '/data/lineage', label: 'Data Lineage' },
-          ].map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="inline-flex h-8 items-center gap-1 rounded-md border border-slate-300 bg-white px-3 font-medium text-slate-700 hover:bg-slate-50"
-            >
-              {item.label}
-              <ArrowRight className="size-3 text-slate-400" aria-hidden="true" />
-            </Link>
-          ))}
-        </div>
-      </Card>
 
       {/* Hai bảng hoạt động gần đây */}
       <div className="grid gap-4 xl:grid-cols-2">

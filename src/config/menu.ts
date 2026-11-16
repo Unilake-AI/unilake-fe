@@ -25,6 +25,8 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
       items: [
         { title: 'Nguồn dữ liệu', href: '/data/sources', iconName: 'Database' },
         { title: 'Bộ dữ liệu (Datasets)', href: '/data/datasets', iconName: 'Layers' },
+        { title: 'Nạp dữ liệu (Ingestion)', href: '/data/ingestion', iconName: 'Upload' },
+        { title: 'Tiến trình nạp & xử lý dữ liệu', href: '/data/pipeline', iconName: 'Workflow' },
         { title: 'Giám sát Worker', href: '/data/workers', iconName: 'HardDrive' },
       ],
     },
@@ -70,6 +72,7 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
       items: [
         { title: 'Tổng quan phân hệ', href: '/manager', iconName: 'LayoutDashboard' },
         { title: 'Phân tích dữ liệu', href: '/manager/analytics', iconName: 'BarChart3' },
+        { title: 'Dữ liệu nghiệp vụ', href: '/manager/records', iconName: 'Table' },
         { title: 'Bộ dữ liệu phòng ban', href: '/manager/datasets', iconName: 'Database' },
         { title: 'Yêu cầu sửa dữ liệu', href: '/manager/quality-issues', iconName: 'FileWarning' },
         { title: 'Hỏi AI (NLQ)', href: '/manager/ask', iconName: 'Sparkles', badge: 'AI' },

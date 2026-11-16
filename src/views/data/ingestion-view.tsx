@@ -212,6 +212,12 @@ function JobDetails({
         </div>
       </dl>
 
+      <Link
+        href={`/data/pipeline?jobId=${jobId}`}
+        className="inline-flex text-sm font-semibold text-[#a9162e] underline"
+      >
+        Xem tiến trình nạp & xử lý của lần nạp này
+      </Link>
       {status === 'SUCCESS' && (
         <div className="space-y-2 rounded-md border border-emerald-200 bg-emerald-50 p-3">
           <div className="flex flex-wrap items-center justify-between gap-2 text-emerald-900">
@@ -1011,6 +1017,12 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
         description="Hỗ trợ tải tệp trực tiếp hoặc thu thập từ nguồn đăng ký vào tầng Bronze, theo dõi trạng thái và chạy lại job upload đủ điều kiện."
         actions={
           <>
+            <Link
+              href="/data/pipeline"
+              className="inline-flex h-9 items-center rounded-lg border border-slate-300 px-3 text-xs font-semibold text-[#a9162e]"
+            >
+              Tiến trình nạp & xử lý dữ liệu
+            </Link>
             <Button
               onClick={() => {
                 void jobs.refetch()
