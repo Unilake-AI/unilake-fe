@@ -65,9 +65,11 @@ describe('ROLE_MENUS', () => {
       '/data/workers',
       '/data/profiles',
       '/data/cleaning',
+      '/data/auto-pipeline',
       '/data/quarantine',
       '/data/quality',
       '/data/silver',
+      '/data/gold',
       '/data/catalog',
       '/data/lineage',
     ])

@@ -273,8 +273,12 @@ function ProfileFormPanel({
       type_options: (parsedTypeOpts.value ?? {}) as Record<string, Record<string, unknown>>,
       null_tokens: (parsedNullTokens.value ?? {}) as Record<string, string[]>,
       dictionaries: (parsedDictionaries.value ?? {}) as Record<string, Record<string, string>>,
-      reference_namespaces: (parsedNamespaces.value ?? {}) as Record<string, string>,
-      crosswalk_release: crosswalkRelease.trim() || 'v1',
+      reference_namespaces:
+        def?.identity_mode === 'source'
+          ? {}
+          : ((parsedNamespaces.value ?? {}) as Record<string, string>),
+      identity_mode: def?.identity_mode ?? 'canonical',
+      crosswalk_release: def?.identity_mode === 'source' ? null : crosswalkRelease.trim() || 'v1',
       effective_at: normalizedEffectiveAt,
       collapse_exact_duplicates: collapseDuplicates,
       source_preview_columns: parseList(previewColumnsText),
@@ -467,8 +471,13 @@ function ProfileFormPanel({
             </label>
             <input
               id="prof-crosswalk"
+              disabled={def?.identity_mode === 'source'}
               className={`${inputClass} font-mono`}
-              value={crosswalkRelease}
+              value={
+                def?.identity_mode === 'source'
+                  ? 'Giữ mã nguồn — không sử dụng đối chiếu'
+                  : crosswalkRelease
+              }
               onChange={(e) => setCrosswalkRelease(e.target.value)}
             />
           </div>
@@ -892,7 +901,7 @@ export function ProfilesView() {
                 <div>
                   <dt className="text-slate-500">Crosswalk / Trùng lặp</dt>
                   <dd className="mt-0.5 font-mono text-slate-900">
-                    {selectedProfile.definition.crosswalk_release} ·{' '}
+                    {selectedProfile.definition.crosswalk_release ?? 'Giữ mã nguồn'} ·{' '}
                     {selectedProfile.definition.collapse_exact_duplicates ? 'Có gộp' : 'Không gộp'}
                   </dd>
                 </div>

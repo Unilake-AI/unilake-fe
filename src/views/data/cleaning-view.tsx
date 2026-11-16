@@ -22,6 +22,7 @@ import {
   API_PreviewCleaning,
   API_RunCleaning,
 } from '@/api/admindata/cleaning'
+import { API_GetCleaningSetup } from '@/api/admindata/cleaning-setup'
 import { API_ListProfiles } from '@/api/admindata/profiles'
 import { getApiErrorMessage } from '@/api/http'
 import { API_ListIngestionJobs } from '@/api/shared/ingestion'
@@ -47,8 +48,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { downloadCleaningReport, reportIssues, reportText } from '@/lib/cleaning-report'
 import type { CleaningPreviewResponse, ManualCleaningResponse } from '@/types/cleaning'
 
+import { CleaningIssues } from './cleaning-issues'
+import { CleaningSetupPanel } from './cleaning-setup-panel'
 import { domainLabel, formatCellValue } from './data-helpers'
 
 const PAGE_SIZE = 20
@@ -101,14 +105,15 @@ function SampleRowsTable({ title, rows }: { title: string; rows: Array<Record<st
   )
 }
 
-function CleaningExecutionOutcome({ result }: { result: ManualCleaningResponse }) {
+export function CleaningExecutionOutcome({ result }: { result: ManualCleaningResponse }) {
   const pubStatus =
     typeof result.publication?.status === 'string' ? result.publication.status.toUpperCase() : null
   const snapshotId =
     typeof result.publication?.snapshot_id === 'string' ? result.publication.snapshot_id : null
   const statusUpper = result.status.toUpperCase()
-  const isPublished = pubStatus === 'PUBLISHED'
-  const isPartial = pubStatus === 'PUBLISHED_WITH_QUARANTINE'
+  // Trạng thái cuối cùng nằm ở kết quả chính; phản hồi cũ có thể chưa có status trong publication.
+  const isPublished = statusUpper === 'PUBLISHED'
+  const isPartial = statusUpper === 'PUBLISHED_WITH_QUARANTINE'
 
   return (
     <Card
@@ -163,16 +168,7 @@ function CleaningExecutionOutcome({ result }: { result: ManualCleaningResponse }
           <KpiCard label="Gộp trùng" value={formatNumber(result.records_collapsed)} />
         </div>
 
-        {result.issues.length > 0 && (
-          <div className="space-y-1">
-            <p className="font-semibold text-slate-800">
-              Vấn đề phát hiện ({result.issues.length})
-            </p>
-            <pre className="max-h-48 overflow-auto rounded-md border border-slate-200 bg-slate-50 p-2 font-mono text-[11px] text-slate-700">
-              {JSON.stringify(result.issues, null, 2)}
-            </pre>
-          </div>
-        )}
+        <CleaningIssues issues={result.issues} />
 
         {result.quarantine_report && (
           <div className="space-y-1">
@@ -265,7 +261,7 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
   const [baseSnapshot, setBaseSnapshot] = useState('active')
   const [confirmRunOpen, setConfirmRunOpen] = useState(false)
 
-  // Filters for Cleaning Runs history
+  // Giữ các lựa chọn lọc để quản trị viên theo dõi những lần xử lý trước.
   const [cleaningStatusFilter, setCleaningStatusFilter] = useState('')
   const [publicationStatusFilter, setPublicationStatusFilter] = useState('')
   const [offset, setOffset] = useState(0)
@@ -322,6 +318,18 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
     retry: false,
   })
 
+  const reportDownload = useMutation({
+    mutationFn: async ({ runId, format }: { runId: string; format: 'json' | 'csv' }) => {
+      // Đọc lại kết quả cuối cùng trước khi xuất, kể cả khi đã mở bản báo cáo cũ trên trang.
+      const report = await queryClient.fetchQuery({
+        queryKey: ['cleaning-runs', 'report', runId],
+        queryFn: () => API_GetCleaningReport(runId),
+        staleTime: 0,
+      })
+      downloadCleaningReport(report, runId, format)
+    },
+  })
+
   const previewMutation = useMutation({
     mutationFn: ({ jobId, profileId }: { jobId: number; profileId: string }) =>
       API_PreviewCleaning(jobId, profileId),
@@ -352,22 +360,45 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
   const parsedJobId = Number(selectedJobId)
   const selectedJob = (bronzeJobsQuery.data ?? []).find((j) => j.ingestion_job_id === parsedJobId)
   const profiles = useMemo(() => profilesQuery.data ?? [], [profilesQuery.data])
-  const selectedProfile = profiles.find((p) => p.profile_id === selectedProfileId)
+  const setupQuery = useQuery({
+    queryKey: ['cleaning-setup', parsedJobId],
+    queryFn: () => API_GetCleaningSetup(parsedJobId),
+    enabled: Boolean(selectedJob),
+    retry: false,
+  })
 
   const compatibleProfiles = useMemo(() => {
-    if (!selectedJob) return profiles
-    return profiles.filter((p) => p.definition.dataset_id === selectedJob.dataset_id)
-  }, [profiles, selectedJob])
-
-  const profileCompatible =
-    !selectedJob ||
-    !selectedProfile ||
-    selectedProfile.definition.dataset_id === selectedJob.dataset_id
+    if (!selectedJob || !setupQuery.data) return []
+    const columns = new Set(setupQuery.data.columns.map((column) => column.name))
+    return profiles.filter((profile) => {
+      const definition = profile.definition
+      const expected = [
+        ...Object.values(definition.field_mapping),
+        ...(definition.ignored_columns ?? []),
+      ]
+      return (
+        definition.dataset_id === selectedJob.dataset_id &&
+        definition.data_source_id === selectedJob.data_source_id &&
+        definition.source_table === selectedJob.source_table &&
+        expected.length === columns.size &&
+        expected.every((name) => columns.has(name))
+      )
+    })
+  }, [profiles, selectedJob, setupQuery.data])
+  // Tự chọn khi chỉ có một cách xử lý khớp cả nguồn, bộ dữ liệu và các cột trong file.
+  const sourceProfiles = compatibleProfiles.filter(
+    (profile) => profile.definition.identity_mode === 'source'
+  )
+  const effectiveProfileId =
+    selectedProfileId || (sourceProfiles.length === 1 ? sourceProfiles[0]!.profile_id : '')
+  const profileCompatible = compatibleProfiles.some(
+    (profile) => profile.profile_id === effectiveProfileId
+  )
 
   const canExecute =
     Number.isInteger(parsedJobId) &&
     parsedJobId > 0 &&
-    Boolean(selectedProfileId) &&
+    Boolean(effectiveProfileId) &&
     profileCompatible &&
     !previewMutation.isPending &&
     !runMutation.isPending
@@ -383,6 +414,7 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
             onClick={() => {
               void bronzeJobsQuery.refetch()
               void profilesQuery.refetch()
+              if (selectedJob) void setupQuery.refetch()
               void runsQuery.refetch()
             }}
             icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
@@ -392,10 +424,10 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
         }
       />
 
-      {/* Workbench: Chọn Job Bronze + Silver Profile */}
+      {/* Chọn dữ liệu đã nạp rồi xem hoặc thiết lập cách xử lý. */}
       <Card
-        title="Thực thi Preview & Cleaning Pipeline"
-        subtitle="Chỉ hỗ trợ job Ingestion đã đạt SUCCESS (đã lưu Bronze) với Silver Profile tương thích."
+        title="Thiết lập cách xử lý và lưu Silver"
+        subtitle="Chọn file đã lưu Bronze. Hệ thống gợi ý cách xử lý hoặc dùng lại lựa chọn phù hợp đã lưu."
       >
         <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-1.5">
@@ -408,6 +440,7 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
               value={selectedJobId}
               onChange={(e) => {
                 setSelectedJobId(e.target.value)
+                setSelectedProfileId('')
                 previewMutation.reset()
                 runMutation.reset()
               }}
@@ -425,12 +458,12 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
 
           <div className="space-y-1.5">
             <label htmlFor="clean-profile" className="block text-xs font-semibold text-slate-700">
-              2. Chọn Silver Profile *
+              2. Cách xử lý đã lưu
             </label>
             <select
               id="clean-profile"
               className={inputClass}
-              value={selectedProfileId}
+              value={effectiveProfileId}
               onChange={(e) => {
                 setSelectedProfileId(e.target.value)
                 previewMutation.reset()
@@ -438,29 +471,30 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
               }}
             >
               <option value="">
-                {profilesQuery.isPending ? 'Đang tải profile…' : 'Chọn Silver Profile'}
+                {profilesQuery.isPending ? 'Đang tải cách xử lý…' : 'Chưa chọn cách xử lý đã lưu'}
               </option>
-              {(compatibleProfiles.length > 0 ? compatibleProfiles : profiles).map((prof) => (
+              {compatibleProfiles.map((prof) => (
                 <option key={prof.profile_id} value={prof.profile_id}>
-                  {prof.profile_id} ({prof.definition.domain}/{prof.definition.entity} · Dataset #
-                  {prof.definition.dataset_id})
+                  {prof.definition.entity} ·{' '}
+                  {prof.definition.identity_mode === 'source' ? 'Giữ mã nguồn' : 'Hợp nhất mã'} ·
+                  Bản {prof.revision}
                 </option>
               ))}
             </select>
-            {selectedJob && compatibleProfiles.length === 0 && profiles.length > 0 && (
+            {selectedJob && !setupQuery.isPending && compatibleProfiles.length === 0 && (
               <p className="text-[11px] text-amber-700">
-                Chưa có profile nào khớp Dataset #{selectedJob.dataset_id}. Hãy tạo profile phù hợp
-                trước.
+                Chưa có cách xử lý khớp với file này. Hãy xem gợi ý và thiết lập ở bên dưới.
               </p>
             )}
           </div>
 
-          <div className="space-y-1.5">
+          <details className="space-y-1.5">
+            <summary className="cursor-pointer text-xs font-semibold">Tùy chọn nâng cao</summary>
             <label
               htmlFor="clean-base-snapshot"
               className="block text-xs font-semibold text-slate-700"
             >
-              Base Snapshot (tùy chọn khi chạy thật)
+              Phiên bản Silver dùng làm cơ sở
             </label>
             <input
               id="clean-base-snapshot"
@@ -469,12 +503,12 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
               onChange={(e) => setBaseSnapshot(e.target.value)}
               placeholder="active"
             />
-          </div>
+          </details>
         </div>
 
-        {!profileCompatible && (
+        {Boolean(effectiveProfileId) && !profileCompatible && (
           <p role="alert" className="mt-3 text-xs text-rose-600">
-            Profile đã chọn không khớp với Dataset #{selectedJob?.dataset_id} của job này.
+            Cách xử lý đã chọn không còn khớp với file này. Hãy kiểm tra lại thiết lập.
           </p>
         )}
 
@@ -489,12 +523,64 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
           </div>
         )}
 
+        {profilesQuery.isError && (
+          <ErrorState
+            message={getApiErrorMessage(profilesQuery.error, 'Không thể tải cách xử lý đã lưu.')}
+          />
+        )}
+        {selectedJob && setupQuery.isPending && (
+          <p className="mt-4 text-sm">Đang đọc file để gợi ý cách xử lý…</p>
+        )}
+        {selectedJob && setupQuery.isError && (
+          <ErrorState
+            message={getApiErrorMessage(setupQuery.error, 'Không thể đọc file Bronze để gợi ý.')}
+          />
+        )}
+        {selectedJob && setupQuery.data && (
+          <details
+            key={`${parsedJobId}-${setupQuery.data.analysis_fingerprint}`}
+            open={!effectiveProfileId}
+            className="mt-4"
+          >
+            <summary className="mb-3 cursor-pointer text-sm font-semibold">
+              {effectiveProfileId
+                ? 'Xem gợi ý và điều chỉnh cách xử lý'
+                : 'Thiết lập cách xử lý từ gợi ý'}
+            </summary>
+            <CleaningSetupPanel
+              key={setupQuery.data.analysis_fingerprint}
+              analysis={setupQuery.data}
+              onSaved={(saved) => {
+                setSelectedProfileId(saved.profile_id)
+                queryClient.setQueryData(
+                  ['silver-profiles', { limit: 100, offset: 0 }],
+                  (current: typeof profiles | undefined) => [
+                    ...(current ?? []).filter((profile) => profile.profile_id !== saved.profile_id),
+                    saved,
+                  ]
+                )
+                void queryClient.invalidateQueries({ queryKey: ['silver-profiles'] })
+                previewMutation.reset()
+                runMutation.reset()
+                toast.success('Đã lưu cách xử lý cho bộ dữ liệu.')
+              }}
+            />
+          </details>
+        )}
+
+        {selectedJob && setupQuery.data && !effectiveProfileId && (
+          <p className="mt-4 text-sm text-amber-800" role="status">
+            Chưa thể chạy vì file này chưa có cách xử lý đã lưu được chọn. Hoàn tất các mục trong
+            “Thiết lập cách xử lý từ gợi ý”, bấm “Xem trước cách xử lý”, rồi “Xác nhận và lưu cách
+            xử lý”. File có dòng lỗi vẫn được kiểm tra khi chạy làm sạch.
+          </p>
+        )}
         <div className="mt-4 flex flex-wrap justify-end gap-2">
           <Button
             variant="outline"
             disabled={!canExecute}
             onClick={() =>
-              previewMutation.mutate({ jobId: parsedJobId, profileId: selectedProfileId })
+              previewMutation.mutate({ jobId: parsedJobId, profileId: effectiveProfileId })
             }
             icon={<Eye className="size-3.5" aria-hidden="true" />}
           >
@@ -674,8 +760,26 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
                   onClick={() => setLoadReportRunId(selectedRunId)}
                   icon={<FileText className="size-3.5" aria-hidden="true" />}
                 >
-                  Tải báo cáo chi tiết
+                  Xem báo cáo chi tiết
                 </Button>
+              )}
+              {runDetailQuery.data?.report_available && (
+                <>
+                  <Button
+                    variant="outline"
+                    disabled={reportDownload.isPending}
+                    onClick={() => reportDownload.mutate({ runId: selectedRunId, format: 'csv' })}
+                  >
+                    Tải CSV (Excel)
+                  </Button>
+                  <Button
+                    variant="outline"
+                    disabled={reportDownload.isPending}
+                    onClick={() => reportDownload.mutate({ runId: selectedRunId, format: 'json' })}
+                  >
+                    Tải JSON
+                  </Button>
+                </>
               )}
               <Button variant="ghost" onClick={() => setSelectedRunId(null)}>
                 Đóng
@@ -723,6 +827,14 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
                 </div>
               </dl>
 
+              {reportDownload.isError && (
+                <ErrorState
+                  message={getApiErrorMessage(
+                    reportDownload.error,
+                    'Không tải được báo cáo. Hãy thử lại.'
+                  )}
+                />
+              )}
               {loadReportRunId === selectedRunId && (
                 <div>
                   <p className="mb-1 font-semibold text-slate-800">
@@ -739,9 +851,27 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
                       onRetry={() => void runReportQuery.refetch()}
                     />
                   ) : (
-                    <pre className="max-h-80 overflow-auto rounded-md border border-slate-200 bg-slate-50 p-3 font-mono text-[11px] text-slate-800">
-                      {JSON.stringify(runReportQuery.data, null, 2)}
-                    </pre>
+                    <div className="space-y-3">
+                      <p>
+                        Trạng thái xuất bản:{' '}
+                        {statusLabel(
+                          reportText(
+                            runReportQuery.data.publication_status ??
+                              runReportQuery.data.status ??
+                              ''
+                          )
+                        )}
+                      </p>
+                      <CleaningIssues issues={reportIssues(runReportQuery.data)} />
+                      <details>
+                        <summary className="cursor-pointer text-slate-500">
+                          Dữ liệu chi tiết dành cho kiểm tra
+                        </summary>
+                        <pre className="mt-2 max-h-80 overflow-auto rounded-md border border-slate-200 bg-slate-50 p-3 font-mono text-[11px] text-slate-800">
+                          {JSON.stringify(runReportQuery.data, null, 2)}
+                        </pre>
+                      </details>
+                    </div>
                   )}
                 </div>
               )}
@@ -756,8 +886,15 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
             <DialogTitle>Xác nhận chạy Cleaning Pipeline</DialogTitle>
             <DialogDescription>
               Thực thi làm sạch cho Job <strong className="font-mono">#{parsedJobId}</strong> với
-              Silver Profile <strong className="font-mono">{selectedProfileId}</strong> (base
-              snapshot: <strong className="font-mono">{baseSnapshot.trim() || 'active'}</strong>)?
+              cách xử lý{' '}
+              <strong>
+                {
+                  compatibleProfiles.find((profile) => profile.profile_id === effectiveProfileId)
+                    ?.definition.entity
+                }
+              </strong>{' '}
+              (base snapshot:{' '}
+              <strong className="font-mono">{baseSnapshot.trim() || 'active'}</strong>)?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -774,7 +911,7 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
               onClick={() =>
                 runMutation.mutate({
                   jobId: parsedJobId,
-                  profileId: selectedProfileId,
+                  profileId: effectiveProfileId,
                   snapshot: baseSnapshot.trim() || null,
                 })
               }

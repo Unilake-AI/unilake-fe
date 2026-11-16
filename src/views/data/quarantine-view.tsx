@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 
+import Link from 'next/link'
+
 import { useQuery } from '@tanstack/react-query'
 import { ChevronLeft, ChevronRight, Eye, RefreshCw } from 'lucide-react'
 
@@ -26,7 +28,10 @@ import {
   Tag,
   formatNumber,
 } from '@/components/page/page-parts'
+import type { QualityIssueDetail } from '@/types/quality-issues'
+import type { QuarantineRecord } from '@/types/quarantine'
 
+import { CreateIssuePanel } from './create-quality-issue-panel'
 import { domainLabel, formatCellValue } from './data-helpers'
 
 const PAGE_SIZE = 20
@@ -48,6 +53,9 @@ export function QuarantineView() {
     error_code?: string
   }>({})
   const [offset, setOffset] = useState(0)
+  const [selectedRecords, setSelectedRecords] = useState<QuarantineRecord[]>([])
+  const [showCreate, setShowCreate] = useState(false)
+  const [createdIssue, setCreatedIssue] = useState<QualityIssueDetail | null>(null)
   const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null)
   const [loadSourceForId, setLoadSourceForId] = useState<string | null>(null)
 
@@ -91,6 +99,8 @@ export function QuarantineView() {
   function applyFilters(event: FormEvent) {
     event.preventDefault()
     setOffset(0)
+    setSelectedRecords([])
+    setShowCreate(false)
     const parsedJob = Number(ingestionJobId)
     setAppliedFilters({
       cleaning_run_id: cleaningRunId.trim() || undefined,
@@ -106,6 +116,64 @@ export function QuarantineView() {
 
   const records = listQuery.data ?? []
   const summary = summaryQuery.data
+  // Một yêu cầu chỉ lấy hồ sơ cùng lượt làm sạch để phòng ban nhận đúng file cần sửa.
+  function canSelect(record: QuarantineRecord) {
+    const first = selectedRecords[0]
+    if (
+      selectedRecords.length >= 100 &&
+      !selectedRecords.some((item) => item.record_id === record.record_id)
+    )
+      return false
+    return (
+      !first ||
+      (record.cleaning_run_id === first.cleaning_run_id &&
+        record.ingestion_job_id === first.ingestion_job_id &&
+        record.dataset_id === first.dataset_id &&
+        record.domain === first.domain &&
+        record.entity === first.entity)
+    )
+  }
+  function toggleRecord(record: QuarantineRecord) {
+    if (!canSelect(record)) return
+    setSelectedRecords((previous) =>
+      previous.some((item) => item.record_id === record.record_id)
+        ? previous.filter((item) => item.record_id !== record.record_id)
+        : [...previous, record]
+    )
+    setCreatedIssue(null)
+  }
+  const pageAnchor = selectedRecords[0] ?? records[0]
+  const selectablePage = records.filter(
+    (record) =>
+      pageAnchor &&
+      record.cleaning_run_id === pageAnchor.cleaning_run_id &&
+      record.ingestion_job_id === pageAnchor.ingestion_job_id &&
+      record.dataset_id === pageAnchor.dataset_id &&
+      record.domain === pageAnchor.domain &&
+      record.entity === pageAnchor.entity
+  )
+  const pageSelected =
+    selectablePage.length > 0 &&
+    selectablePage.every((record) =>
+      selectedRecords.some((selected) => selected.record_id === record.record_id)
+    )
+  const pageLimitReached =
+    !pageSelected &&
+    selectedRecords.length +
+      selectablePage.filter(
+        (record) => !selectedRecords.some((selected) => selected.record_id === record.record_id)
+      ).length >
+      100
+  function togglePage() {
+    if (pageLimitReached) return
+    const pageIds = new Set(selectablePage.map((record) => record.record_id))
+    setSelectedRecords((previous) =>
+      pageSelected
+        ? previous.filter((record) => !pageIds.has(record.record_id))
+        : [...previous.filter((record) => !pageIds.has(record.record_id)), ...selectablePage]
+    )
+    setCreatedIssue(null)
+  }
   const sourcePayload = sourceQuery.data as
     | {
         data?: Record<string, unknown>
@@ -227,6 +295,59 @@ export function QuarantineView() {
         </form>
       </Card>
 
+      <Card>
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+          <div>
+            <p className="font-semibold" aria-live="polite">
+              Đã chọn {selectedRecords.length} hồ sơ cách ly
+            </p>
+            <p className="mt-1 text-xs text-slate-600">
+              Chọn các hồ sơ cùng một lượt làm sạch để giao về phòng ban sửa dữ liệu nguồn. Lựa chọn
+              được giữ khi chuyển trang và được xóa khi áp dụng bộ lọc mới.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              disabled={selectedRecords.length === 0 || showCreate}
+              onClick={() => setSelectedRecords([])}
+            >
+              Bỏ chọn
+            </Button>
+            <Button
+              variant="primary"
+              disabled={selectedRecords.length === 0 || showCreate}
+              onClick={() => setShowCreate(true)}
+            >
+              Gửi yêu cầu sửa về phòng ban
+            </Button>
+          </div>
+        </div>
+      </Card>
+      {showCreate && (
+        <CreateIssuePanel
+          initialRecords={selectedRecords}
+          onClose={() => setShowCreate(false)}
+          onCreated={(issue) => {
+            setCreatedIssue(issue)
+            setSelectedRecords([])
+          }}
+        />
+      )}
+      {createdIssue && (
+        <div
+          role="status"
+          className="rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"
+        >
+          <p>
+            {createdIssue.assignment_mode === 'SOURCE_UPLOADER'
+              ? `Đã duyệt trả yêu cầu “${createdIssue.title}” về người nạp file.`
+              : `Đã tạo yêu cầu “${createdIssue.title}” và giao cho phòng ban phụ trách.`}
+          </p>
+          <Link href="/data/quality" className="mt-2 inline-block font-semibold underline">
+            Theo dõi và phân công yêu cầu
+          </Link>
+        </div>
+      )}
       <div className="grid gap-4 xl:grid-cols-[1fr_420px]">
         <Card title="Danh sách hồ sơ cách ly" bodyClassName="p-0">
           {listQuery.isPending ? (
@@ -246,6 +367,15 @@ export function QuarantineView() {
                 <table className="w-full min-w-[680px] text-left text-xs">
                   <thead className="bg-slate-50 font-mono text-[10px] uppercase tracking-wider text-slate-500">
                     <tr>
+                      <th scope="col" className="px-3 py-2">
+                        <input
+                          type="checkbox"
+                          aria-label="Chọn hồ sơ cùng lượt trên trang này"
+                          checked={pageSelected}
+                          disabled={showCreate || selectablePage.length === 0 || pageLimitReached}
+                          onChange={togglePage}
+                        />
+                      </th>
                       {['Vị trí', 'Dataset / Entity', 'Job', 'Mã lỗi', 'Phiên bản Bronze'].map(
                         (h) => (
                           <th key={h} scope="col" className="px-3 py-2 font-medium">
@@ -263,6 +393,22 @@ export function QuarantineView() {
                           key={rec.record_id}
                           className={active ? 'bg-[#fff3f5]/60' : 'hover:bg-slate-50'}
                         >
+                          <td className="px-3 py-2.5">
+                            <input
+                              type="checkbox"
+                              aria-label={`Chọn hồ sơ dòng ${rec.record_position}, lần nạp ${rec.ingestion_job_id}`}
+                              checked={selectedRecords.some(
+                                (selected) => selected.record_id === rec.record_id
+                              )}
+                              disabled={showCreate || !canSelect(rec)}
+                              title={
+                                !canSelect(rec)
+                                  ? 'Hãy bỏ lựa chọn hiện tại để chọn hồ sơ của lượt làm sạch khác.'
+                                  : undefined
+                              }
+                              onChange={() => toggleRecord(rec)}
+                            />
+                          </td>
                           <td className="px-3 py-2.5">
                             <button
                               type="button"

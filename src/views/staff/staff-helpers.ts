@@ -3,7 +3,7 @@ import type { StaffDomainChoice } from '@/types/staff-context'
 export const ACTIVE_INGESTION_STATUSES = new Set(['QUEUED', 'RUNNING', 'RETRY_WAIT'])
 export const INGESTION_POLL_INTERVAL_MS = 4000
 export const BRONZE_SUCCESS_MESSAGE =
-  'Đã lưu dữ liệu vào Bronze. Đang chờ quản trị dữ liệu xử lý Silver.'
+  'Đã lưu dữ liệu vào Bronze. Kết quả Silver được theo dõi riêng trong lịch sử nạp dữ liệu.'
 
 export const UPLOAD_FILENAME_REGEX = /^[A-Za-z0-9_][A-Za-z0-9_.-]{0,199}$/
 

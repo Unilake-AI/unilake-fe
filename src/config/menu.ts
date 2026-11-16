@@ -34,9 +34,11 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
       items: [
         { title: 'Cấu hình Silver (Profiles)', href: '/data/profiles', iconName: 'Settings' },
         { title: 'Làm sạch & Kiểm tra', href: '/data/cleaning', iconName: 'Play' },
+        { title: 'Xử lý Silver tự động', href: '/data/auto-pipeline', iconName: 'Workflow' },
         { title: 'Hồ sơ cách ly (Quarantine)', href: '/data/quarantine', iconName: 'FileWarning' },
         { title: 'Yêu cầu xử lý dữ liệu lỗi', href: '/data/quality', iconName: 'ShieldCheck' },
         { title: 'Phiên bản Silver (Snapshots)', href: '/data/silver', iconName: 'CheckCircle2' },
+        { title: 'Tổng hợp & Báo cáo Gold', href: '/data/gold', iconName: 'BarChart3' },
       ],
     },
     {

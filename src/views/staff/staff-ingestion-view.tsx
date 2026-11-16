@@ -23,6 +23,7 @@ import {
   API_ListIngestionAttempts,
   API_ListIngestionJobs,
 } from '@/api/shared/ingestion'
+import { AutoSilverForIngestion } from '@/components/data/auto-silver-jobs'
 import {
   Button,
   Card,
@@ -159,6 +160,8 @@ function JobDetailSection({
           <span>{BRONZE_SUCCESS_MESSAGE}</span>
         </div>
       )}
+
+      {status === 'SUCCESS' && <AutoSilverForIngestion ingestionJobId={jobId} />}
 
       {job.quality_issue_id && (
         <div className="flex items-center justify-between rounded-md border border-[#ebc5cd] bg-[#fff3f5] px-3 py-2 text-[#7a1020]">

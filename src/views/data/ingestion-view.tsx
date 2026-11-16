@@ -32,6 +32,7 @@ import {
   API_ListIngestionJobs,
 } from '@/api/shared/ingestion'
 import { API_UploadIngestion } from '@/api/staff/upload'
+import { AutoSilverForIngestion } from '@/components/data/auto-silver-jobs'
 import {
   Button,
   Card,
@@ -216,7 +217,7 @@ function JobDetails({
           <div className="flex flex-wrap items-center justify-between gap-2 text-emerald-900">
             <span className="inline-flex items-center gap-1.5 font-medium">
               <CheckCircle2 className="size-4 text-emerald-600" aria-hidden="true" />
-              Đã lưu dữ liệu vào Bronze (chưa tự động xuất bản sang Silver).
+              Đã lưu dữ liệu vào Bronze. Theo dõi kết quả xử lý Silver riêng ở bên dưới.
             </span>
             <Link
               href={`/data/cleaning?jobId=${jobId}`}
@@ -285,6 +286,8 @@ function JobDetails({
           message={getApiErrorMessage(cleaning.error, 'Không chạy được tác vụ làm sạch.')}
         />
       )}
+      {status === 'SUCCESS' && <AutoSilverForIngestion ingestionJobId={jobId} canManage />}
+
       {cleaning.data && (
         <p role="status" className="text-slate-700">
           <Tag tone={statusTone(cleaning.data.status)}>{statusLabel(cleaning.data.status)}</Tag> ·{' '}
