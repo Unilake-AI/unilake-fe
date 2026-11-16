@@ -133,11 +133,10 @@ describe('DATA_ADMIN IngestionView', () => {
     }
   })
 
-  it('hỗ trợ chạy nạp từ nguồn đăng ký, tải tệp lên và chỉ cho Manual Retry với UPLOAD_V1 thất bại', async () => {
+  it('chuyển tới dashboard pipeline và chỉ cho Manual Retry với UPLOAD_V1 thất bại', async () => {
     let startPayload: unknown = null
     let uploadForm: FormData | null = null
     let retried = false
-    const file = new File(['id,name\n1,An'], 'upload.csv', { type: 'text/csv' })
 
     const originalAdapter = http.defaults.adapter
     http.defaults.adapter = (config) => {
@@ -282,28 +281,15 @@ describe('DATA_ADMIN IngestionView', () => {
       await user.click(await screen.findByRole('button', { name: 'Xác nhận chạy lại' }))
       await waitFor(() => expect(retried).toBe(true))
 
-      // 3. Method B: Chạy nạp từ nguồn đăng ký
-      await user.click(screen.getByRole('button', { name: 'Chạy từ nguồn' }))
-      await user.selectOptions(await screen.findByLabelText('Nguồn dữ liệu *'), '3')
-      await user.selectOptions(screen.getByLabelText('Bộ dữ liệu đích *'), '8')
-      await user.type(screen.getByLabelText('File / bảng nguồn *'), 'applicants.csv')
-      await user.click(screen.getByRole('button', { name: 'Chạy nạp dữ liệu' }))
-      await waitFor(() =>
-        expect(startPayload).toEqual({
-          data_source_id: 3,
-          dataset_id: 8,
-          source_table: 'applicants.csv',
-        })
+      // Trang giám sát chuyển người dùng sang dashboard pipeline hiện tại.
+      expect(screen.getByRole('link', { name: 'Tiến trình nạp & xử lý dữ liệu' })).toHaveAttribute(
+        'href',
+        '/data/pipeline'
       )
-
-      // 4. Method A: Tải tệp lên
-      await user.click(screen.getByRole('button', { name: 'Tải tệp lên' }))
-      await user.selectOptions(await screen.findByLabelText('Bộ dữ liệu đích *'), '8')
-      await user.upload(screen.getByLabelText(/Tệp dữ liệu/), file)
-      await user.click(screen.getByRole('button', { name: 'Tải lên và tạo job' }))
-      await waitFor(() => expect(uploadForm).not.toBeNull())
-      expect(uploadForm!.get('file')).toBe(file)
-      expect(uploadForm!.get('dataset_id')).toBe('8')
+      expect(screen.queryByRole('button', { name: 'Chạy từ nguồn' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Tải tệp lên' })).not.toBeInTheDocument()
+      expect(startPayload).toBeNull()
+      expect(uploadForm).toBeNull()
     } finally {
       client.clear()
       http.defaults.adapter = originalAdapter

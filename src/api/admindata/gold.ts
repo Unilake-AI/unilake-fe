@@ -1,8 +1,21 @@
 import { http } from '@/api/http'
 
 export type GoldStatus = 'QUEUED' | 'RUNNING' | 'RETRY_WAIT' | 'SUCCEEDED' | 'FAILED' | 'SUPERSEDED'
+export type DatabaseSyncStatus =
+  'QUEUED' | 'RUNNING' | 'SYNCED' | 'BLOCKED' | 'FAILED' | 'SUPERSEDED'
+export interface DatabaseSync {
+  database_sync_status: DatabaseSyncStatus | null
+  database_sync_error: string | null
+  database_sync_report?: { code: string; entity?: string; field?: string | null } | null
+  database_sync_result?: {
+    entities: Record<string, number>
+    records_synced: number
+    source: string
+    recipe_version: string
+  } | null
+}
 export type GoldDomain = 'hr' | 'academic' | 'admissions'
-export interface GoldSource {
+export interface GoldSource extends DatabaseSync {
   scope: string
   silver_snapshot_id: string
   dataset_id: number
@@ -13,7 +26,7 @@ export interface GoldSource {
   sync_status: GoldStatus | 'CURRENT' | 'NOT_STARTED'
   error_code: string | null
 }
-export interface GoldJob {
+export interface GoldJob extends DatabaseSync {
   job_id: string
   dataset_id: number
   domain: GoldDomain
@@ -98,3 +111,9 @@ export const API_GoldReport = async (id: string) =>
       responseType: 'blob',
     })
   ).data
+
+export const API_RetryGoldDatabaseSync = async (id: string) =>
+  (await http.post(`/pipeline/gold/jobs/${encodeURIComponent(id)}/database-sync/retry`)).data as {
+    job_id: string
+    status: DatabaseSyncStatus
+  }

@@ -14,6 +14,7 @@ import {
   API_GoldRecipes,
   API_RefreshGold,
   API_RetryGold,
+  API_RetryGoldDatabaseSync,
   API_GoldReport,
 } from '@/api/admindata/gold'
 import type { GoldDomain } from '@/api/admindata/gold'
@@ -35,8 +36,26 @@ const statusNames: Record<string, string> = {
   SUCCEEDED: 'Đã công bố',
   FAILED: 'Có lỗi',
   SUPERSEDED: 'Đã có bản mới',
-  CURRENT: 'Đã đồng bộ',
+  CURRENT: 'Gold hiện hành',
   NOT_STARTED: 'Chưa tạo Gold',
+}
+const databaseStatuses: Record<string, string> = {
+  QUEUED: 'Chờ ghi vào DB',
+  RUNNING: 'Đang ghi vào DB',
+  SYNCED: 'Đã ghi vào DB',
+  BLOCKED: 'Cần bổ sung dữ liệu',
+  FAILED: 'Ghi DB thất bại',
+  SUPERSEDED: 'Đã có bản mới',
+}
+function databaseStatus(status: string | null) {
+  return status ? (databaseStatuses[status] ?? status) : 'Chưa đồng bộ DB'
+}
+const syncReasons: Record<string, string> = {
+  GOLD_SYNC_REQUIRED_FIELD: 'Thiếu trường bắt buộc',
+  GOLD_SYNC_REFERENCE_MISSING: 'Thiếu dữ liệu liên kết',
+  GOLD_SYNC_ENTITY_MAPPING_REQUIRED: 'Cần khai báo ánh xạ nghiệp vụ',
+  GOLD_SYNC_SOURCE_CONFLICT: 'Mã nghiệp vụ trùng giữa các nguồn',
+  GOLD_SYNC_FIELD_INVALID: 'Giá trị chưa hợp lệ',
 }
 const domains = { hr: 'Nhân sự', academic: 'Đào tạo', admissions: 'Tuyển sinh' }
 const fields: Record<string, string> = {
@@ -75,6 +94,7 @@ export function GoldView() {
   const [metricPage, setMetricPage] = useState(0)
   const [selected, setSelected] = useState('')
   const [retryId, setRetryId] = useState('')
+  const [databaseRetryId, setDatabaseRetryId] = useState('')
   const [notice, setNotice] = useState('')
   const filter = domain ? { domain } : {}
   const sources = useQuery({
@@ -126,6 +146,14 @@ export function GoldView() {
       await client.invalidateQueries({ queryKey: ['gold'] })
     },
   })
+  const retryDatabase = useMutation({
+    mutationFn: API_RetryGoldDatabaseSync,
+    onSuccess: async () => {
+      setDatabaseRetryId('')
+      setNotice('Đã yêu cầu đồng bộ lại dữ liệu Gold vào DB.')
+      await client.invalidateQueries({ queryKey: ['gold'] })
+    },
+  })
   const download = useMutation({
     mutationFn: API_GoldReport,
     onSuccess: (blob, id) => {
@@ -150,13 +178,13 @@ export function GoldView() {
       </div>
     )
   }
-  const errors = [update.error, retry.error, download.error].filter(Boolean)
+  const errors = [update.error, retry.error, retryDatabase.error, download.error].filter(Boolean)
   return (
     <div className="space-y-5">
       <PageHeader
         breadcrumb={['Quản trị dữ liệu', 'Gold']}
         title="Tổng hợp & Báo cáo Gold"
-        description="Silver công bố xong sẽ tự tạo lượt Gold. Theo dõi xử lý, xem số liệu và tải báo cáo theo từng nguồn dữ liệu."
+        description="Silver công bố xong sẽ tự tạo lượt Gold. Theo dõi công bố Gold, đồng bộ dữ liệu vào DB và tải báo cáo theo từng nguồn."
         actions={
           <Button onClick={() => void client.invalidateQueries({ queryKey: ['gold'] })}>
             Làm mới
@@ -239,7 +267,8 @@ export function GoldView() {
                 <tr>
                   <th>Bộ dữ liệu</th>
                   <th>Lĩnh vực</th>
-                  <th>Tiến độ</th>
+                  <th>Công bố Gold</th>
+                  <th>Dữ liệu nghiệp vụ</th>
                   <th>Thao tác</th>
                 </tr>
               </thead>
@@ -260,6 +289,14 @@ export function GoldView() {
                       {statusNames[item.sync_status]}
                       {item.error_code && (
                         <div className="text-xs text-red-700">{item.error_code}</div>
+                      )}
+                    </td>
+                    <td>
+                      {databaseStatus(item.database_sync_status)}
+                      {item.database_sync_error && (
+                        <div className="text-xs text-red-700">
+                          {syncReasons[item.database_sync_error] ?? item.database_sync_error}
+                        </div>
                       )}
                     </td>
                     <td>
@@ -377,7 +414,12 @@ export function GoldView() {
                     <td>
                       #{item.dataset_id} · {domains[item.domain]}
                     </td>
-                    <td>{statusNames[item.status]}</td>
+                    <td>
+                      <div>{statusNames[item.status]}</div>
+                      <div className="text-xs text-slate-600">
+                        {databaseStatus(item.database_sync_status)}
+                      </div>
+                    </td>
                     <td>{item.attempt_number}</td>
                     <td className="space-x-2">
                       <Button onClick={() => setSelected(item.job_id)}>Chi tiết</Button>
@@ -401,6 +443,25 @@ export function GoldView() {
         )}
         {paging(jobPage, setJobPage, jobs.data?.length)}
       </Card>
+      {databaseRetryId && (
+        <Card title="Đồng bộ lại vào DB">
+          <p className="mb-3 text-sm">
+            Sau khi bổ sung trường bắt buộc hoặc dữ liệu liên kết, chạy lại đồng bộ cho bản Gold
+            này.
+          </p>
+          <div className="flex gap-2">
+            <Button
+              disabled={retryDatabase.isPending}
+              onClick={() => retryDatabase.mutate(databaseRetryId)}
+            >
+              Xác nhận đồng bộ
+            </Button>
+            <Button disabled={retryDatabase.isPending} onClick={() => setDatabaseRetryId('')}>
+              Hủy
+            </Button>
+          </div>
+        </Card>
+      )}
       {retryId && (
         <Card title="Xác nhận thử lại">
           <p className="mb-3 text-sm">
@@ -449,6 +510,35 @@ export function GoldView() {
                   <span className="font-mono text-xs">{detail.data.silver_snapshot_id}</span>
                 </p>
                 <p>Quy định: {detail.data.recipe_version}</p>
+                <p>
+                  Dữ liệu nghiệp vụ:{' '}
+                  <strong>{databaseStatus(detail.data.database_sync_status)}</strong>
+                </p>
+                {detail.data.database_sync_error && (
+                  <p className="text-red-700">
+                    {syncReasons[detail.data.database_sync_error] ??
+                      detail.data.database_sync_error}
+                    {detail.data.database_sync_report?.entity && (
+                      <>
+                        {' '}
+                        · {detail.data.database_sync_report.entity}
+                        {detail.data.database_sync_report.field
+                          ? `.${detail.data.database_sync_report.field}`
+                          : ''}
+                      </>
+                    )}
+                  </p>
+                )}
+                {detail.data.database_sync_result && (
+                  <p>
+                    {Object.entries(detail.data.database_sync_result.entities)
+                      .map(([table, count]) => `${table}: ${count.toLocaleString('vi-VN')} bản ghi`)
+                      .join(' · ')}
+                  </p>
+                )}
+                {['BLOCKED', 'FAILED'].includes(detail.data.database_sync_status ?? '') && (
+                  <Button onClick={() => setDatabaseRetryId(selected)}>Đồng bộ lại vào DB</Button>
+                )}
                 {detail.data.error_code && (
                   <p className="text-red-700">Mã lỗi: {detail.data.error_code}</p>
                 )}

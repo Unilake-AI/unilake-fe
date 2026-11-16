@@ -111,7 +111,6 @@ export function UserMenu({ role, onNavigate }: UserMenuProps) {
                       <DialogClose asChild>
                         <Link
                           href={ROLE_ROUTE_PREFIXES[item]}
-                          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                           onClick={onNavigate}
                           className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
                         >
@@ -132,7 +131,6 @@ export function UserMenu({ role, onNavigate }: UserMenuProps) {
               <DialogClose asChild>
                 <Link
                   href="/staff/profile"
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                   onClick={onNavigate}
                   className="text-sm font-medium text-rose-700 hover:underline"
                 >

@@ -60,6 +60,8 @@ describe('ROLE_MENUS', () => {
       '/data',
       '/data/sources',
       '/data/datasets',
+      '/data/ingestion',
+      '/data/pipeline',
       '/data/workers',
       '/data/profiles',
       '/data/cleaning',
