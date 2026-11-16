@@ -103,6 +103,11 @@ const STATUS_MESSAGES: Record<number, string> = {
 }
 
 const API_ERROR_MESSAGES = new Map([
+  [
+    'MANAGER_SCOPE_REQUIRED',
+    'Cần phân công đang hiệu lực tại phòng phụ trách lĩnh vực này. Vui lòng liên hệ quản trị viên.',
+  ],
+  ['MANAGER_UNAVAILABLE', 'Không thể tải báo cáo phòng ban. Vui lòng thử lại sau.'],
   ['GOLD_RETRY_NOT_ALLOWED', 'Chỉ chạy lại lượt Gold bị lỗi của bản Silver còn đang sử dụng.'],
   [
     'GOLD_SILVER_HEAD_CHANGED',
