@@ -7,7 +7,6 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { API_GetAutoSilverPolicy } from '@/api/admindata/auto-pipeline'
 import { http } from '@/api/http'
 import { AutoSilverForIngestion } from '@/components/data/auto-silver-jobs'
-import type { AutoSilverPolicy } from '@/types/auto-pipeline'
 
 import { AutoPipelineView } from './auto-pipeline-view'
 
@@ -41,24 +40,8 @@ function fail(
   })
 }
 
-function environment(options: { missingProfile?: boolean; existing?: boolean } = {}) {
+function environment(options: { automatic?: boolean; healthy?: number } = {}) {
   const calls: { method: string; url: string; body: unknown; params: unknown }[] = []
-  let policy: AutoSilverPolicy | null = options.existing
-    ? {
-        dataset_id: 4,
-        revision: 3,
-        enabled: true,
-        definition: {
-          profile_id: 'removed-profile',
-          max_attempts: 3,
-          retry_delay_seconds: 30,
-          allow_partial_publication: false,
-        },
-        updated_by: '1',
-        updated_at: '2026-11-16T01:00:00Z',
-      }
-    : null
-  let revisionConflict = false
   let retryConflict = false
   let status = 'FAILED'
   http.defaults.adapter = async (config) => {
@@ -71,59 +54,17 @@ function environment(options: { missingProfile?: boolean; existing?: boolean } =
       params: config.params,
     })
     let data: unknown = []
-    if (url === '/datasets') data = [{ dataset_id: 4, dataset_name: 'Nhân viên HR', domain: 'hr' }]
-    else if (url === '/pipeline/profiles')
-      data = options.missingProfile
-        ? []
-        : [
-            {
-              profile_id: 'hr-source',
-              revision: 1,
-              definition: {
-                dataset_id: 4,
-                entity: 'employee',
-                source_table: 'employees.csv',
-                identity_mode: 'source',
-              },
-            },
-          ]
-    else if (url === '/pipeline/auto/datasets/4') {
-      if (config.method === 'put') {
-        const body = JSON.parse(String(config.data))
-        if (revisionConflict) {
-          policy = { ...policy!, revision: policy!.revision + 1 }
-          revisionConflict = false
-          fail(
-            config,
-            409,
-            'AUTO_PIPELINE_REVISION_CONFLICT',
-            'Cấu hình đã được người khác thay đổi'
-          )
-        }
-        expect(body.expected_revision).toBe(policy?.revision ?? 0)
-        policy = {
-          dataset_id: 4,
-          revision: body.expected_revision + 1,
-          enabled: body.enabled,
-          definition: {
-            profile_id: body.profile_id,
-            max_attempts: body.max_attempts,
-            retry_delay_seconds: body.retry_delay_seconds,
-            allow_partial_publication: body.allow_partial_publication,
-          },
-          updated_by: '1',
-          updated_at: '2026-11-16T01:01:00Z',
-        }
+    if (url === '/pipeline/auto/overview')
+      data = {
+        automatic_enabled: options.automatic ?? true,
+        recipe_version: 'auto-source-v1',
+        total: 1,
+        counts: { FAILED: 1 },
+        paused_datasets: 0,
+        healthy_workers: options.healthy ?? 1,
       }
-      if (!policy)
-        fail(
-          config,
-          404,
-          'AUTO_PIPELINE_POLICY_NOT_FOUND',
-          'Chưa cấu hình tự chạy cho bộ dữ liệu này'
-        )
-      data = policy
-    } else if (url === '/pipeline/auto/jobs') data = [{ ...job, status }]
+    else if (url === '/pipeline/auto/jobs')
+      data = [{ ...job, status, dataset_name: 'Nhân viên HR', source_table: 'employees.csv' }]
     else if (url === `/pipeline/auto/jobs/${jobId}`)
       data = { ...job, status, worker_id: 'silver-1', lease_expires_at: null }
     else if (url.endsWith('/attempts'))
@@ -144,7 +85,12 @@ function environment(options: { missingProfile?: boolean; existing?: boolean } =
       data = { job_id: jobId, status, attempt_number: 1 }
     } else if (url === '/pipeline/auto/workers')
       data = [
-        { worker_id: 'silver-1', current_job_id: null, last_heartbeat_at: '2026-11-16T01:02:00Z' },
+        {
+          worker_id: 'silver-1',
+          current_job_id: null,
+          last_heartbeat_at: '2026-11-16T01:02:00Z',
+          healthy: true,
+        },
       ]
     return { data, status: 200, statusText: 'OK', headers: {}, config }
   }
@@ -160,9 +106,6 @@ function environment(options: { missingProfile?: boolean; existing?: boolean } =
     client,
     calls,
     user: userEvent.setup(),
-    conflict: () => {
-      revisionConflict = true
-    },
     conflictRetry: () => {
       retryConflict = true
     },
@@ -178,70 +121,50 @@ describe('Gọi API xử lý Silver tự động', () => {
     http.defaults.adapter = original
   })
 
-  it('chỉ bật sau khi lưu, dùng đúng phiên bản khi sửa và tải lại khi xung đột', async () => {
-    const { client, calls, user, conflict } = environment()
+  it('tự giám sát mọi bộ dữ liệu ngay khi mở trang, không yêu cầu chọn hoặc lưu cấu hình', async () => {
+    const { client, calls } = environment()
     try {
-      await screen.findByRole('option', { name: 'Nhân viên HR · hr' })
-      await user.selectOptions(screen.getByLabelText('Bộ dữ liệu tự chạy'), '4')
-      const toggle = await screen.findByLabelText('Tự xử lý Silver cho các lần nạp mới')
-      expect(toggle).not.toBeChecked()
-      expect(calls.some((call) => call.method === 'put')).toBe(false)
-      expect(screen.getByLabelText('Cách xử lý tự động')).toHaveValue('hr-source')
-      await user.click(toggle)
-      await user.click(screen.getByRole('button', { name: 'Lưu cấu hình tự chạy' }))
-      expect(await screen.findByText('Đã lưu cấu hình tự chạy.')).toBeInTheDocument()
-      expect(calls.find((call) => call.method === 'put')?.body).toEqual({
-        expected_revision: 0,
-        enabled: true,
-        profile_id: 'hr-source',
-        allow_partial_publication: false,
-        max_attempts: 3,
-        retry_delay_seconds: 30,
-      })
-      expect(calls.find((call) => call.url === '/pipeline/profiles')?.params).toEqual({
-        dataset_id: 4,
-        limit: 100,
-        offset: 0,
-      })
-      conflict()
-      await user.click(screen.getByLabelText('Tự xử lý Silver cho các lần nạp mới'))
-      await user.click(screen.getByRole('button', { name: 'Lưu cấu hình tự chạy' }))
+      expect(await screen.findByText('Đang tự động xử lý Bronze → Silver')).toBeInTheDocument()
+      expect(await screen.findByText('silver-1')).toBeInTheDocument()
+      expect(calls.some((call) => call.url === '/pipeline/auto/jobs')).toBe(true)
       expect(
-        await screen.findByText(
-          'Cấu hình đã được thay đổi. Hãy tải lại phiên bản mới nhất trước khi lưu.'
+        calls.some(
+          (call) =>
+            call.url === '/pipeline/profiles' || call.url === '/datasets' || call.method === 'put'
         )
-      ).toBeInTheDocument()
-      expect(calls.filter((call) => call.method === 'put')).toHaveLength(2)
-      await user.click(screen.getByRole('button', { name: 'Thử lại' }))
-      await screen.findByText(/Cấu hình hiện tại: bản 2/)
-      await user.click(screen.getByLabelText('Tự xử lý Silver cho các lần nạp mới'))
-      await user.click(screen.getByRole('button', { name: 'Lưu cấu hình tự chạy' }))
-      await waitFor(() => expect(calls.filter((call) => call.method === 'put')).toHaveLength(3))
-      expect(calls.filter((call) => call.method === 'put')[2]?.body).toEqual(
-        expect.objectContaining({ expected_revision: 2, enabled: false })
-      )
+      ).toBe(false)
+      expect(screen.queryByLabelText('Bộ dữ liệu tự chạy')).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Lưu cấu hình tự chạy' })).not.toBeInTheDocument()
     } finally {
       client.clear()
     }
   })
 
-  it('cho tắt cấu hình cũ khi cách xử lý không còn trong danh sách', async () => {
-    const { client, calls, user } = environment({ existing: true, missingProfile: true })
+  it('nói rõ khi chưa áp dụng migration hoặc worker dừng, không báo tự động giả', async () => {
+    const { client } = environment({ automatic: false, healthy: 0 })
     try {
-      await screen.findByRole('option', { name: 'Nhân viên HR · hr' })
-      await user.selectOptions(screen.getByLabelText('Bộ dữ liệu tự chạy'), '4')
-      await screen.findByText(/Cấu hình hiện tại: bản 3/)
-      expect(screen.getByRole('button', { name: 'Lưu cấu hình tự chạy' })).toBeDisabled()
-      await user.click(screen.getByLabelText('Tự xử lý Silver cho các lần nạp mới'))
-      await user.click(screen.getByRole('button', { name: 'Lưu cấu hình tự chạy' }))
-      expect(await screen.findByText('Đã lưu cấu hình tự chạy.')).toBeInTheDocument()
-      expect(calls.find((call) => call.method === 'put')?.body).toEqual(
-        expect.objectContaining({
-          expected_revision: 3,
-          enabled: false,
-          profile_id: 'removed-profile',
-        })
+      expect(await screen.findByText('Cần cập nhật hệ thống tự động')).toBeInTheDocument()
+      expect(screen.queryByText('Đang tự động xử lý Bronze → Silver')).not.toBeInTheDocument()
+      expect(screen.getByRole('alert')).toHaveTextContent('Chưa có bộ xử lý Silver đang hoạt động')
+    } finally {
+      client.clear()
+    }
+  })
+
+  it('bộ lọc tùy chọn chỉ lọc lượt chạy, không cấu hình dataset', async () => {
+    const { client, calls, user } = environment()
+    try {
+      await screen.findByText('silver-1')
+      await user.click(screen.getByText('Lọc lượt chạy (tùy chọn)'))
+      await user.type(screen.getByLabelText('Lọc theo mã bộ dữ liệu'), '4')
+      await user.type(screen.getByLabelText('Lọc theo lần nạp Bronze'), '20')
+      await user.click(screen.getByRole('button', { name: 'Lọc lượt chạy' }))
+      await waitFor(() =>
+        expect(
+          calls.filter((call) => call.url === '/pipeline/auto/jobs').at(-1)?.params
+        ).toMatchObject({ dataset_id: 4, ingestion_job_id: 20 })
       )
+      expect(calls.some((call) => call.method === 'put')).toBe(false)
     } finally {
       client.clear()
     }

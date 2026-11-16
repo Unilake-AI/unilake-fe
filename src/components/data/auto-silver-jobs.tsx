@@ -199,8 +199,8 @@ export function AutoSilverJobDetail({
           <DialogHeader>
             <DialogTitle>Thử lại xử lý Silver?</DialogTitle>
             <DialogDescription>
-              Hệ thống dùng lại đúng bản Bronze và cách xử lý của lượt này. Chỉ thử lại khi cấu hình
-              vẫn bật và chưa đổi phiên bản.
+              Hệ thống dùng lại đúng bản Bronze và cách xử lý của lượt này. Quy tắc xử lý đã chốt
+              vẫn được giữ khi thử lại.
             </DialogDescription>
           </DialogHeader>
           {retry.isError && (
@@ -251,7 +251,7 @@ export function AutoSilverForIngestion({
             href="/data/auto-pipeline"
             className="text-xs font-semibold text-[#a9162e] underline"
           >
-            Cấu hình tự chạy
+            Theo dõi tự chạy
           </Link>
         )}
       </div>
@@ -265,7 +265,7 @@ export function AutoSilverForIngestion({
       ) : jobs.data.length === 0 ? (
         <EmptyState
           title="Chưa có lượt tự xử lý Silver cho lần nạp này"
-          description="Tự chạy áp dụng khi bộ dữ liệu đã bật cấu hình trước lúc lần nạp Bronze thành công. Dữ liệu Bronze cũ có thể được quản trị xử lý thủ công."
+          description="Sau khi Bronze thành công, hệ thống tự xếp hàng xử lý Silver. Nếu chưa xuất hiện lượt chạy, hãy làm mới hoặc kiểm tra dịch vụ xử lý."
         />
       ) : (
         jobs.data.map((job) => <AutoSilverJobDetail key={job.job_id} jobId={job.job_id} />)

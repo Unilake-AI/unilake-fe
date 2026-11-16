@@ -232,13 +232,13 @@ describe('ManagerReportsView', () => {
     client.clear()
   })
 
-  it('tải yêu cầu sửa, thống kê và lịch sử từ manager API', async () => {
+  it('tải yêu cầu sửa và mở đúng trang chi tiết', async () => {
     const { calls, client } = setup('issues')
-    fireEvent.click(await screen.findByRole('button', { name: 'Xem yêu cầu' }))
-    expect(await screen.findByText('Thiếu trạng thái nhân sự')).toBeInTheDocument()
-    expect(screen.getByText('Lịch sử xử lý')).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Xem yêu cầu' })).toHaveAttribute(
+      'href',
+      '/manager/quality-issues/issue-1'
+    )
     expect(calls.some((call) => call.url === '/manager/issues/stats')).toBe(true)
-    expect(calls.some((call) => call.url === '/manager/issues/issue-1')).toBe(true)
     client.clear()
   })
 

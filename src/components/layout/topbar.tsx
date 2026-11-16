@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 
-import { Bell, Building2, ChevronDown, Menu, Sparkles } from 'lucide-react'
+import { Building2, ChevronDown, Menu, Sparkles } from 'lucide-react'
 
 import campusImage from '@/assets/login/duy-tan-campus-source.png'
 import { ASK_AI_PATHS } from '@/config/menu'
@@ -11,6 +11,7 @@ import { getWorkspaceForRole } from '@/config/roles'
 import type { TopbarProps } from '@/types/layout/topbar'
 
 import { DomainSelector } from './domain-selector'
+import { NotificationsMenu } from './notifications-menu'
 import { UserMenu } from './user-menu'
 
 export function Topbar({ role, onOpenMobile }: TopbarProps) {
@@ -90,14 +91,11 @@ export function Topbar({ role, onOpenMobile }: TopbarProps) {
         </Link>
       )}
 
-      <span
-        role="img"
-        title="Thông báo chưa được kết nối trong phiên bản hiện tại"
-        className="relative flex size-10 shrink-0 items-center justify-center text-[#34486c]"
-        aria-label="Thông báo chưa khả dụng"
-      >
-        <Bell className="size-5" />
-      </span>
+      {getWorkspaceForRole(role) !== 'VIEWER' && (
+        <NotificationsMenu
+          workspace={getWorkspaceForRole(role) as 'ADMIN' | 'DATA_ADMIN' | 'MANAGER' | 'STAFF'}
+        />
+      )}
 
       <UserMenu role={role} />
     </header>

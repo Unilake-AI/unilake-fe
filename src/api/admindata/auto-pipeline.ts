@@ -42,3 +42,14 @@ export async function API_RetryAutoSilverJob(
 export async function API_ListSilverWorkers(): Promise<AutoSilverWorker[]> {
   return (await http.get<AutoSilverWorker[]>('/pipeline/auto/workers')).data
 }
+
+export interface AutoSilverOverview {
+  automatic_enabled: boolean
+  recipe_version: string
+  total: number
+  counts: Partial<Record<string, number>>
+  paused_datasets: number
+  healthy_workers: number
+}
+export const API_AutoSilverOverview = async () =>
+  (await http.get<AutoSilverOverview>('/pipeline/auto/overview')).data

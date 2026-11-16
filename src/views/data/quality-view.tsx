@@ -62,7 +62,7 @@ const PAGE_SIZE = 20
 const inputClass =
   'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]/30'
 
-function IssueDetailPanel({ issueId }: { issueId: string }) {
+export function IssueDetailPanel({ issueId }: { issueId: string }) {
   const queryClient = useQueryClient()
   const [assigneeId, setAssigneeId] = useState('')
   const [selectedRunId, setSelectedRunId] = useState('')

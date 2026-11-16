@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 
+import Link from 'next/link'
+
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { getApiErrorMessage } from '@/api/http'
@@ -12,7 +14,6 @@ import {
   API_ManagerDataset,
   API_ManagerIssues,
   API_ManagerIssueStats,
-  API_ManagerIssue,
   API_ManagerRecipes,
 } from '@/api/manager/reports'
 import type { ManagerContext, AnalyticsFilters, IssueFilters } from '@/api/manager/reports'
@@ -35,7 +36,7 @@ const titles = {
   overview: 'Tổng quan phân hệ',
   analytics: 'Phân tích dữ liệu',
   datasets: 'Bộ dữ liệu phòng ban',
-  issues: 'Yêu cầu sửa dữ liệu',
+  issues: 'Yêu cầu xử lý lỗi',
 }
 const departmentCodes: Record<string, string> = { hr: 'PNS', academic: 'PDT', admissions: 'PTS' }
 const size = 20
@@ -405,7 +406,6 @@ function Datasets({ domain }: { domain: Domain }) {
 function Issues({ domain }: { domain: Domain }) {
   const [page, setPage] = useState(0)
   const [status, setStatus] = useState('')
-  const [selected, setSelected] = useState('')
   const params: IssueFilters = {
     domain,
     status: status ? (status as 'ASSIGNED' | 'PENDING_VERIFICATION' | 'VERIFIED') : undefined,
@@ -422,16 +422,10 @@ function Issues({ domain }: { domain: Domain }) {
     queryFn: () => API_ManagerIssueStats({ domain, status: params.status }),
     ...polling,
   })
-  const detail = useQuery({
-    queryKey: ['manager', 'issue', selected],
-    queryFn: () => API_ManagerIssue(selected),
-    enabled: Boolean(selected),
-    ...polling,
-  })
   return (
     <div className="space-y-5">
       <Card
-        title="Theo dõi yêu cầu sửa"
+        title="Theo dõi yêu cầu xử lý lỗi"
         subtitle="Xem tiến độ và lịch sử các yêu cầu được giao cho phòng phụ trách."
       >
         <label className="mb-4 flex items-center gap-2 text-sm">
@@ -442,7 +436,6 @@ function Issues({ domain }: { domain: Domain }) {
             onChange={(event) => {
               setStatus(event.target.value)
               setPage(0)
-              setSelected('')
             }}
           >
             <option value="">Tất cả trạng thái</option>
@@ -484,7 +477,12 @@ function Issues({ domain }: { domain: Domain }) {
                         {item.assignee_user_id ?? 'Chưa phân công'}
                       </p>
                     </div>
-                    <Button onClick={() => setSelected(item.issue_id)}>Xem yêu cầu</Button>
+                    <Link
+                      href={`/manager/quality-issues/${encodeURIComponent(item.issue_id)}`}
+                      className="text-sm font-semibold text-indigo-700"
+                    >
+                      Xem yêu cầu
+                    </Link>
                   </div>
                 ))}
               </div>
@@ -498,42 +496,6 @@ function Issues({ domain }: { domain: Domain }) {
           </>
         )}
       </Card>
-      {selected && (
-        <Card
-          title={detail.data?.title ?? 'Chi tiết yêu cầu'}
-          right={<Button onClick={() => setSelected('')}>Đóng chi tiết</Button>}
-        >
-          {detail.isPending ? (
-            <LoadingState />
-          ) : detail.isError ? (
-            <ErrorState
-              message={getApiErrorMessage(detail.error, 'Không thể tải yêu cầu.')}
-              onRetry={() => void detail.refetch()}
-            />
-          ) : (
-            <div className="space-y-4">
-              <p className="whitespace-pre-wrap text-sm">{detail.data.description}</p>
-              <p className="text-sm">
-                Trạng thái: {label(detail.data.status)} ·{' '}
-                {number(detail.data.quarantine_records.length)} bản ghi cần kiểm tra
-              </p>
-              <h3 className="text-sm font-semibold">Lịch sử xử lý</h3>
-              {!detail.data.history.length ? (
-                <p className="text-sm text-slate-500">Chưa có lịch sử.</p>
-              ) : (
-                detail.data.history.map((event) => (
-                  <div key={event.event_id} className="rounded-lg border p-3 text-sm">
-                    {label(event.to_status)} · Người thực hiện: {event.actor_id}
-                    <p className="mt-1 text-xs text-slate-500">
-                      {formatDateTime(event.created_at)}
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-        </Card>
-      )}
     </div>
   )
 }

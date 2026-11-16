@@ -21,3 +21,8 @@ giây và nút Làm mới giúp cập nhật tiến độ. Khi API lỗi/thu h�
 
 Trang Hỏi AI và lịch sử vẫn dùng các API NLQ dùng chung hiện có. Các trang mẫu
 dành cho VIEWER không bị thay đổi.
+
+Chuông thông báo dùng `/notifications?workspace=MANAGER`, lưu đã đọc qua
+`/notifications/read` và mở trực tiếp `/manager/quality-issues/{issue_id}`.
+Trạng thái đọc được lưu riêng cho tài khoản. Manager xem nội dung, vị trí/mã lỗi
+và lịch sử; quyền giao việc/xác minh vẫn thuộc quản trị dữ liệu.

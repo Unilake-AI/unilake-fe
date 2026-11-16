@@ -89,6 +89,108 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/users': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Accounts */
+    get: operations['list_accounts_api_v1_users_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/users/employees': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Employees */
+    get: operations['list_employees_api_v1_users_employees_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/users/organization': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Organization */
+    get: operations['organization_api_v1_users_organization_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/users/employees/{employee_id}/assignments': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Assignments */
+    get: operations['assignments_api_v1_users_employees__employee_id__assignments_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/users/{user_id}/employee': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /** Link Employee */
+    patch: operations['link_employee_api_v1_users__user_id__employee_patch']
+    trace?: never
+  }
+  '/api/v1/users/assignments': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Add Assignment */
+    post: operations['add_assignment_api_v1_users_assignments_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/datasources': {
     parameters: {
       query?: never
@@ -203,6 +305,40 @@ export interface paths {
     options?: never
     head?: never
     patch?: never
+    trace?: never
+  }
+  '/api/v1/dataset-owner-departments': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Owner Departments */
+    get: operations['owner_departments_api_v1_dataset_owner_departments_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/datasets/{dataset_id}/ownership': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /** Update Ownership */
+    patch: operations['update_ownership_api_v1_datasets__dataset_id__ownership_patch']
     trace?: never
   }
   '/api/v1/ingestion/jobs': {
@@ -379,6 +515,23 @@ export interface paths {
      * @description Áp dụng cấu hình nguồn được khai báo trên máy chủ; kiểm tra dữ liệu trước khi công bố Silver.
      */
     post: operations['run_cleaning_for_ingestion_job_api_v1_pipeline_cleaning_ingestion_jobs__ingestion_job_id__post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/pipeline/auto/overview': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Giám sát Silver tự động trên toàn hệ thống */
+    get: operations['overview_api_v1_pipeline_auto_overview_get']
+    put?: never
+    post?: never
     delete?: never
     options?: never
     head?: never
@@ -1484,6 +1637,40 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/notifications': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Notifications */
+    get: operations['notifications_api_v1_notifications_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/notifications/read': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Mark Read */
+    post: operations['mark_read_api_v1_notifications_read_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/': {
     parameters: {
       query?: never
@@ -1552,6 +1739,27 @@ export interface components {
       username: string
       /** Full Name */
       full_name: string
+    }
+    /** AssignmentCreate */
+    AssignmentCreate: {
+      /** Employee Id */
+      employee_id: number
+      /** Department Id */
+      department_id: number
+      /** Position Id */
+      position_id: number
+      /**
+       * Start Date
+       * Format: date
+       */
+      start_date: string
+      /** End Date */
+      end_date?: string | null
+      /**
+       * Is Primary
+       * @default false
+       */
+      is_primary?: boolean
     }
     /** AutoPolicyRequest */
     AutoPolicyRequest: {
@@ -2057,6 +2265,13 @@ export interface components {
       /** Description */
       description?: string | null
     }
+    /** DatasetOwnership */
+    DatasetOwnership: {
+      /** Owner Department Id */
+      owner_department_id: number
+      /** Expected Owner Department Id */
+      expected_owner_department_id: number | null
+    }
     /** DatasetPage */
     DatasetPage: {
       /** Items */
@@ -2120,6 +2335,16 @@ export interface components {
       domain: string
       /** Name */
       name: string
+    }
+    /**
+     * EmployeeLink
+     * @description Liên kết tài khoản với hồ sơ nhân viên có thật; kiểm tra bản cũ để tránh ghi đè.
+     */
+    EmployeeLink: {
+      /** Employee Id */
+      employee_id: number
+      /** Expected Employee Id */
+      expected_employee_id: number | null
     }
     /**
      * ErrorBody
@@ -2793,6 +3018,11 @@ export interface components {
         [key: string]: unknown
       } | null
     }
+    /** MarkNotificationsRead */
+    MarkNotificationsRead: {
+      /** Event Ids */
+      event_ids: number[]
+    }
     /**
      * MessageResponse
      * @description Phản hồi trạng thái/thông báo dùng chung.
@@ -2834,6 +3064,48 @@ export interface components {
       rows?: {
         [key: string]: unknown
       }[]
+    }
+    /** NotificationPage */
+    NotificationPage: {
+      /** Items */
+      items: components['schemas']['NotificationRead'][]
+      /** Total */
+      total: number
+      /** Unread Count */
+      unread_count: number
+      /** Limit */
+      limit: number
+      /** Offset */
+      offset: number
+    }
+    /** NotificationRead */
+    NotificationRead: {
+      /** Event Id */
+      event_id: number
+      /**
+       * Issue Id
+       * Format: uuid
+       */
+      issue_id: string
+      /** Title */
+      title: string
+      /** Domain */
+      domain: string
+      /** Department Name */
+      department_name: string
+      /** Event Type */
+      event_type: string
+      /** To Status */
+      to_status: string
+      /** Actor Id */
+      actor_id: number
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      /** Read At */
+      read_at: string | null
     }
     /** OwnerGrant */
     OwnerGrant: {
@@ -3440,6 +3712,199 @@ export interface operations {
       }
     }
   }
+  list_accounts_api_v1_users_get: {
+    parameters: {
+      query?: {
+        search?: string
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }[]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_employees_api_v1_users_employees_get: {
+    parameters: {
+      query?: {
+        search?: string
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }[]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  organization_api_v1_users_organization_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+    }
+  }
+  assignments_api_v1_users_employees__employee_id__assignments_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        employee_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }[]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  link_employee_api_v1_users__user_id__employee_patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        user_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EmployeeLink']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  add_assignment_api_v1_users_assignments_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AssignmentCreate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: string
+          }
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   get_data_source_api_v1_datasources_get: {
     parameters: {
       query?: {
@@ -3836,6 +4301,63 @@ export interface operations {
       }
     }
   }
+  owner_departments_api_v1_dataset_owner_departments_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }[]
+        }
+      }
+    }
+  }
+  update_ownership_api_v1_datasets__dataset_id__ownership_patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        dataset_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DatasetOwnership']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DatasetRead']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   list_jobs_api_v1_ingestion_jobs_get: {
     parameters: {
       query?: {
@@ -4161,6 +4683,28 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  overview_api_v1_pipeline_auto_overview_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
         }
       }
     }
@@ -6061,6 +6605,15 @@ export interface operations {
           'application/json': components['schemas']['ErrorResponse']
         }
       }
+      /** @description Chưa áp dụng migration Data Catalog. */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   create_catalog_api_v1_governance_catalog_post: {
@@ -6132,6 +6685,15 @@ export interface operations {
       }
       /** @description Internal server error. */
       500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Chưa áp dụng migration Data Catalog. */
+      503: {
         headers: {
           [name: string]: unknown
         }
@@ -6216,6 +6778,15 @@ export interface operations {
           'application/json': components['schemas']['ErrorResponse']
         }
       }
+      /** @description Chưa áp dụng migration Data Catalog. */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   delete_catalog_api_v1_governance_catalog__domain_id___dataset__delete: {
@@ -6284,6 +6855,15 @@ export interface operations {
       }
       /** @description Internal server error. */
       500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Chưa áp dụng migration Data Catalog. */
+      503: {
         headers: {
           [name: string]: unknown
         }
@@ -6372,6 +6952,15 @@ export interface operations {
           'application/json': components['schemas']['ErrorResponse']
         }
       }
+      /** @description Chưa áp dụng migration Data Catalog. */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   get_lineage_api_v1_governance_lineage_get: {
@@ -6443,6 +7032,15 @@ export interface operations {
       }
       /** @description Internal server error. */
       500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Chưa áp dụng migration Data Catalog. */
+      503: {
         headers: {
           [name: string]: unknown
         }
@@ -7007,6 +7605,143 @@ export interface operations {
         content: {
           'application/json': components['schemas']['IssueDetail']
         }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  notifications_api_v1_notifications_get: {
+    parameters: {
+      query?: {
+        workspace?: ('ADMIN' | 'DATA_ADMIN' | 'MANAGER' | 'STAFF') | null
+        unread_only?: boolean
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NotificationPage']
+        }
+      }
+      /** @description Unauthorized - token is missing, invalid, or expired. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Forbidden - current user does not have a required role. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Not found - requested resource does not exist. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description Internal server error. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  mark_read_api_v1_notifications_read_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MarkNotificationsRead']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
       /** @description Unauthorized - token is missing, invalid, or expired. */
       401: {
