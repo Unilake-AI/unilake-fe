@@ -21,7 +21,6 @@ import { getApiErrorMessage } from '@/api/http'
 import { API_GetIngestionStats, API_ListIngestionJobs } from '@/api/shared/ingestion'
 import { API_GetQualityIssueStats, API_ListQualityIssues } from '@/api/shared/quality-issues'
 import emptyData from '@/assets/dashboard/empty-data.webp'
-import campusImage from '@/assets/login/duy-tan-campus-source.png'
 import {
   Button,
   Card,
@@ -83,15 +82,7 @@ function OverviewContent({ context }: { context: StaffContext }) {
   return (
     <div className="space-y-5">
       <div className="relative min-h-[130px] overflow-hidden rounded-2xl bg-gradient-to-r from-[#f9faff] to-[#eef3ff] p-4 sm:px-6">
-        <Image
-          src={campusImage}
-          alt=""
-          fill
-          priority
-          sizes="(max-width: 768px) 300px, 560px"
-          className="pointer-events-none !left-auto !w-[45%] object-cover object-[center_48%] opacity-40 [mask-image:linear-gradient(to_right,transparent,black)]"
-        />
-        <div className="relative max-w-[70%]">
+        <div>
           <p className="text-xs font-semibold text-[#b91830]">Tổng quan</p>
           <h1 className="mt-3 text-2xl font-bold tracking-tight text-[#0f1831] sm:text-[30px]">
             Tổng quan vận hành dữ liệu
@@ -103,27 +94,6 @@ function OverviewContent({ context }: { context: StaffContext }) {
       </div>
 
       {context.needs_department_assignment && <DepartmentAssignmentBanner note={context.note} />}
-
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#dfe4f2] bg-white px-4 py-3 text-xs shadow-sm">
-        <div className="flex flex-wrap items-center gap-2 text-[#596884]">
-          <span>Tài khoản:</span>
-          <strong className="text-[#111a35]">{context.username}</strong>
-          <span className="mx-1 text-[#cbd4e3]">|</span>
-          <span>Lĩnh vực được cấp:</span>
-          {context.domains.map((domain) => (
-            <Tag key={domain.domain} tone="indigo">
-              {domain.name}
-            </Tag>
-          ))}
-        </div>
-        <span className="text-[#596884]">
-          Đơn vị công tác:{' '}
-          <strong className="text-[#b91830]">
-            {context.departments.map((department) => department.department_name).join(', ') ||
-              'Chưa có phân công'}
-          </strong>
-        </span>
-      </div>
 
       <div className="flex items-center justify-end gap-2">
         <Button
@@ -139,14 +109,6 @@ function OverviewContent({ context }: { context: StaffContext }) {
         >
           <ShieldCheck className="size-4" /> Yêu cầu dữ liệu lỗi
         </Link>
-        {context.can_upload && (
-          <Link
-            href="/staff/upload"
-            className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#b91830] px-3 text-xs font-semibold text-white"
-          >
-            <Upload className="size-4" /> Nạp dữ liệu
-          </Link>
-        )}
       </div>
 
       {jobStats.isPending ? (
@@ -406,46 +368,6 @@ function OverviewContent({ context }: { context: StaffContext }) {
           </div>
         )}
       </Card>
-
-      <div className="grid gap-3 md:grid-cols-3">
-        {[
-          {
-            href: '/staff/upload',
-            label: 'Nạp dữ liệu',
-            description: 'Tải tệp dữ liệu mới',
-            icon: Upload,
-          },
-          {
-            href: '/staff/ingestion',
-            label: 'Lịch sử nạp dữ liệu',
-            description: 'Xem các lần nạp và kết quả xử lý',
-            icon: History,
-          },
-          {
-            href: '/staff/quality-issues',
-            label: 'Yêu cầu xử lý dữ liệu lỗi',
-            description: 'Theo dõi các yêu cầu được giao',
-            icon: ShieldCheck,
-          },
-        ]
-          .filter((action) => action.href !== '/staff/upload' || context.can_upload)
-          .map(({ href, label, description, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex items-center gap-3 rounded-2xl border border-[#dfe4f2] bg-white p-4 shadow-[0_8px_24px_rgba(31,43,83,.055)] transition-transform hover:-translate-y-0.5"
-            >
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#fce8ee] text-[#b91830]">
-                <Icon className="size-6" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <strong className="block text-sm text-[#111a35]">{label}</strong>
-                <small className="text-[#65718d]">{description}</small>
-              </span>
-              <ArrowRight className="size-4 text-[#b91830]" />
-            </Link>
-          ))}
-      </div>
     </div>
   )
 }

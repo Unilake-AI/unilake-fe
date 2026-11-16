@@ -31,6 +31,8 @@ import type { DomainCode } from '@/types/domains'
 import type { NlqConversationTurn } from '@/types/nlq'
 import type { QueryHistoryEntry } from '@/types/query-history'
 
+import logo from '../../../public/logo.png'
+
 const SUGGESTIONS: Record<DomainCode, string[]> = {
   all: [
     'Tỷ lệ nhập học theo từng phương thức năm 2026?',
@@ -292,7 +294,7 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
                 <Card
                   title={
                     <span className="flex items-center gap-2">
-                      <Sparkles className="size-4 text-indigo-600" aria-hidden="true" />
+                      <Image src={logo} alt="" width={24} height={24} />
                       UniLake AI
                     </span>
                   }

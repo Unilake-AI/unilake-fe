@@ -27,12 +27,10 @@ import { z } from 'zod'
 import { API_SignIn } from '@/api/auth/client'
 import { getApiErrorMessage } from '@/api/http'
 import campus from '@/assets/login/ai-campus-composition.webp'
-import aiLake from '@/assets/login/ai-data-lake-3d.png'
 import aiLeavesLeft from '@/assets/login/ai-leaves-left.png'
 import aiLeavesTop from '@/assets/login/ai-leaves-top-left.png'
 import aiAmbient from '@/assets/login/ai-login-ambient.webp'
 import aiSky from '@/assets/login/ai-sky-background.webp'
-import officialMark from '@/assets/login/duy-tan-official-mark.png'
 import { getDefaultHomeForRoles, toRoleCode } from '@/config/roles'
 import { SESSION_EXPIRED_PARAM, storeSession } from '@/lib/session'
 import type { LoginFormValues } from '@/types/auth'
@@ -53,31 +51,6 @@ export const loginSchema = z.object({
 })
 
 const DEFAULT_LOGIN_ERROR = 'Tên đăng nhập hoặc mật khẩu chưa đúng. Vui lòng kiểm tra lại.'
-
-function UniversityBrand({ compact = false }: { compact?: boolean }) {
-  return (
-    <div
-      className={compact ? styles.cardUniversityLogo : styles.universityLogo}
-      aria-label="Duy Tân University"
-    >
-      <Image src={officialMark} alt="" width={60} height={60} />
-      <span>
-        <strong>DUY TÂN</strong>
-        <small>UNIVERSITY</small>
-      </span>
-    </div>
-  )
-}
-
-function UniLakeMark() {
-  return (
-    <svg viewBox="0 0 44 42" width="36" height="36" aria-hidden="true" fill="currentColor">
-      <ellipse cx="22" cy="8" rx="20" ry="7" />
-      <path d="M2 17c5 4 12 6 20 6s15-2 20-6v5c0 5-9 8-20 8S2 27 2 22v-5Z" />
-      <path d="M2 28c5 4 12 6 20 6s15-2 20-6v5c0 5-9 8-20 8S2 38 2 33v-5Z" />
-    </svg>
-  )
-}
 
 export function LoginView() {
   const router = useRouter()
@@ -159,24 +132,12 @@ export function LoginView() {
         aria-hidden="true"
       />
       <section className={styles.intro} aria-label="Giới thiệu UniLake AI">
-        <div className={styles.brandRow}>
-          <UniversityBrand />
-          <span className={styles.brandDivider} aria-hidden="true" />
-          <span className={styles.uniLakeBrand}>
-            <span className={styles.databaseMark} aria-hidden="true">
-              <UniLakeMark />
-            </span>
-            UniLake AI
-          </span>
-        </div>
         <div className={styles.introCopy}>
-          <span className={styles.redRule} aria-hidden="true" />
-          <h1>UniLake AI</h1>
-          <p className={styles.introTagline}>
-            Nền tảng Data Lake
-            <br />
-            cho Trường Đại học Duy Tân
-          </p>
+          <h1>
+            <Image className={styles.introLogo} src="/logo.png" alt="" width={96} height={96} />
+            UniLake AI
+          </h1>
+          <p className={styles.introTagline}>Nền tảng Data Lake</p>
           <p className={styles.introDescription}>
             Gom dữ liệu từ các phòng ban, làm sạch và chuẩn hóa qua 3 tầng dữ liệu Bronze – Silver –
             Gold, kiểm soát chất lượng dữ liệu và hỗ trợ lãnh đạo ra quyết định bằng Hỏi AI.
@@ -217,40 +178,10 @@ export function LoginView() {
       </section>
       <section className={styles.formArea} aria-label="Đăng nhập hệ thống">
         <div className={styles.card}>
-          <header className={styles.cardBrand}>
-            <div className={styles.cardBrandText}>
-              <UniversityBrand compact />
-              <span className={styles.cardLake}>
-                <span className={styles.databaseMark} aria-hidden="true">
-                  <UniLakeMark />
-                </span>
-                UniLake AI
-              </span>
-              <p>Nền tảng Data Lake cho Trường Đại học Duy Tân</p>
-            </div>
-            <div
-              className={styles.lakeIllustration}
-              aria-label="Ba tầng dữ liệu Gold, Silver, Bronze"
-              role="img"
-            >
-              <Image
-                className={styles.lakeArt}
-                src={aiLake}
-                alt=""
-                width={190}
-                height={190}
-                sizes="190px"
-              />
-              <span className={styles.lakeGold}>Gold</span>
-              <span className={styles.lakeSilver}>Silver</span>
-              <span className={styles.lakeBronze}>Bronze</span>
-            </div>
-          </header>
-          <div className={styles.cardDivider} />
-          <div className={styles.formHeading}>
+          <header className={styles.formHeading}>
             <h2>Đăng nhập</h2>
             <p>Vui lòng đăng nhập bằng tài khoản công vụ của nhà trường.</p>
-          </div>
+          </header>
           {sessionExpired && !serverError && (
             <div role="status" className={styles.statusBox}>
               <Clock size={18} aria-hidden="true" />

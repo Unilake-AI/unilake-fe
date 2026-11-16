@@ -25,7 +25,6 @@ import {
 } from 'lucide-react'
 
 import emptyData from '@/assets/dashboard/empty-data.webp'
-import campusArtwork from '@/assets/login/duy-tan-campus-source.png'
 import { cn } from '@/lib/utils'
 import type { StatusTone } from '@/types/page/page-parts'
 
@@ -58,14 +57,13 @@ export function PageHeader({
   title: string
   description?: ReactNode
   actions?: ReactNode
-  /** Hình minh hoạ đặt ở góc phải (vd. robot ở trang Hỏi AI); thay cho ảnh khuôn viên. */
+  /** Hình minh hoạ đặt ở góc phải (vd. robot ở trang Hỏi AI). */
   illustration?: StaticImageData
 }) {
   const Icon = getPageIcon(title)
-  const isOverview = /tổng quan|dashboard|điều hành/i.test(title)
   return (
     <header className="relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-[#e5e9f5] bg-[radial-gradient(circle_at_88%_15%,rgba(210,221,255,.72),transparent_34%),linear-gradient(110deg,#fff_0%,#f5f6ff_100%)] p-5 shadow-[0_8px_24px_rgba(31,43,83,.045)] sm:px-6 lg:min-h-[145px] lg:flex-row lg:items-end lg:justify-between">
-      {illustration ? (
+      {illustration && (
         <Image
           src={illustration}
           alt=""
@@ -75,15 +73,6 @@ export function PageHeader({
           priority
           className="pointer-events-none absolute -bottom-16 right-0 hidden h-auto w-44 object-contain sm:right-7 sm:block sm:w-56"
         />
-      ) : (
-        isOverview && (
-          <Image
-            src={campusArtwork}
-            alt=""
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-[45%] object-cover object-center opacity-[.13] [mask-image:linear-gradient(to_right,transparent,black_45%)] lg:block"
-          />
-        )
       )}
       <div
         className={cn(

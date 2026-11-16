@@ -30,23 +30,27 @@ const DOMAIN_ICONS: Record<DomainDefinition['iconName'], ComponentType<{ classNa
   BriefcaseBusiness,
 }
 
-export function DomainSelector() {
+export function DomainSelector({ side = 'bottom' }: { side?: 'bottom' | 'right' }) {
   const { domain, availableDomains, setDomain } = useDomain()
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label="Chọn phân hệ nghiệp vụ"
-        className="relative flex h-10 min-w-0 items-center gap-2 rounded-[9px] border border-[#cbd4e3] bg-white px-3 text-[13px] font-semibold text-[#17233d] shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830] data-[state=open]:border-[#b91830]"
+        className="flex h-10 w-full items-center gap-3 overflow-hidden rounded-[10px] px-[22px] text-left text-sm font-medium text-slate-200 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 data-[state=open]:bg-white/10"
       >
-        <Landmark className="size-4 shrink-0 text-[#34486c]" />
-        <span className="truncate">
-          <span className="hidden sm:inline">Phân hệ: </span>
-          {domain.shortLabel}
+        <Landmark className="size-4 shrink-0" aria-hidden="true" />
+        <span className="min-w-0 flex-1 items-center gap-2 [display:var(--sidebar-label-display,flex)]">
+          <span className="min-w-0 flex-1 truncate">{domain.shortLabel}</span>
+          <ChevronDown className="size-4 shrink-0" aria-hidden="true" />
         </span>
-        <ChevronDown className="size-4 shrink-0 text-[#34486c]" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-72">
+      <DropdownMenuContent
+        align="start"
+        side={side}
+        sideOffset={12}
+        className="w-72 max-w-[calc(100vw-1.5rem)]"
+      >
         <DropdownMenuLabel className="font-mono text-[10px] font-medium uppercase tracking-wider text-slate-400">
           Chọn phân hệ nghiệp vụ
         </DropdownMenuLabel>
