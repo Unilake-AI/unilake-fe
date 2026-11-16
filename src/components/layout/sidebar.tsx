@@ -32,7 +32,6 @@ import {
   Sparkles,
   Table,
   Upload,
-  User,
   UserPlus,
   Users,
   Workflow,
@@ -40,10 +39,14 @@ import {
   PanelLeftOpen,
 } from 'lucide-react'
 
-import campusImage from '@/assets/login/duy-tan-campus-source.png'
 import { ROLE_MENUS } from '@/config/menu'
-import { ROLE_DEFINITIONS, getWorkspaceForRole } from '@/config/roles'
+import { ROLE_DEFINITIONS, getDepartmentDomain, getWorkspaceForRole } from '@/config/roles'
 import type { SidebarProps } from '@/types/layout/sidebar'
+
+import { DomainSelector } from './domain-selector'
+import styles from './sidebar.module.css'
+import logo from '../../../public/logo.png'
+import logoText from '../../../public/logo_text.png'
 
 const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
   LayoutDashboard,
@@ -73,28 +76,12 @@ const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
   ScrollText,
   Sparkles,
   Upload,
-  User,
   Workflow,
-}
-
-function SidebarCampusArtwork() {
-  return (
-    <div className="relative h-40 shrink-0 overflow-hidden" aria-hidden="true">
-      <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-b from-[#1e3456] via-[#709ac5] to-[#c9dfed]" />
-      <Image
-        src={campusImage}
-        alt=""
-        fill
-        sizes="275px"
-        className="object-cover object-[51%_64%] [mask-image:linear-gradient(to_bottom,transparent_0%,black_24%,black_100%)]"
-      />
-      <div className="absolute -top-12 left-[-15%] h-20 w-[140%] rotate-[-8deg] rounded-[50%] border-b-[9px] border-[#bd1931] bg-[#101b32]" />
-    </div>
-  )
 }
 
 export function Sidebar({
   role,
+  actions,
   onCloseMobile,
   collapsed = false,
   onToggleCollapsed,
@@ -108,93 +95,77 @@ export function Sidebar({
     .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
     .sort((a, b) => b.length - a.length)[0]
 
-  // 'auto' thu gọn bằng CSS ở khoảng tablet (768–1279px) nên không nhấp nháy khi tải trang.
-  // Tailwind chỉ sinh class viết nguyên văn, nên mỗi biến thể được liệt kê đầy đủ.
-  const asideWidth =
-    collapsed === true
-      ? 'w-[76px]'
-      : collapsed === 'auto'
-        ? 'w-[280px] max-w-[86vw] md:max-xl:w-[76px]'
-        : 'w-[280px] max-w-[86vw]'
-  const hideWhenCollapsed =
-    collapsed === true ? 'hidden' : collapsed === 'auto' ? 'md:max-xl:hidden' : ''
-  const showWhenCollapsed =
-    collapsed === true ? '' : collapsed === 'auto' ? 'hidden md:max-xl:block' : 'hidden'
-  const centerWhenCollapsed =
-    collapsed === true
-      ? 'justify-center px-2'
-      : collapsed === 'auto'
-        ? 'md:max-xl:justify-center md:max-xl:px-2'
-        : ''
-
   return (
     <aside
-      className={`flex h-full flex-col overflow-hidden bg-[#101b32] text-[#aeb9cd] transition-[width] duration-200 ${asideWidth}`}
+      data-collapsed={collapsed}
+      className={`${styles.sidebar} flex h-full max-w-[86vw] flex-col overflow-hidden bg-[#101b32] text-[#aeb9cd] motion-safe:transition-[width] motion-safe:duration-300 motion-safe:ease-in-out`}
     >
       <div
-        className={`relative flex h-[76px] shrink-0 items-center gap-2.5 border-b border-white/10 px-4 ${centerWhenCollapsed}`}
+        className={`${styles.brand} relative flex shrink-0 items-center border-b border-white/10`}
       >
+        <span className="sr-only">UniLake AI</span>
         <Image
-          src="/logo.png"
-          alt="UniLake AI"
-          width={48}
-          height={48}
-          className="size-12 shrink-0 object-contain"
+          src={logo}
+          alt=""
+          width={36}
+          height={36}
+          className={`${styles.compactMark} pointer-events-none absolute left-1/2 top-2 size-9 -translate-x-1/2 object-contain`}
         />
-        <div className={`min-w-0 flex-1 ${hideWhenCollapsed}`}>
-          <div className="truncate text-[21px] font-bold leading-6 tracking-tight text-white">
-            UniLake <span className="text-[#efad35]">AI</span>
-          </div>
-          <div className="truncate text-[10px] font-semibold tracking-[.07em] text-white/80">
-            DUY TÂN UNIVERSITY
+        <Image
+          src={logoText}
+          alt=""
+          width={192}
+          height={64}
+          className={`${styles.details} pointer-events-none absolute left-3 h-auto w-48 max-w-none`}
+        />
+        {onToggleCollapsed && (
+          <button
+            type="button"
+            onClick={onToggleCollapsed}
+            aria-controls="workspace-navigation"
+            className={`${styles.toggle} absolute grid size-8 place-items-center rounded-md border border-white/20 text-white transition-colors hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2`}
+          >
+            <PanelLeftOpen className={`${styles.compactMark} absolute size-4`} aria-hidden="true" />
+            <PanelLeftClose className={`${styles.details} size-4`} aria-hidden="true" />
+            <span className={`${styles.expandedLabel} sr-only`}>Thu gọn thanh điều hướng</span>
+            <span className={`${styles.compactLabel} sr-only`}>Mở rộng thanh điều hướng</span>
+          </button>
+        )}
+      </div>
+
+      <div className={styles.section}>
+        <div className="overflow-hidden">
+          <div className="px-6 pb-3 pt-4">
+            <p className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[.13em] text-[#a8b1c5]">
+              Phân hệ vai trò (RBAC)
+            </p>
+            <p className="mt-1 truncate text-sm font-semibold text-white">{roleDef.name}</p>
           </div>
         </div>
-        <span
-          className={`rounded-md bg-white/10 px-1.5 py-0.5 text-xs font-bold text-white/90 ${onCloseMobile ? 'hidden' : hideWhenCollapsed}`}
-        >
-          v1.0
-        </span>
-        <span className="absolute bottom-0 right-0 h-1 w-20 rounded-t-full bg-[#bd1931]" />
       </div>
-      {/* Role Workspace */}
-      <div className={`px-7 pb-3 pt-5 ${hideWhenCollapsed}`}>
-        <p className="text-[10px] font-semibold uppercase tracking-[.13em] text-[#a8b1c5]">
-          Phân hệ vai trò (RBAC)
-        </p>
-        <div className="mt-1 flex items-center justify-between gap-2">
-          <p className="truncate text-sm font-semibold text-white">{roleDef.name}</p>
-          <span className="text-xs font-bold text-white/85">v1.0</span>
+
+      {!getDepartmentDomain(role) && role !== 'DATA_ADMIN' && (
+        <div className="px-2 pb-1">
+          <DomainSelector side={onCloseMobile ? 'bottom' : 'right'} />
         </div>
-      </div>
-      {onToggleCollapsed && (
-        <button
-          type="button"
-          onClick={onToggleCollapsed}
-          className="mx-3 mb-2 hidden items-center justify-center gap-2 rounded-lg p-1.5 text-xs text-white/70 hover:bg-white/10 md:flex xl:hidden"
-          // Nút chỉ hiện ở tablet, nơi chế độ 'auto' đang thu gọn.
-          aria-label={collapsed === false ? 'Thu gọn thanh điều hướng' : 'Mở rộng thanh điều hướng'}
-        >
-          <PanelLeftOpen className={`size-5 ${showWhenCollapsed}`} aria-hidden="true" />
-          <span className={`flex items-center gap-2 ${hideWhenCollapsed}`} aria-hidden="true">
-            <PanelLeftClose className="size-4" /> Thu gọn
-          </span>
-        </button>
       )}
 
-      {/* Navigation Menu */}
       <nav
-        className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-1 [scrollbar-width:thin]"
+        id={onToggleCollapsed ? 'workspace-navigation' : undefined}
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden p-2 [scrollbar-width:none]"
         aria-label="Điều hướng chính"
       >
         {menuGroups.map((group, groupIdx) => (
           <div key={group.groupTitle ?? groupIdx}>
             {group.groupTitle &&
               (menuGroups.length > 1 ? (
-                <h3
-                  className={`px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#8999b4] ${hideWhenCollapsed}`}
-                >
-                  {group.groupTitle}
-                </h3>
+                <div className={styles.section}>
+                  <div className="overflow-hidden">
+                    <h3 className="truncate px-4 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#8999b4]">
+                      {group.groupTitle}
+                    </h3>
+                  </div>
+                </div>
               ) : (
                 <h3 className="sr-only">{group.groupTitle}</h3>
               ))}
@@ -209,18 +180,23 @@ export function Sidebar({
                       href={item.href}
                       onClick={onCloseMobile}
                       aria-current={isActive ? 'page' : undefined}
-                      title={collapsed === false ? undefined : item.title}
-                      className={`flex h-11 items-center gap-3 rounded-[10px] px-4 text-[14px] transition-colors duration-150 ${centerWhenCollapsed} ${
+                      aria-label={item.title}
+                      title={onToggleCollapsed ? item.title : undefined}
+                      className={`flex h-11 items-center gap-3 overflow-hidden rounded-[10px] px-5 text-[14px] transition-colors duration-150 ${
                         isActive
                           ? 'bg-[#b91830] font-semibold text-white shadow-sm'
                           : 'font-medium text-[#e2e7f0] hover:bg-white/10 hover:text-white'
                       }`}
                     >
                       <IconComponent className="size-5 shrink-0" />
-                      <span className={`flex-1 truncate ${hideWhenCollapsed}`}>{item.title}</span>
+                      <span
+                        className={`${styles.details} line-clamp-2 min-w-0 flex-1 leading-snug`}
+                      >
+                        {item.title}
+                      </span>
                       {item.badge && (
                         <span
-                          className={`rounded px-1.5 py-px font-mono text-[9px] font-bold uppercase ${hideWhenCollapsed} ${
+                          className={`${styles.details} rounded px-1.5 py-px font-mono text-[9px] font-bold uppercase ${
                             isActive ? 'bg-white/20 text-white' : 'bg-white/10 text-white/80'
                           }`}
                         >
@@ -234,22 +210,8 @@ export function Sidebar({
             </ul>
           </div>
         ))}
+        {actions && <div className="space-y-1 border-t border-white/10 pt-2">{actions}</div>}
       </nav>
-
-      <div className={`shrink-0 ${hideWhenCollapsed}`}>
-        <SidebarCampusArtwork />
-        <div className="mx-3 mb-3 rounded-xl border border-white/10 bg-white/10 p-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-white">Kiến trúc dữ liệu</span>
-            <span className="rounded bg-[#b91830] px-1.5 py-0.5 text-[10px] font-semibold text-white">
-              Lakehouse
-            </span>
-          </div>
-          <p className="mt-2 text-[10px] leading-4 text-[#d5dceb]">
-            Bronze (thô) → Silver (chuẩn hoá) → Gold (tích hợp)
-          </p>
-        </div>
-      </div>
     </aside>
   )
 }

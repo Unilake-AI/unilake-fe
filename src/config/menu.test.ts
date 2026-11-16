@@ -54,18 +54,15 @@ describe('ROLE_MENUS', () => {
       '/staff/upload',
       '/staff/ingestion',
       '/staff/quality-issues',
-      '/staff/profile',
     ])
     expect(ROLE_MENUS.ADMIN[0]?.items.map((item) => item.href)).toContain('/admin')
     expect(ROLE_MENUS.DATA_ADMIN.flatMap((g) => g.items.map((item) => item.href))).toEqual([
       '/data',
       '/data/sources',
       '/data/datasets',
-      '/data/ingestion',
       '/data/workers',
       '/data/profiles',
       '/data/cleaning',
-      '/data/auto-pipeline',
       '/data/quarantine',
       '/data/quality',
       '/data/silver',

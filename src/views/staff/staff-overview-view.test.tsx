@@ -64,7 +64,7 @@ describe('StaffOverviewView', () => {
       username: 'admissions_staff_1',
     },
   ])(
-    'hiển thị đúng ngữ cảnh cho $role ($domain)',
+    'hiển thị thống kê và các thao tác cho $role ($domain)',
     async ({ role, domain, domainName, departmentName, username }) => {
       http.defaults.adapter = (config) => {
         const key = `${config.method} ${config.url}`
@@ -119,14 +119,9 @@ describe('StaffOverviewView', () => {
 
       const { client } = renderWithClient()
       try {
-        expect(await screen.findByText(username)).toBeInTheDocument()
-        expect(screen.getByText(domainName)).toBeInTheDocument()
-        expect(screen.getByText(departmentName)).toBeInTheDocument()
         expect(await screen.findByText('12')).toBeInTheDocument()
-        expect(screen.getByRole('link', { name: 'Nạp dữ liệu' })).toHaveAttribute(
-          'href',
-          '/staff/upload'
-        )
+        expect(screen.queryByText('Lĩnh vực được cấp:')).not.toBeInTheDocument()
+        expect(screen.queryByRole('link', { name: 'Nạp dữ liệu' })).not.toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'Yêu cầu dữ liệu lỗi' })).toHaveAttribute(
           'href',
           '/staff/quality-issues'

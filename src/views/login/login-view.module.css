@@ -70,72 +70,42 @@
   position: relative;
   min-width: 0;
   min-height: 830px;
-  padding: clamp(35px, 4vw, 58px) 4vw 390px max(7vw, 48px);
-}
-.brandRow {
-  position: relative;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  white-space: nowrap;
-}
-.universityLogo {
-  display: block;
-  width: 175px;
-  height: auto;
-}
-.brandDivider {
-  width: 1px;
-  height: 45px;
-  background: #9bacbf77;
-}
-.uniLakeBrand,
-.cardLake {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: clamp(19px, 1.6vw, 25px);
-  font-weight: 800;
-  letter-spacing: -0.04em;
-}
-.databaseMark {
-  display: inline-flex;
-  color: #be1730;
+  padding: clamp(56px, 10svh, 104px) 4vw 390px 8vw;
 }
 .introCopy {
   position: relative;
   z-index: 3;
-  max-width: 570px;
-  margin-top: 32px;
-}
-.redRule {
-  display: block;
-  width: 46px;
-  height: 4px;
-  margin-bottom: 15px;
-  background: #be1730;
-  border-radius: 4px;
+  max-width: 620px;
 }
 .introCopy h1 {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1vw, 14px);
   color: #b51631;
   font-size: clamp(42px, 3.65vw, 58px);
   line-height: 1;
   letter-spacing: -0.065em;
   font-weight: 800;
 }
+.introLogo {
+  display: block;
+  flex-shrink: 0;
+  width: clamp(58px, 6vw, 96px);
+  height: auto;
+  margin-left: -6px;
+}
 .introTagline {
-  margin-top: 5px;
+  margin-top: 6px;
   font-size: clamp(27px, 2.35vw, 37px);
   line-height: 1.1;
   font-weight: 800;
   letter-spacing: -0.045em;
 }
 .introDescription {
-  max-width: 540px;
-  margin-top: 20px;
+  max-width: 55ch;
+  margin-top: 16px;
   font-size: clamp(14px, 1vw, 16px);
-  line-height: 1.55;
+  line-height: 1.6;
   color: #28364b;
 }
 .features {
@@ -143,9 +113,9 @@
   z-index: 3;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  width: min(710px, 100%);
-  margin-top: 26px;
+  gap: clamp(8px, 1.1vw, 18px);
+  width: min(760px, 100%);
+  margin-top: 24px;
 }
 .features li {
   display: flex;
@@ -224,46 +194,6 @@
     0 4px 15px #33435a12,
     inset 0 1px 1px #fff;
   backdrop-filter: blur(18px);
-}
-.cardBrand {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  min-height: 149px;
-}
-.cardBrandText {
-  position: relative;
-  z-index: 1;
-  flex: 1;
-  min-width: 0;
-}
-.cardBrandText > img {
-  width: 155px;
-  height: auto;
-  display: block;
-}
-.cardLake {
-  margin-top: 13px;
-  font-size: 26px;
-}
-.cardBrandText p {
-  margin-top: 8px;
-  max-width: 245px;
-  color: #344057;
-  font-size: 11px;
-  line-height: 1.3;
-}
-.lakeArt {
-  align-self: flex-start;
-  width: 155px;
-  min-width: 132px;
-  margin: -20px -13px 0 -29px;
-}
-.cardDivider {
-  height: 1px;
-  background: #e9e6ec;
-  margin: 0 0 25px;
 }
 .formHeading h2 {
   font-size: 31px;
@@ -443,9 +373,6 @@
   .page {
     min-height: 100svh;
   }
-  .intro {
-    padding-left: max(7vw, calc((100vw - 1680px) / 2));
-  }
   .campus {
     max-width: 1050px;
   }
@@ -489,32 +416,11 @@
     min-height: 0;
     padding: 24px 5vw 30px;
   }
-  .brandRow {
-    gap: 14px;
-  }
-  .universityLogo {
-    width: 142px;
-  }
-  .brandDivider {
-    height: 34px;
-  }
-  .uniLakeBrand {
-    font-size: 20px;
-  }
-  .introCopy {
-    margin-top: 28px;
-  }
   .introCopy h1 {
     font-size: 42px;
   }
   .introTagline {
     font-size: 26px;
-  }
-  .introDescription {
-    max-width: 630px;
-  }
-  .features {
-    max-width: 700px;
   }
   .campus {
     right: 0;
@@ -548,30 +454,6 @@
   .intro {
     padding: 20px 20px 14px;
   }
-  .brandRow {
-    gap: 11px;
-  }
-  .universityLogo {
-    width: 122px;
-  }
-  .brandDivider {
-    height: 28px;
-  }
-  .uniLakeBrand {
-    gap: 4px;
-    font-size: 16px;
-  }
-  .uniLakeBrand svg {
-    width: 18px;
-  }
-  .introCopy {
-    margin-top: 19px;
-  }
-  .redRule {
-    width: 31px;
-    height: 3px;
-    margin-bottom: 10px;
-  }
   .introCopy h1 {
     font-size: 35px;
   }
@@ -579,13 +461,13 @@
     font-size: 20px;
   }
   .introDescription {
-    margin-top: 11px;
-    font-size: 12px;
-    line-height: 1.45;
+    margin-top: 10px;
+    font-size: 13px;
+    line-height: 1.5;
   }
   .features {
-    gap: 7px;
-    margin-top: 15px;
+    gap: 8px;
+    margin-top: 16px;
   }
   .features li {
     gap: 5px;
@@ -599,7 +481,7 @@
     width: 15px;
   }
   .features strong {
-    font-size: 9px;
+    font-size: 11px;
   }
   .features small {
     display: none;
@@ -617,31 +499,6 @@
   .card {
     padding: 23px 21px 24px;
     border-radius: 24px;
-  }
-  .cardBrand {
-    min-height: 112px;
-  }
-  .cardBrandText > img {
-    width: 125px;
-  }
-  .cardLake {
-    margin-top: 8px;
-    font-size: 20px;
-  }
-  .cardLake svg {
-    width: 18px;
-  }
-  .cardBrandText p {
-    margin-top: 3px;
-    font-size: 9px;
-  }
-  .lakeArt {
-    width: 116px;
-    min-width: 106px;
-    margin: -14px -10px 0 -20px;
-  }
-  .cardDivider {
-    margin-bottom: 17px;
   }
   .formHeading h2 {
     font-size: 27px;
@@ -674,18 +531,6 @@
   }
 }
 @media (max-width: 380px) {
-  .brandRow {
-    gap: 7px;
-  }
-  .universityLogo {
-    width: 107px;
-  }
-  .uniLakeBrand {
-    font-size: 15px;
-  }
-  .introDescription {
-    font-size: 11px;
-  }
   .card {
     padding: 20px 17px 22px;
   }
@@ -716,9 +561,6 @@
 .ambient img {
   opacity: 0.7;
 }
-.intro {
-  padding-top: clamp(25px, 3vw, 42px);
-}
 .campus {
   bottom: -2%;
   width: min(96%, 760px);
@@ -747,42 +589,6 @@
   left: -87px;
   top: 42%;
   transform: none;
-}
-.cardBrand {
-  position: relative;
-}
-.lakeIllustration {
-  position: absolute;
-  top: -22px;
-  right: -14px;
-  width: 154px;
-  height: 150px;
-}
-.lakeArt {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.lakeIllustration span {
-  position: absolute;
-  left: 19%;
-  padding: 1px 4px;
-  border-radius: 3px;
-  background: #ffffffad;
-  color: #63444d;
-  font-size: 9px;
-  font-weight: 700;
-  line-height: 1.2;
-  text-shadow: 0 1px #fff;
-}
-.lakeGold {
-  top: 31%;
-}
-.lakeSilver {
-  top: 57%;
-}
-.lakeBronze {
-  top: 82%;
 }
 @media (max-width: 800px) {
   .intro {
@@ -814,22 +620,10 @@
     height: 155px;
     bottom: -20px;
   }
-  .lakeIllustration {
-    width: 118px;
-    height: 116px;
-    right: -10px;
-    top: -14px;
-  }
-  .lakeIllustration span {
-    font-size: 7px;
-  }
 }
 /* Fine tuning against the supplied 1671 × 941 reference. */
 .sky::after {
   background: #f6faff80;
-}
-.intro {
-  padding-left: 8vw;
 }
 .leavesTop {
   width: clamp(135px, 11vw, 182px);
@@ -846,81 +640,7 @@
   height: 60%;
   bottom: 0;
 }
-.universityLogo,
-.cardUniversityLogo {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  white-space: nowrap;
-}
-.universityLogo img,
-.cardUniversityLogo img {
-  flex: none;
-  width: clamp(48px, 3.6vw, 60px);
-  height: auto;
-}
-.universityLogo span,
-.cardUniversityLogo span {
-  display: flex;
-  flex-direction: column;
-  line-height: 0.89;
-}
-.universityLogo strong,
-.cardUniversityLogo strong {
-  color: #b81631;
-  font-size: clamp(22px, 1.9vw, 31px);
-  font-weight: 800;
-  letter-spacing: -0.06em;
-}
-.universityLogo small,
-.cardUniversityLogo small {
-  margin-top: 5px;
-  color: #283246;
-  font-size: clamp(13px, 1.1vw, 18px);
-  font-weight: 400;
-  letter-spacing: 0.035em;
-}
-.uniLakeBrand svg,
-.cardLake svg {
-  display: block;
-  width: clamp(26px, 2.7vw, 39px);
-  height: auto;
-}
-.cardUniversityLogo img {
-  width: clamp(44px, 3.6vw, 58px);
-}
-.cardUniversityLogo strong {
-  font-size: clamp(20px, 1.85vw, 30px);
-}
-.cardUniversityLogo small {
-  font-size: clamp(12px, 1.05vw, 17px);
-}
-.lakeIllustration {
-  top: -13px;
-  right: -13px;
-  width: 170px;
-  height: 160px;
-}
-.lakeIllustration span {
-  left: 18%;
-  padding: 0 3px;
-  background: #ffffff9e;
-  color: #412b34;
-  font-size: 10px;
-}
-.lakeGold {
-  top: 29%;
-}
-.lakeSilver {
-  top: 53%;
-}
-.lakeBronze {
-  top: 76%;
-}
 @media (min-width: 1600px) {
-  .introCopy {
-    margin-top: 52px;
-  }
   .introCopy h1 {
     font-size: 64px;
   }
@@ -928,19 +648,13 @@
     font-size: 40px;
   }
   .introDescription {
-    max-width: 650px;
-    margin-top: 25px;
-    font-size: 16px;
-  }
-  .features {
-    margin-top: 39px;
-    width: 790px;
+    margin-top: 18px;
   }
   .features strong {
-    font-size: 16px;
+    font-size: 15px;
   }
   .features small {
-    font-size: 13px;
+    font-size: 12px;
   }
   .featureIcon {
     width: 51px;
@@ -954,12 +668,6 @@
     width: min(100%, 635px);
     max-width: 635px;
     padding: 40px 58px 44px;
-  }
-  .cardBrand {
-    min-height: 190px;
-  }
-  .cardDivider {
-    margin-bottom: 28px;
   }
   .formHeading h2 {
     font-size: 36px;
@@ -992,15 +700,6 @@
   .notice strong {
     font-size: 16px;
   }
-  .lakeIllustration {
-    top: -4px;
-    right: -7px;
-    width: 195px;
-    height: 190px;
-  }
-  .lakeIllustration span {
-    font-size: 13px;
-  }
 }
 @media (max-width: 800px) {
   .intro {
@@ -1019,39 +718,6 @@
   .intro {
     padding-left: 20px;
   }
-  .universityLogo img {
-    width: 32px;
-  }
-  .universityLogo strong {
-    font-size: 16px;
-  }
-  .universityLogo small {
-    font-size: 9px;
-    margin-top: 2px;
-  }
-  .cardUniversityLogo img {
-    width: 39px;
-  }
-  .cardUniversityLogo strong {
-    font-size: 18px;
-  }
-  .cardUniversityLogo small {
-    font-size: 10px;
-    margin-top: 3px;
-  }
-  .uniLakeBrand svg,
-  .cardLake svg {
-    width: 18px;
-  }
-  .lakeIllustration {
-    width: 118px;
-    height: 116px;
-    top: -12px;
-    right: -8px;
-  }
-  .lakeIllustration span {
-    font-size: 8px;
-  }
   .campus {
     width: 65%;
     height: 155px;
@@ -1059,33 +725,13 @@
   }
 }
 /* Match vertical landmarks in the 1671 × 941 reference. */
-.cardBrandText {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
 .campus {
   height: 52%;
   bottom: -35px;
 }
-.lakeSilver {
-  top: 48%;
-}
-.lakeBronze {
-  top: 68%;
-}
 @media (min-width: 1600px) {
-  .introCopy {
-    margin-top: 35px;
-  }
-  .features {
-    margin-top: 31px;
-  }
   .card {
     padding-bottom: 34px;
-  }
-  .cardBrand {
-    min-height: 185px;
   }
   .form {
     margin-top: 28px;
@@ -1115,34 +761,16 @@
     bottom: -20px;
   }
 }
-.features {
-  margin-left: -2vw;
-}
 .campus {
   left: 58px;
   bottom: -55px;
 }
 @media (min-width: 1600px) {
-  .brandRow {
-    gap: 37px;
-  }
-  .universityLogo {
-    width: 195px;
-  }
-  .features {
-    width: 830px;
-  }
-  .cardLake {
-    margin-top: 23px;
-  }
   .campus {
     left: 75px;
   }
 }
 @media (max-width: 800px) {
-  .features {
-    margin-left: 0;
-  }
   .campus {
     bottom: -30px;
     right: 0;
@@ -1163,15 +791,6 @@
     linear-gradient(to right, #000 69%, transparent 82%);
   -webkit-mask-composite: source-in;
   mask-composite: intersect;
-}
-.lakeGold {
-  top: 21%;
-}
-.lakeSilver {
-  top: 40%;
-}
-.lakeBronze {
-  top: 60%;
 }
 /* Keep the real building's ground visible while blending the sky and right edge. */
 .campus {

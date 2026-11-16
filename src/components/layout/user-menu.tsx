@@ -1,17 +1,19 @@
 'use client'
 
+import { useEffect, useId, useRef, useState } from 'react'
+
 import Link from 'next/link'
 
-import { Check, ChevronDown, LogOut, Settings, Shield, User } from 'lucide-react'
+import { Check, ChevronDown, LogOut, Settings, Shield } from 'lucide-react'
 
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import {
   ROLE_DEFINITIONS,
   ROLE_PRIORITY,
@@ -20,6 +22,10 @@ import {
 } from '@/config/roles'
 import { useAuth } from '@/hooks/use-auth'
 import type { UserMenuProps } from '@/types/layout/user-menu'
+import { SessionsPanel } from '@/views/admin/sessions-panel'
+
+const actionClass =
+  'flex h-10 w-full items-center gap-3 rounded-lg px-5 text-left text-sm font-medium transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2'
 
 export function getInitials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean)
@@ -28,108 +34,130 @@ export function getInitials(name: string): string {
   return `${words[words.length - 2]![0]}${words[words.length - 1]![0]}`.toUpperCase()
 }
 
-export function UserMenu({ role }: UserMenuProps) {
+export function UserMenu({ role, onNavigate }: UserMenuProps) {
   const { user, roles, logout, isLoggingOut } = useAuth()
-  const roleDef = ROLE_DEFINITIONS[role]
+  const [expanded, setExpanded] = useState(false)
+  const actionsId = useId()
+  const actions = useRef<HTMLDivElement>(null)
   const displayName = user?.fullName ?? user?.username ?? 'Người dùng'
-  const username = user?.username ?? displayName
-  const secondaryLine = user?.email ?? user?.username ?? 'Chưa đăng nhập'
-  // Giữ thứ tự ưu tiên vai trò để danh sách không nhảy khi token đổi thứ tự.
+  const secondaryLine = user?.email ?? user?.username
+  const isStaff = getWorkspaceForRole(role) === 'STAFF'
   const switchableRoles = ROLE_PRIORITY.filter((item) => roles.includes(item))
 
+  useEffect(() => {
+    if (expanded) actions.current?.scrollIntoView?.({ block: 'nearest' })
+  }, [expanded])
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
+    <div>
+      <button
+        type="button"
         aria-label="Mở menu người dùng"
-        className="relative flex h-[54px] min-w-0 items-center gap-2.5 rounded-[13px] border border-[#d7ddea] bg-white py-1 pl-1.5 pr-3 text-left shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830] data-[state=open]:border-[#b91830]"
+        aria-controls={actionsId}
+        aria-expanded={expanded}
+        title={displayName}
+        onClick={() => setExpanded(!expanded)}
+        className="group flex h-11 w-full items-center gap-3 overflow-hidden rounded-[10px] px-[18px] text-left text-sm font-medium text-slate-200 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 aria-expanded:bg-white/10"
       >
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e9eaff] text-xs font-bold text-[#3429c7]">
+        <span
+          aria-hidden="true"
+          className="grid size-6 shrink-0 place-items-center rounded-full bg-rose-100 text-[10px] font-bold text-rose-800"
+        >
           {getInitials(displayName)}
         </span>
-        <span className="hidden min-w-0 flex-col lg:flex">
-          <span className="flex items-center gap-1.5">
-            <span className="max-w-28 truncate text-[13px] font-semibold text-[#17233d]">
-              {username}
-            </span>
-            <span className="hidden rounded border border-[#cdd1ff] bg-[#f0f0ff] px-1.5 py-px text-[10px] font-bold text-[#3429c7] xl:inline">
-              [{role}]
-            </span>
-          </span>
-          <span className="truncate text-[12px] text-[#596884]">{roleDef.name}</span>
+        <span className="min-w-0 flex-1 items-center justify-between gap-2 pr-0.5 [display:var(--sidebar-label-display,flex)]">
+          <span className="min-w-0 truncate">{displayName}</span>
+          <ChevronDown
+            className="size-4 shrink-0 text-slate-400 transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none"
+            aria-hidden="true"
+          />
         </span>
-        <ChevronDown className="size-4 shrink-0 text-[#34486c]" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
-        <div className="space-y-0.5 px-2 py-1.5">
-          <div className="flex items-center gap-1.5">
-            <p className="min-w-0 flex-1 truncate text-sm font-bold text-slate-900">
-              {displayName}
-            </p>
-            <span className="rounded border border-indigo-200 bg-indigo-50 px-1.5 py-px font-mono text-[10px] font-bold text-indigo-700">
-              [{role}]
-            </span>
-          </div>
-          <p className="truncate font-mono text-[10px] font-medium text-slate-500">
-            {secondaryLine}
-          </p>
-          <p className="text-[11px] text-slate-600">{roleDef.description}</p>
-        </div>
-        {switchableRoles.length > 1 && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel className="font-mono text-[10px] font-medium uppercase tracking-wider text-slate-400">
-              Chuyển không gian làm việc
-            </DropdownMenuLabel>
-            {switchableRoles.map((item) => {
-              const selected = item === role
-              return (
-                <DropdownMenuItem
-                  key={item}
-                  asChild
-                  className={
-                    selected
-                      ? 'bg-indigo-50 text-indigo-700 focus:bg-indigo-50 focus:text-indigo-700'
-                      : 'text-slate-700'
-                  }
+      </button>
+
+      <div id={actionsId} ref={actions} hidden={!expanded} className="mt-1 space-y-1">
+        <Dialog>
+          <DialogTrigger asChild>
+            <button
+              type="button"
+              aria-label="Cài đặt"
+              title="Cài đặt"
+              className={`${actionClass} text-slate-200 hover:text-white`}
+            >
+              <Settings className="size-5 shrink-0" aria-hidden="true" />
+              <span className="[display:var(--sidebar-label-display,flex)]">Cài đặt</span>
+            </button>
+          </DialogTrigger>
+          <DialogContent className="max-h-[calc(100dvh_-_2rem)] w-[calc(100%_-_2rem)] max-w-3xl overflow-y-auto rounded-xl bg-white">
+            <DialogTitle>Cài đặt tài khoản</DialogTitle>
+            <DialogDescription>Thông tin tài khoản và không gian làm việc.</DialogDescription>
+            <div className="min-w-0 rounded-lg bg-slate-50 p-3">
+              <p className="break-words text-sm font-semibold text-slate-900">{displayName}</p>
+              {secondaryLine && secondaryLine !== displayName && (
+                <p className="break-words text-xs text-slate-500">{secondaryLine}</p>
+              )}
+              <p className="mt-1 text-xs font-medium text-slate-600">
+                {ROLE_DEFINITIONS[role].name}
+              </p>
+            </div>
+
+            {switchableRoles.length > 1 && (
+              <div>
+                <p className="mb-1 text-sm font-medium text-slate-600">
+                  Chuyển không gian làm việc
+                </p>
+                <ul className="space-y-1">
+                  {switchableRoles.map((item) => (
+                    <li key={item}>
+                      <DialogClose asChild>
+                        <Link
+                          href={ROLE_ROUTE_PREFIXES[item]}
+                          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                          onClick={onNavigate}
+                          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                        >
+                          <Shield className="size-4" aria-hidden="true" />
+                          <span className="flex-1">{ROLE_DEFINITIONS[item].name}</span>
+                          {item === role && (
+                            <Check className="size-4 text-rose-700" aria-label="Đang mở" />
+                          )}
+                        </Link>
+                      </DialogClose>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {isStaff ? (
+              <DialogClose asChild>
+                <Link
+                  href="/staff/profile"
+                  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                  onClick={onNavigate}
+                  className="text-sm font-medium text-rose-700 hover:underline"
                 >
-                  <Link href={ROLE_ROUTE_PREFIXES[item]}>
-                    <Shield className={selected ? 'text-indigo-600' : 'text-slate-500'} />
-                    <span className="flex-1">{ROLE_DEFINITIONS[item].name}</span>
-                    {selected && <Check className="text-indigo-600" aria-label="Đang mở" />}
-                  </Link>
-                </DropdownMenuItem>
-              )
-            })}
-          </>
-        )}
-        <DropdownMenuSeparator />
-        {getWorkspaceForRole(role) === 'STAFF' ? (
-          <DropdownMenuItem asChild className="text-slate-700">
-            <Link href="/staff/profile">
-              <User className="text-slate-500" />
-              Hồ sơ cá nhân / Phiên đăng nhập
-            </Link>
-          </DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem disabled className="text-slate-700">
-            <User className="text-slate-500" />
-            Hồ sơ cá nhân
-          </DropdownMenuItem>
-        )}
-        <DropdownMenuItem disabled className="text-slate-700">
-          <Settings className="text-slate-500" />
-          Cài đặt
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
+                  Hồ sơ cá nhân và phiên đăng nhập
+                </Link>
+              </DialogClose>
+            ) : (
+              <SessionsPanel />
+            )}
+          </DialogContent>
+        </Dialog>
+        <button
+          type="button"
+          aria-label={isLoggingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}
+          title="Đăng xuất"
           disabled={isLoggingOut}
-          onSelect={() => logout()}
-          className="text-rose-600 focus:bg-rose-50 focus:text-rose-700"
+          onClick={() => logout()}
+          className={`${actionClass} text-rose-200 hover:text-rose-100 disabled:opacity-50`}
         >
-          <LogOut />
-          {isLoggingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <LogOut className="size-5 shrink-0" aria-hidden="true" />
+          <span className="[display:var(--sidebar-label-display,flex)]">
+            {isLoggingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}
+          </span>
+        </button>
+      </div>
+    </div>
   )
 }

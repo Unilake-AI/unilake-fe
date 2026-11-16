@@ -9,18 +9,16 @@ import { ArrowRight, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 
 import { getApiErrorMessage } from '@/api/http'
 import { API_ListDatasets } from '@/api/shared/datasets'
-import { API_GetQualityIssueStats, API_ListQualityIssues } from '@/api/shared/quality-issues'
+import { API_ListQualityIssues } from '@/api/shared/quality-issues'
 import {
   Button,
   Card,
   EmptyState,
   ErrorState,
-  KpiCard,
   LoadingState,
   PageHeader,
   Tag,
   formatDateTime,
-  formatNumber,
   statusLabel,
   statusTone,
 } from '@/components/page/page-parts'
@@ -48,12 +46,6 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
     status: (statusFilter as StaffQualityIssueStatusFilter) || undefined,
     mine_only: mineOnly,
   }
-
-  const statsQuery = useQuery({
-    queryKey: ['quality-issues', 'stats', filterParams],
-    queryFn: () => API_GetQualityIssueStats(filterParams),
-    refetchInterval: 15_000,
-  })
 
   const issuesQuery = useQuery({
     queryKey: ['quality-issues', 'list', { ...filterParams, limit: PAGE_SIZE, offset }],
@@ -97,11 +89,8 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
         description="Xem danh sách các vấn đề chất lượng dữ liệu trong phạm vi đơn vị, tải tệp đã sửa và gửi báo cáo xác minh."
         actions={
           <Button
-            onClick={() => {
-              void issuesQuery.refetch()
-              void statsQuery.refetch()
-            }}
-            disabled={issuesQuery.isFetching || statsQuery.isFetching}
+            onClick={() => void issuesQuery.refetch()}
+            disabled={issuesQuery.isFetching}
             icon={
               <RefreshCw
                 className={`size-3.5 ${issuesQuery.isFetching ? 'animate-spin' : ''}`}
@@ -113,29 +102,6 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
           </Button>
         }
       />
-
-      {/* Thống kê */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard
-          label="Tổng yêu cầu"
-          value={statsQuery.data ? formatNumber(statsQuery.data.total) : '—'}
-        />
-        <KpiCard
-          label="Cần xử lý"
-          value={statsQuery.data ? formatNumber(statsQuery.data.assigned) : '—'}
-          tone="amber"
-        />
-        <KpiCard
-          label="Chờ xác minh"
-          value={statsQuery.data ? formatNumber(statsQuery.data.pending_verification) : '—'}
-          tone="sky"
-        />
-        <KpiCard
-          label="Đã xác minh"
-          value={statsQuery.data ? formatNumber(statsQuery.data.verified) : '—'}
-          tone="emerald"
-        />
-      </div>
 
       {/* Bộ lọc */}
       <Card>

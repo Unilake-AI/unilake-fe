@@ -25,7 +25,6 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
       items: [
         { title: 'Nguồn dữ liệu', href: '/data/sources', iconName: 'Database' },
         { title: 'Bộ dữ liệu (Datasets)', href: '/data/datasets', iconName: 'Layers' },
-        { title: 'Nạp dữ liệu (Ingestion)', href: '/data/ingestion', iconName: 'Upload' },
         { title: 'Giám sát Worker', href: '/data/workers', iconName: 'HardDrive' },
       ],
     },
@@ -34,7 +33,6 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
       items: [
         { title: 'Cấu hình Silver (Profiles)', href: '/data/profiles', iconName: 'Settings' },
         { title: 'Làm sạch & Kiểm tra', href: '/data/cleaning', iconName: 'Play' },
-        { title: 'Xử lý Silver tự động', href: '/data/auto-pipeline', iconName: 'Workflow' },
         { title: 'Hồ sơ cách ly (Quarantine)', href: '/data/quarantine', iconName: 'FileWarning' },
         { title: 'Yêu cầu xử lý dữ liệu lỗi', href: '/data/quality', iconName: 'ShieldCheck' },
         { title: 'Phiên bản Silver (Snapshots)', href: '/data/silver', iconName: 'CheckCircle2' },
@@ -61,11 +59,6 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
           title: 'Yêu cầu xử lý dữ liệu lỗi',
           href: '/staff/quality-issues',
           iconName: 'ShieldCheck',
-        },
-        {
-          title: 'Hồ sơ cá nhân / Phiên đăng nhập',
-          href: '/staff/profile',
-          iconName: 'User',
         },
       ],
     },
