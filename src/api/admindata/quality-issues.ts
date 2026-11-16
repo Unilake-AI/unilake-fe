@@ -1,5 +1,7 @@
 import { http } from '@/api/http'
 import type {
+  UploadReturnPreview,
+  ApproveUploadReturnPayload,
   IssueAssigneeChoice,
   IssueAssigneeFilters,
   IssueDepartmentChoice,
@@ -45,6 +47,24 @@ export async function API_VerifyQualityIssue(
 ): Promise<QualityIssueDetail> {
   const res = await http.post<QualityIssueDetail>(
     `/data-quality-issues/${encodeURIComponent(issueId)}/verification`,
+    payload
+  )
+  return res.data
+}
+
+// Chỉ lấy gợi ý; người nạp và phòng phụ trách được backend xác định từ file nguồn.
+export async function API_PreviewUploadReturn(recordIds: string[]): Promise<UploadReturnPreview> {
+  const res = await http.post<UploadReturnPreview>('/data-quality-issues/return-preview', {
+    quarantine_record_ids: recordIds,
+  })
+  return res.data
+}
+
+export async function API_ApproveUploadReturn(
+  payload: ApproveUploadReturnPayload
+): Promise<QualityIssueDetail> {
+  const res = await http.post<QualityIssueDetail>(
+    '/data-quality-issues/return-to-uploader',
     payload
   )
   return res.data

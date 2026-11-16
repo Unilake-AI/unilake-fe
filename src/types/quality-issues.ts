@@ -28,3 +28,6 @@ export type CreateQualityIssuePayload = components['schemas']['CreateIssue']
 export type AssignQualityIssuePayload = components['schemas']['AssignIssue']
 
 export type VerifyQualityIssuePayload = components['schemas']['SubmitVerification']
+
+export type UploadReturnPreview = components['schemas']['UploadReturnPreview']
+export type ApproveUploadReturnPayload = components['schemas']['ApproveUploadReturn']

@@ -103,6 +103,25 @@ const STATUS_MESSAGES: Record<number, string> = {
 }
 
 const API_ERROR_MESSAGES = new Map([
+  ['GOLD_RETRY_NOT_ALLOWED', 'Chỉ chạy lại lượt Gold bị lỗi của bản Silver còn đang sử dụng.'],
+  [
+    'GOLD_SILVER_HEAD_CHANGED',
+    'Silver đã đổi phiên bản. Hãy làm mới danh sách trước khi tạo Gold.',
+  ],
+  ['GOLD_SOURCE_EVIDENCE_REQUIRED', 'Chưa đủ thông tin nguồn gốc Silver để tạo báo cáo Gold.'],
+  ['GOLD_JOB_NOT_FOUND', 'Không tìm thấy lượt Gold trong phạm vi được xem.'],
+  ['GOLD_REPORT_NOT_READY', 'Lượt Gold chưa công bố báo cáo. Vui lòng xem tiến độ xử lý.'],
+  [
+    'AUTO_PIPELINE_REVISION_CONFLICT',
+    'Cấu hình đã được thay đổi. Hãy tải lại phiên bản mới nhất trước khi lưu.',
+  ],
+  [
+    'AUTO_PIPELINE_RETRY_CONFLICT',
+    'Chỉ thử lại lượt thất bại có cấu hình đang bật và cùng phiên bản.',
+  ],
+  ['AUTO_PIPELINE_DATASET_MISMATCH', 'Cách xử lý không thuộc bộ dữ liệu đã chọn. Hãy chọn lại.'],
+  ['AUTO_PIPELINE_JOB_NOT_FOUND', 'Không tìm thấy lượt tự xử lý Silver trong phạm vi được xem.'],
+
   ['USER_INACTIVE', 'Tài khoản của bạn đang bị khóa. Vui lòng liên hệ quản trị viên.'],
   ['ROLE_REQUIRED', 'Tài khoản chưa được cấp quyền phù hợp. Vui lòng liên hệ quản trị viên.'],
   ['FORBIDDEN', 'Bạn không có quyền truy cập chức năng hoặc phạm vi dữ liệu này.'],

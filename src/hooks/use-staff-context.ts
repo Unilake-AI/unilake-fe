@@ -12,6 +12,7 @@ export function useStaffContext() {
     queryKey: STAFF_CONTEXT_QUERY_KEY,
     queryFn: API_GetStaffContext,
     staleTime: 60_000,
+    refetchInterval: 15_000,
     retry: (failureCount, error) => {
       if (
         axios.isAxiosError(error) &&

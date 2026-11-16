@@ -52,6 +52,7 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
   const statsQuery = useQuery({
     queryKey: ['quality-issues', 'stats', filterParams],
     queryFn: () => API_GetQualityIssueStats(filterParams),
+    refetchInterval: 15_000,
   })
 
   const issuesQuery = useQuery({
@@ -62,6 +63,7 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
         limit: PAGE_SIZE,
         offset,
       }),
+    refetchInterval: 15_000,
   })
 
   const datasetsQuery = useQuery({

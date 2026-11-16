@@ -70,6 +70,8 @@ const inputClass =
 
 function eventTypeLabel(eventType: string): string {
   switch (eventType.toUpperCase()) {
+    case 'RETURN_APPROVED':
+      return 'Quản trị duyệt trả hồ sơ về người nạp'
     case 'ASSIGNED':
       return 'Giao yêu cầu xử lý'
     case 'ASSIGNEE_CHANGED':
@@ -870,6 +872,7 @@ function IssueDetailContent({ context, issueId }: { context: StaffContext; issue
 
   const departmentName =
     context.departments.find((d) => d.department_id === issue.department_id)?.department_name ??
+    issue.department_name ??
     `Đơn vị #${issue.department_id}`
   const datasetName = datasetQuery.data?.dataset_name ?? `Bộ dữ liệu #${issue.dataset_id}`
   const sourceFilename = issue.quarantine_records.find((r) => r.source_table)?.source_table ?? '—'
