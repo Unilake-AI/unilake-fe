@@ -133,6 +133,7 @@ export function DomainsCompareView({ detailHref }: { detailHref: string }) {
   return (
     <div className="space-y-5">
       <PageHeader
+        dashboard
         breadcrumb={['Điều hành', 'Dashboard theo phân hệ']}
         title="Dashboard theo phân hệ"
         description="So sánh nhanh ba phân hệ Tuyển sinh, Đào tạo, Nhân sự. Bấm một phân hệ để xem dashboard chi tiết."

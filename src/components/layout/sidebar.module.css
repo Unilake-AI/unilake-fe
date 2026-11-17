@@ -1,81 +1,66 @@
 .sidebar {
-  width: var(--navigation-width, 280px);
-  --details-opacity: 1;
-  --compact-opacity: 0;
-  --section-rows: 1fr;
-  --expanded-label: visible;
-  --compact-label: hidden;
-  --brand-height: 76px;
-  --toggle-right: 12px;
-  --toggle-bottom: 22px;
-  --sidebar-label-display: flex;
-}
-
-.sidebar[data-collapsed='true'] {
-  --navigation-width: 76px;
-  --details-opacity: 0;
-  --compact-opacity: 1;
-  --section-rows: 0fr;
-  --expanded-label: hidden;
-  --compact-label: visible;
-  --brand-height: 92px;
-  --toggle-right: 22px;
-  --toggle-bottom: 8px;
   --sidebar-label-display: none;
+  --sidebar-label-opacity: 0;
+  --sidebar-section-rows: 0fr;
+  width: var(--workspace-rail-width);
 }
 
-@media (min-width: 768px) and (max-width: 1279px) {
-  .sidebar[data-collapsed='auto'] {
-    --navigation-width: 76px;
-    --details-opacity: 0;
-    --compact-opacity: 1;
-    --section-rows: 0fr;
-    --expanded-label: hidden;
-    --compact-label: visible;
-    --brand-height: 92px;
-    --toggle-right: 22px;
-    --toggle-bottom: 8px;
-    --sidebar-label-display: none;
-  }
+.sidebar[data-expanded='true'] {
+  --sidebar-label-display: flex;
+  --sidebar-label-opacity: 1;
+  --sidebar-section-rows: 1fr;
+  width: 240px;
 }
 
-.brand {
-  height: var(--brand-height);
-}
-
-.toggle {
-  right: var(--toggle-right);
-  bottom: var(--toggle-bottom);
+.sidebar[data-mobile='true'] {
+  width: 100%;
 }
 
 .details {
-  opacity: var(--details-opacity);
+  min-width: 0;
+  flex: 1;
+  opacity: var(--sidebar-label-opacity);
 }
 
-.compactMark {
-  opacity: var(--compact-opacity);
+.sidebar[data-mobile='false'] .details {
+  flex: 1 0 148px;
 }
 
 .section {
   display: grid;
-  grid-template-rows: var(--section-rows);
-  opacity: var(--details-opacity);
+  grid-template-rows: var(--sidebar-section-rows);
+  opacity: var(--sidebar-label-opacity);
 }
 
-.expandedLabel {
-  visibility: var(--expanded-label);
+.section > div {
+  min-width: 0;
+  min-height: 0;
 }
 
-.compactLabel {
-  visibility: var(--compact-label);
+.sidebar[data-mobile='false'] .section > div {
+  width: 216px;
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  .sidebar {
+    transition: width 200ms ease-in-out;
+  }
+
   .details,
-  .compactMark,
   .section {
-    transition:
-      opacity 200ms ease,
-      grid-template-rows 300ms ease-in-out;
+    transition: opacity 100ms ease-out;
+  }
+
+  .section {
+    transition-property: grid-template-rows, opacity;
+    transition-duration: 200ms, 100ms;
+  }
+
+  .sidebar[data-expanded='true'] :is(.details, .section) {
+    transition-delay: 70ms;
+  }
+
+  .sidebar[data-expanded='true'] .section {
+    transition-delay: 0ms, 70ms;
   }
 }

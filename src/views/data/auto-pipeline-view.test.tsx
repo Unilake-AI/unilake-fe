@@ -123,7 +123,8 @@ function environment(options: { missingProfile?: boolean; existing?: boolean } =
           'Chưa cấu hình tự chạy cho bộ dữ liệu này'
         )
       data = policy
-    } else if (url === '/pipeline/auto/jobs') data = [{ ...job, status }]
+    } else if (url === '/pipeline/auto/flows') data = { items: [], next_offset: null }
+    else if (url === '/pipeline/auto/jobs') data = [{ ...job, status }]
     else if (url === `/pipeline/auto/jobs/${jobId}`)
       data = { ...job, status, worker_id: 'silver-1', lease_expires_at: null }
     else if (url.endsWith('/attempts'))

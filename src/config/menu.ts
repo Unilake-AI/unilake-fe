@@ -25,6 +25,7 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
       items: [
         { title: 'Nguồn dữ liệu', href: '/data/sources', iconName: 'Database' },
         { title: 'Bộ dữ liệu (Datasets)', href: '/data/datasets', iconName: 'Layers' },
+        { title: 'Lịch sử nạp Bronze', href: '/data/ingestion', iconName: 'History' },
         { title: 'Giám sát Worker', href: '/data/workers', iconName: 'HardDrive' },
       ],
     },
@@ -32,6 +33,7 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
       groupTitle: 'Xử lý & Chất lượng',
       items: [
         { title: 'Cấu hình Silver (Profiles)', href: '/data/profiles', iconName: 'Settings' },
+        { title: 'Giám sát pipeline', href: '/data/auto-pipeline', iconName: 'GitBranch' },
         { title: 'Làm sạch & Kiểm tra', href: '/data/cleaning', iconName: 'Play' },
         { title: 'Hồ sơ cách ly (Quarantine)', href: '/data/quarantine', iconName: 'FileWarning' },
         { title: 'Yêu cầu xử lý dữ liệu lỗi', href: '/data/quality', iconName: 'ShieldCheck' },

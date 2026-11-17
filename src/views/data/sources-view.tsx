@@ -26,6 +26,7 @@ import {
   statusLabel,
   statusTone,
 } from '@/components/page/page-parts'
+import { TableSkeleton } from '@/components/ui/table-skeleton'
 import { SOURCE_SYSTEMS, SOURCE_TYPES } from '@/config/data-sources'
 import type { DataSourceFilter, DataSourceItem, DataSourceStatusFilter } from '@/types/data-sources'
 
@@ -252,11 +253,12 @@ export function SourcesView() {
         bodyClassName="p-0"
       >
         {list.isPending ? (
-          <LoadingState />
+          <TableSkeleton columns={8} />
         ) : list.isError ? (
           <div className="p-4">
             <ErrorState
               message={getApiErrorMessage(list.error, 'Không tải được danh sách nguồn dữ liệu.')}
+              retrying={list.isFetching}
               onRetry={() => void list.refetch()}
             />
           </div>
@@ -354,6 +356,10 @@ export function SourcesView() {
                         </Link>
                         <Button
                           variant="ghost"
+                          loading={
+                            toggle.isPending &&
+                            toggle.variables?.data_source_id === source.data_source_id
+                          }
                           disabled={toggle.isPending}
                           onClick={() => toggle.mutate(source)}
                           aria-label={`${source.is_active ? 'Tắt' : 'Bật'} nguồn ${source.source_name}`}
@@ -411,6 +417,7 @@ export function SourcesView() {
           ) : detailQuery.isError ? (
             <ErrorState
               message={getApiErrorMessage(detailQuery.error, 'Không tải được chi tiết nguồn.')}
+              retrying={detailQuery.isFetching}
               onRetry={() => void detailQuery.refetch()}
             />
           ) : (

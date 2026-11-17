@@ -53,6 +53,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { TableSkeleton } from '@/components/ui/table-skeleton'
 
 import { CreateIssuePanel } from './create-quality-issue-panel'
 import { domainLabel } from './data-helpers'
@@ -157,6 +158,7 @@ function IssueDetailPanel({ issueId }: { issueId: string }) {
     return (
       <ErrorState
         message={getApiErrorMessage(detailQuery.error, 'Không tải được chi tiết yêu cầu.')}
+        retrying={detailQuery.isFetching}
         onRetry={() => void detailQuery.refetch()}
       />
     )
@@ -237,6 +239,7 @@ function IssueDetailPanel({ issueId }: { issueId: string }) {
               ))}
             </select>
             <Button
+              loading={assignMutation.isPending}
               variant="outline"
               disabled={!assigneeId || assignMutation.isPending}
               onClick={() => assignMutation.mutate(Number(assigneeId))}
@@ -496,8 +499,8 @@ function IssueDetailPanel({ issueId }: { issueId: string }) {
               Hủy
             </Button>
             <Button
+              loading={verifyMutation.isPending}
               variant="primary"
-              disabled={verifyMutation.isPending}
               onClick={() => verifyMutation.mutate()}
             >
               {verifyMutation.isPending ? 'Đang gửi…' : 'Xác nhận'}
@@ -572,13 +575,8 @@ export function QualityView() {
                 void listQuery.refetch()
                 void statsQuery.refetch()
               }}
-              disabled={listQuery.isFetching}
-              icon={
-                <RefreshCw
-                  className={`size-3.5 ${listQuery.isFetching ? 'animate-spin' : ''}`}
-                  aria-hidden="true"
-                />
-              }
+              reading={listQuery.isFetching}
+              icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
             >
               Làm mới
             </Button>
@@ -688,11 +686,12 @@ export function QualityView() {
       <div className="grid gap-4 xl:grid-cols-[1fr_460px]">
         <Card title="Danh sách yêu cầu xử lý" bodyClassName="p-0">
           {listQuery.isPending ? (
-            <LoadingState />
+            <TableSkeleton columns={6} />
           ) : listQuery.isError ? (
             <div className="p-4">
               <ErrorState
                 message={getApiErrorMessage(listQuery.error, 'Không tải được danh sách yêu cầu.')}
+                retrying={listQuery.isFetching}
                 onRetry={() => void listQuery.refetch()}
               />
             </div>

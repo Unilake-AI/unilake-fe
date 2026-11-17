@@ -4,6 +4,7 @@
 
 :root {
   color-scheme: light;
+  scroll-padding-top: calc(var(--workspace-header-height) + 0.5rem);
 }
 
 * {
@@ -43,13 +44,13 @@ a {
 /* Giá trị là bộ ba HSL vì tailwind.config.ts bọc mỗi biến bằng hsl(var(--x)). */
 @layer base {
   :root {
-    --background: 225 42% 98%;
-    --foreground: 222 47% 11%;
+    --background: 216 45% 98%;
+    --foreground: 219 38% 16%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 219 38% 16%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 350 78% 42%;
+    --popover-foreground: 219 38% 16%;
+    --primary: 349 78% 41%;
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
@@ -60,16 +61,16 @@ a {
     --destructive: 347 77% 50%;
     --border: 214 32% 91%;
     --input: 213 27% 84%;
-    --ring: 239 84% 67%;
+    --ring: 214 69% 42%;
     --chart-1: 243 75% 59%;
     --chart-2: 161 94% 30%;
     --chart-3: 222 47% 11%;
     --chart-4: 38 92% 50%;
     --chart-5: 347 77% 50%;
-    --radius: 0.75rem;
-    --sidebar: 222 47% 11%;
+    --radius: 0.5rem;
+    --sidebar: 218 52% 13%;
     --sidebar-foreground: 215 20% 65%;
-    --sidebar-primary: 350 78% 42%;
+    --sidebar-primary: 349 78% 41%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 217 33% 17%;
     --sidebar-accent-foreground: 210 40% 96%;
@@ -111,14 +112,14 @@ a {
   }
 }
 
-.dashboard-content :is(input, select, textarea):focus-visible {
-  outline: 2px solid rgba(91, 84, 229, 0.34);
+:where(.workspace-header, .workspace-rail, .workspace-main) :focus-visible {
+  outline: 2px solid hsl(var(--ring));
   outline-offset: 1px;
 }
 
 .dashboard-content table thead {
-  background: #f0f2ff;
-  color: #34415f;
+  background: #edf2f8;
+  color: #334155;
 }
 
 .dashboard-content table tbody tr {
@@ -131,5 +132,118 @@ a {
   body {
     @apply bg-background text-foreground;
     font-feature-settings: 'cv11', 'ss01';
+  }
+}
+
+:root {
+  --workspace-header-height: 56px;
+  --workspace-rail-width: 64px;
+}
+
+.workspace-header {
+  height: var(--workspace-header-height);
+}
+
+.workspace-rail {
+  display: none;
+  top: var(--workspace-header-height);
+  bottom: 0;
+}
+
+.workspace-mobile-menu,
+.workspace-menu-overlay {
+  top: var(--workspace-header-height);
+}
+
+.workspace-main {
+  padding-top: calc(var(--workspace-header-height) + 1.25rem);
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  .workspace-rail {
+    display: block;
+  }
+
+  .workspace-main {
+    margin-left: var(--workspace-rail-width);
+  }
+
+  .workspace-menu-button,
+  .workspace-mobile-menu,
+  .workspace-menu-overlay {
+    display: none;
+  }
+}
+
+.database-loader {
+  --loader-body: hsl(var(--accent));
+  --loader-cap: hsl(var(--card));
+  --loader-layer-height: 9px;
+  --loader-cap-height: 7px;
+  --loader-cap-offset: -4px;
+  display: grid;
+  flex: none;
+  width: 32px;
+  gap: 2px;
+  padding-top: 3px;
+  color: hsl(var(--primary));
+}
+
+.database-loader-compact {
+  --loader-body: transparent;
+  --loader-cap: transparent;
+  --loader-layer-height: 4px;
+  --loader-cap-height: 4px;
+  --loader-cap-offset: -2px;
+  width: 15px;
+  gap: 1px;
+  padding-top: 1px;
+  color: inherit;
+}
+
+.database-loader > span {
+  position: relative;
+  height: var(--loader-layer-height);
+  border: 1px solid currentColor;
+  border-radius: 0 0 50% 50% / 0 0 40% 40%;
+  background: var(--loader-body);
+}
+
+.database-loader > span::before {
+  position: absolute;
+  inset: var(--loader-cap-offset) -1px auto;
+  height: var(--loader-cap-height);
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: var(--loader-cap);
+  content: '';
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .database-loader > span {
+    animation: database-loading 1350ms ease-in-out infinite;
+    animation-delay: 300ms;
+  }
+
+  .database-loader > span:nth-child(2) {
+    animation-delay: 150ms;
+  }
+
+  .database-loader > span:last-child {
+    animation-delay: 0ms;
+  }
+}
+
+@keyframes database-loading {
+  0%,
+  70%,
+  100% {
+    opacity: 0.5;
+  }
+
+  28% {
+    opacity: 1;
+    transform: translateY(-1px);
   }
 }

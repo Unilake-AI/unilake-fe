@@ -686,7 +686,7 @@ function ProfileFormPanel({
           <Button variant="outline" onClick={onClose} disabled={saveMutation.isPending}>
             Hủy
           </Button>
-          <Button type="submit" variant="primary" disabled={saveMutation.isPending}>
+          <Button loading={saveMutation.isPending} type="submit" variant="primary">
             {saveMutation.isPending ? 'Đang lưu…' : isEdit ? 'Lưu cập nhật' : 'Tạo profile'}
           </Button>
         </div>
@@ -724,13 +724,8 @@ export function ProfilesView() {
           <>
             <Button
               onClick={() => void listQuery.refetch()}
-              disabled={listQuery.isFetching}
-              icon={
-                <RefreshCw
-                  className={`size-3.5 ${listQuery.isFetching ? 'animate-spin' : ''}`}
-                  aria-hidden="true"
-                />
-              }
+              reading={listQuery.isFetching}
+              icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
             >
               Làm mới
             </Button>
@@ -768,6 +763,7 @@ export function ProfilesView() {
             <div className="p-4">
               <ErrorState
                 message={getApiErrorMessage(listQuery.error, 'Không tải được danh sách profile.')}
+                retrying={listQuery.isFetching}
                 onRetry={() => void listQuery.refetch()}
               />
             </div>
@@ -860,6 +856,7 @@ export function ProfilesView() {
           ) : detailQuery.isError || !selectedProfile?.definition ? (
             <ErrorState
               message={getApiErrorMessage(detailQuery.error, 'Không tải được chi tiết profile.')}
+              retrying={detailQuery.isFetching}
               onRetry={() => void detailQuery.refetch()}
             />
           ) : (

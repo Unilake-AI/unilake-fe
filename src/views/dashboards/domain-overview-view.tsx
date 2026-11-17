@@ -28,7 +28,7 @@ import type { BusinessDomain, DomainDefinition } from '@/types/domains'
 
 import { ACADEMIC, ADMISSIONS, HR } from './dashboard-data'
 
-const CHART_COLORS = { primary: '#4f46e5', secondary: '#0ea5e9', tertiary: '#f59e0b' }
+const CHART_COLORS = { primary: '#334f72', secondary: '#557ba4', tertiary: '#a55b09' }
 
 function DomainTabs({
   value,
@@ -80,7 +80,7 @@ function AdmissionsDashboard() {
           subtitle="So sánh chỉ số qua các năm 2022 – 2026"
           right={<Tag>Gold Mart History</Tag>}
         >
-          <div className="h-64">
+          <div className="h-64 min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={ADMISSIONS.trend} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
                 <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
@@ -165,7 +165,7 @@ function AcademicDashboard() {
       </div>
       <div className="grid gap-4 xl:grid-cols-2">
         <Card title="GPA trung bình theo học kỳ" subtitle="Xu hướng 5 học kỳ gần nhất">
-          <div className="h-64">
+          <div className="h-64 min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={ACADEMIC.gpaTrend}
@@ -253,6 +253,7 @@ export function DomainOverviewView({ askHref }: { askHref: string }) {
   return (
     <div className="space-y-5">
       <PageHeader
+        dashboard
         breadcrumb={[domain.code === 'all' ? 'Tuyển sinh' : domain.shortLabel, 'Tổng quan']}
         title={meta.title}
         description={meta.description}

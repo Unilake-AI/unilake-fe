@@ -48,6 +48,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { TableSkeleton } from '@/components/ui/table-skeleton'
 import { downloadCleaningReport, reportIssues, reportText } from '@/lib/cleaning-report'
 import type { CleaningPreviewResponse, ManualCleaningResponse } from '@/types/cleaning'
 
@@ -319,6 +320,7 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
   })
 
   const reportDownload = useMutation({
+    meta: { readOnly: true },
     mutationFn: async ({ runId, format }: { runId: string; format: 'json' | 'csv' }) => {
       // Đọc lại kết quả cuối cùng trước khi xuất, kể cả khi đã mở bản báo cáo cũ trên trang.
       const report = await queryClient.fetchQuery({
@@ -331,6 +333,7 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
   })
 
   const previewMutation = useMutation({
+    meta: { readOnly: true },
     mutationFn: ({ jobId, profileId }: { jobId: number; profileId: string }) =>
       API_PreviewCleaning(jobId, profileId),
   })
@@ -577,6 +580,7 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
         )}
         <div className="mt-4 flex flex-wrap justify-end gap-2">
           <Button
+            reading={previewMutation.isPending}
             variant="outline"
             disabled={!canExecute}
             onClick={() =>
@@ -587,6 +591,7 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
             {previewMutation.isPending ? 'Đang xem trước…' : 'Xem trước (Preview)'}
           </Button>
           <Button
+            loading={runMutation.isPending}
             variant="primary"
             disabled={!canExecute}
             onClick={() => setConfirmRunOpen(true)}
@@ -637,11 +642,12 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
         </div>
 
         {runsQuery.isPending ? (
-          <LoadingState />
+          <TableSkeleton columns={6} />
         ) : runsQuery.isError ? (
           <div className="p-4">
             <ErrorState
               message={getApiErrorMessage(runsQuery.error, 'Không tải được lịch sử Cleaning.')}
+              retrying={runsQuery.isFetching}
               onRetry={() => void runsQuery.refetch()}
             />
           </div>
@@ -768,6 +774,11 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
                   <Button
                     variant="outline"
                     disabled={reportDownload.isPending}
+                    reading={
+                      reportDownload.isPending &&
+                      reportDownload.variables?.runId === selectedRunId &&
+                      reportDownload.variables?.format === 'csv'
+                    }
                     onClick={() => reportDownload.mutate({ runId: selectedRunId, format: 'csv' })}
                   >
                     Tải CSV (Excel)
@@ -775,6 +786,11 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
                   <Button
                     variant="outline"
                     disabled={reportDownload.isPending}
+                    reading={
+                      reportDownload.isPending &&
+                      reportDownload.variables?.runId === selectedRunId &&
+                      reportDownload.variables?.format === 'json'
+                    }
                     onClick={() => reportDownload.mutate({ runId: selectedRunId, format: 'json' })}
                   >
                     Tải JSON
@@ -848,6 +864,7 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
                         runReportQuery.error,
                         'Không đọc được báo cáo làm sạch.'
                       )}
+                      retrying={runReportQuery.isFetching}
                       onRetry={() => void runReportQuery.refetch()}
                     />
                   ) : (
@@ -906,8 +923,8 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
               Hủy
             </Button>
             <Button
+              loading={runMutation.isPending}
               variant="primary"
-              disabled={runMutation.isPending}
               onClick={() =>
                 runMutation.mutate({
                   jobId: parsedJobId,

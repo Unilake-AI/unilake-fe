@@ -28,6 +28,7 @@ import {
   Tag,
   formatNumber,
 } from '@/components/page/page-parts'
+import { TableSkeleton } from '@/components/ui/table-skeleton'
 import type { QualityIssueDetail } from '@/types/quality-issues'
 import type { QuarantineRecord } from '@/types/quarantine'
 
@@ -194,13 +195,8 @@ export function QuarantineView() {
               void listQuery.refetch()
               void summaryQuery.refetch()
             }}
-            disabled={listQuery.isFetching}
-            icon={
-              <RefreshCw
-                className={`size-3.5 ${listQuery.isFetching ? 'animate-spin' : ''}`}
-                aria-hidden="true"
-              />
-            }
+            reading={listQuery.isFetching}
+            icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
           >
             Làm mới
           </Button>
@@ -351,11 +347,12 @@ export function QuarantineView() {
       <div className="grid gap-4 xl:grid-cols-[1fr_420px]">
         <Card title="Danh sách hồ sơ cách ly" bodyClassName="p-0">
           {listQuery.isPending ? (
-            <LoadingState />
+            <TableSkeleton columns={6} />
           ) : listQuery.isError ? (
             <div className="p-4">
               <ErrorState
                 message={getApiErrorMessage(listQuery.error, 'Không tải được hồ sơ cách ly.')}
+                retrying={listQuery.isFetching}
                 onRetry={() => void listQuery.refetch()}
               />
             </div>
@@ -545,13 +542,14 @@ export function QuarantineView() {
                     Dữ liệu dòng nguồn (theo source_preview_columns)
                   </p>
                   {sourceQuery.isPending ? (
-                    <LoadingState label="Đang đọc dòng nguồn từ Bronze…" />
+                    <TableSkeleton columns={2} label="Đang đọc dòng nguồn từ Bronze…" />
                   ) : sourceQuery.isError ? (
                     <ErrorState
                       message={getApiErrorMessage(
                         sourceQuery.error,
                         'Không được phép hoặc không thể đọc dòng dữ liệu nguồn.'
                       )}
+                      retrying={sourceQuery.isFetching}
                       onRetry={() => void sourceQuery.refetch()}
                     />
                   ) : sourcePayload?.data ? (

@@ -36,6 +36,7 @@ import { AutoSilverForIngestion } from '@/components/data/auto-silver-jobs'
 import {
   Button,
   Card,
+  DatabaseLoader,
   EmptyState,
   ErrorState,
   KpiCard,
@@ -55,6 +56,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { TableSkeleton } from '@/components/ui/table-skeleton'
 import type { IngestionJob, IngestionJobStatusFilter } from '@/types/ingestion'
 import type { UploadDomain } from '@/types/staff-upload'
 import {
@@ -151,6 +153,7 @@ function JobDetails({
     return (
       <ErrorState
         message={getApiErrorMessage(jobQuery.error, 'Không tải được thông tin lần nạp dữ liệu.')}
+        retrying={jobQuery.isFetching}
         onRetry={() => void jobQuery.refetch()}
       />
     )
@@ -241,7 +244,8 @@ function JobDetails({
             <Button
               variant="primary"
               className="self-end"
-              disabled={isCleaning || !profileId.trim()}
+              loading={isCleaning}
+              disabled={!profileId.trim()}
               onClick={() => cleaning.mutate(profileId.trim())}
             >
               {isCleaning ? 'Đang làm sạch…' : 'Làm sạch dữ liệu'}
@@ -382,8 +386,8 @@ function JobDetails({
               Hủy
             </Button>
             <Button
+              loading={retryMutation.isPending}
               variant="primary"
-              disabled={retryMutation.isPending}
               onClick={() => retryMutation.mutate()}
             >
               {retryMutation.isPending ? 'Đang gửi…' : 'Xác nhận chạy lại'}
@@ -554,9 +558,14 @@ function RunJobPanel({
           <button
             type="submit"
             disabled={run.isPending}
+            aria-busy={run.isPending}
             className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#b91830] px-3 text-xs font-semibold text-white hover:bg-[#9e1429] disabled:opacity-70"
           >
-            <Play className="size-3.5" aria-hidden="true" />
+            {run.isPending ? (
+              <DatabaseLoader compact />
+            ) : (
+              <Play className="size-3.5" aria-hidden="true" />
+            )}
             {run.isPending ? 'Đang gửi…' : 'Chạy nạp dữ liệu'}
           </button>
         </div>
@@ -921,9 +930,9 @@ function UploadFilePanel({
 
         <div className="flex justify-end">
           <Button
+            loading={uploadMutation.isPending}
             type="submit"
             variant="primary"
-            disabled={uploadMutation.isPending}
             icon={<Upload className="size-3.5" aria-hidden="true" />}
           >
             {uploadMutation.isPending ? 'Đang tải lên…' : 'Tải lên và tạo job'}
@@ -1017,13 +1026,8 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
                 void statsQuery.refetch()
                 void metricsQuery.refetch()
               }}
-              disabled={jobs.isFetching}
-              icon={
-                <RefreshCw
-                  className={`size-3.5 ${jobs.isFetching ? 'animate-spin' : ''}`}
-                  aria-hidden="true"
-                />
-              }
+              reading={jobs.isFetching || statsQuery.isFetching || metricsQuery.isFetching}
+              icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
             >
               Làm mới
             </Button>
@@ -1175,11 +1179,12 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
         bodyClassName="p-0"
       >
         {jobs.isPending ? (
-          <LoadingState />
+          <TableSkeleton columns={8} />
         ) : jobs.isError ? (
           <div className="p-4">
             <ErrorState
               message={getApiErrorMessage(jobs.error, 'Không tải được danh sách lần nạp dữ liệu.')}
+              retrying={jobs.isFetching}
               onRetry={() => void jobs.refetch()}
             />
           </div>

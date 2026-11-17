@@ -1,94 +1,47 @@
 import type { ReactNode } from 'react'
 
-import Image from 'next/image'
-import type { StaticImageData } from 'next/image'
+import { CheckCircle2, ChevronRight, CircleAlert, Clock3, Database, RefreshCw } from 'lucide-react'
 
-import {
-  CheckCircle2,
-  ChartNoAxesCombined,
-  ChevronRight,
-  CircleAlert,
-  Clock3,
-  Database,
-  FileClock,
-  FileWarning,
-  GitBranch,
-  Layers3,
-  LoaderCircle,
-  Network,
-  RefreshCw,
-  Search,
-  Settings2,
-  Sparkles,
-  UploadCloud,
-  UsersRound,
-} from 'lucide-react'
-
-import emptyData from '@/assets/dashboard/empty-data.webp'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import type { StatusTone } from '@/types/page/page-parts'
 
-/** Biểu tượng của từng nhóm trang, dùng chung cho ba phân hệ phòng ban. */
-function getPageIcon(title: string) {
-  if (/người dùng|phân quyền|hồ sơ cá nhân/i.test(title)) return UsersRound
-  if (/nhật ký|lịch sử|phiên đăng nhập/i.test(title)) return FileClock
-  if (/cấu hình|profiles|settings/i.test(title)) return Settings2
-  if (/lineage|truy vết/i.test(title)) return GitBranch
-  if (/quarantine|lỗi|chất lượng|quality/i.test(title)) return FileWarning
-  if (/nguồn dữ liệu|bộ dữ liệu|catalog|silver|bronze/i.test(title)) return Layers3
-  if (/nạp dữ liệu|ingestion|upload/i.test(title)) return UploadCloud
-  if (/worker|pipeline|làm sạch|cleaning/i.test(title)) return Network
-  if (/khám phá|tìm kiếm/i.test(title)) return Search
-  if (/hỏi ai|nlq/i.test(title)) return Sparkles
-  if (/tổng quan|dashboard|bảng điều khiển|phân tích|so sánh|điều hành/i.test(title))
-    return ChartNoAxesCombined
-  return Database
-}
-
-/** Khung trang theo Figma: breadcrumb, biểu tượng, tiêu đề, mô tả và thao tác. */
 export function PageHeader({
   breadcrumb,
   title,
   description,
   actions,
-  illustration,
+  dashboard = false,
 }: {
   breadcrumb: string[]
   title: string
   description?: ReactNode
   actions?: ReactNode
-  /** Hình minh hoạ đặt ở góc phải (vd. robot ở trang Hỏi AI). */
-  illustration?: StaticImageData
+  dashboard?: boolean
 }) {
-  const Icon = getPageIcon(title)
   return (
-    <header className="relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-[#e5e9f5] bg-[radial-gradient(circle_at_88%_15%,rgba(210,221,255,.72),transparent_34%),linear-gradient(110deg,#fff_0%,#f5f6ff_100%)] p-5 shadow-[0_8px_24px_rgba(31,43,83,.045)] sm:px-6 lg:min-h-[145px] lg:flex-row lg:items-end lg:justify-between">
-      {illustration && (
-        <Image
-          src={illustration}
-          alt=""
-          aria-hidden="true"
-          width={260}
-          height={260}
-          priority
-          className="pointer-events-none absolute -bottom-16 right-0 hidden h-auto w-44 object-contain sm:right-7 sm:block sm:w-56"
-        />
+    <header
+      className={cn(
+        'flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between',
+        dashboard ? 'rounded-lg bg-sidebar px-5 py-5 text-white sm:px-6' : 'border-b pb-4'
       )}
-      <div
-        className={cn(
-          'relative z-10 min-w-0 space-y-3',
-          illustration && 'sm:max-w-[calc(100%-15rem)]'
-        )}
-      >
+    >
+      <div className="min-w-0 space-y-2">
         <nav aria-label="Breadcrumb">
-          <ol className="flex flex-wrap items-center gap-2 text-xs font-medium text-[#63708d]">
+          <ol
+            className={cn(
+              'flex flex-wrap items-center gap-2 text-xs font-medium',
+              dashboard ? 'text-slate-300' : 'text-[#63708d]'
+            )}
+          >
             {breadcrumb.map((item, index) => (
               <li key={`${item}-${index}`} className="flex items-center gap-1">
                 {index > 0 && <ChevronRight className="size-3.5" aria-hidden="true" />}
                 <span
-                  className={
-                    index === breadcrumb.length - 1 ? 'font-semibold text-[#ad1830]' : undefined
-                  }
+                  className={cn(
+                    index === breadcrumb.length - 1 &&
+                      (dashboard ? 'font-semibold text-white' : 'font-semibold text-primary')
+                  )}
                 >
                   {item}
                 </span>
@@ -96,23 +49,26 @@ export function PageHeader({
             ))}
           </ol>
         </nav>
-        <div className="flex min-w-0 items-start gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#e9eaff] text-[#514cf2] shadow-[inset_0_0_0_1px_rgba(94,89,232,.08)] sm:size-12">
-            <Icon className="size-6" aria-hidden="true" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-2xl font-bold tracking-tight text-[#0f1831] sm:text-[30px]">
-              {title}
-            </h1>
-            {description && (
-              <p className="mt-1 max-w-3xl text-sm leading-6 text-[#596884]">{description}</p>
+        <h1
+          className={cn(
+            'text-2xl font-semibold tracking-tight sm:text-[28px]',
+            dashboard ? 'text-white' : 'text-foreground'
+          )}
+        >
+          {title}
+        </h1>
+        {description && (
+          <p
+            className={cn(
+              'max-w-3xl text-sm leading-5',
+              dashboard ? 'text-slate-300' : 'text-muted-foreground'
             )}
-          </div>
-        </div>
+          >
+            {description}
+          </p>
+        )}
       </div>
-      {actions && (
-        <div className="relative z-10 flex shrink-0 flex-wrap items-center gap-2">{actions}</div>
-      )}
+      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
     </header>
   )
 }
@@ -133,22 +89,17 @@ export function Card({
   bodyClassName?: string
 }) {
   return (
-    <section
-      className={cn(
-        'min-w-0 rounded-2xl border border-[#dfe4f2] bg-white shadow-[0_8px_24px_rgba(31,43,83,.055)]',
-        className
-      )}
-    >
+    <section className={cn('min-w-0 rounded-lg border bg-card', className)}>
       {(title || right) && (
-        <header className="flex flex-wrap items-start justify-between gap-2 border-b border-[#e5e9f3] px-5 py-4">
+        <header className="flex flex-wrap items-start justify-between gap-2 border-b px-4 py-3">
           <div className="min-w-0">
-            {title && <h2 className="text-base font-bold text-[#111a35]">{title}</h2>}
+            {title && <h2 className="text-sm font-semibold text-foreground">{title}</h2>}
             {subtitle && <p className="mt-1 text-xs text-[#65718d]">{subtitle}</p>}
           </div>
           {right}
         </header>
       )}
-      <div className={cn('p-5', bodyClassName)}>{children}</div>
+      <div className={cn('p-4', bodyClassName)}>{children}</div>
     </section>
   )
 }
@@ -158,11 +109,13 @@ export function KpiCard({
   value,
   hint,
   tone = 'slate',
+  dashboard = false,
 }: {
   label: string
   value: ReactNode
   hint?: ReactNode
   tone?: StatusTone
+  dashboard?: boolean
 }) {
   const Icon =
     tone === 'emerald'
@@ -173,38 +126,20 @@ export function KpiCard({
           ? CircleAlert
           : Database
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-[#dfe4f2] bg-white p-5 shadow-[0_8px_24px_rgba(31,43,83,.055)]">
-      <div
-        aria-hidden="true"
+    <div className={cn('min-w-0 bg-card p-3.5', dashboard ? 'p-4 sm:p-5' : 'rounded-lg border')}>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <Icon aria-hidden="true" className={cn('size-4 shrink-0', HINT_TONE[tone])} />
+      </div>
+      <p
         className={cn(
-          'pointer-events-none absolute -bottom-12 -right-12 size-32 rounded-full blur-2xl',
-          {
-            'bg-[#e5e7ff]': tone === 'indigo' || tone === 'slate',
-            'bg-[#dcf8e5]': tone === 'emerald',
-            'bg-[#fff0d4]': tone === 'amber',
-            'bg-[#ffe0e8]': tone === 'rose',
-            'bg-[#e4f1ff]': tone === 'sky',
-          }
-        )}
-      />
-      <div
-        aria-hidden="true"
-        className={cn(
-          'relative mb-3 flex size-11 items-center justify-center rounded-2xl text-xl font-bold',
-          {
-            'bg-[#eef0ff] text-[#4f52e8]': tone === 'indigo' || tone === 'slate',
-            'bg-[#e5f8ea] text-[#15913a]': tone === 'emerald',
-            'bg-[#fff3df] text-[#e58a00]': tone === 'amber',
-            'bg-[#fce8ee] text-[#c51c3d]': tone === 'rose',
-            'bg-[#e8f3ff] text-[#2376d6]': tone === 'sky',
-          }
+          'mt-1.5 text-2xl font-semibold tabular-nums tracking-tight text-foreground',
+          dashboard && 'sm:text-3xl'
         )}
       >
-        <Icon className="size-6" />
-      </div>
-      <p className="relative text-xs font-semibold text-[#4a5875]">{label}</p>
-      <p className="relative mt-1 text-3xl font-bold text-[#111a35]">{value}</p>
-      {hint && <p className={cn('relative mt-1 text-xs', HINT_TONE[tone])}>{hint}</p>}
+        {value}
+      </p>
+      {hint && <p className={cn('mt-1 text-xs', HINT_TONE[tone])}>{hint}</p>}
     </div>
   )
 }
@@ -231,7 +166,7 @@ export function Tag({ children, tone = 'slate' }: { children: ReactNode; tone?: 
   return (
     <span
       className={cn(
-        'inline-flex items-center whitespace-nowrap rounded border px-1.5 py-px font-mono text-[10px] font-bold uppercase',
+        'inline-flex max-w-full items-center rounded border px-1.5 py-0.5 text-[11px] font-medium',
         TAG_TONE[tone]
       )}
     >
@@ -243,6 +178,7 @@ export function Tag({ children, tone = 'slate' }: { children: ReactNode; tone?: 
 /** Màu nhãn theo trạng thái job/nguồn/truy vấn trả về từ backend. */
 export function statusTone(status: string | null | undefined): StatusTone {
   switch ((status ?? '').toUpperCase()) {
+    case 'SUCCEEDED':
     case 'SUCCESS':
     case 'COMPLETED':
     case 'ACTIVE':
@@ -255,6 +191,7 @@ export function statusTone(status: string | null | undefined): StatusTone {
     case 'QUEUED':
     case 'RETRY_WAIT':
     case 'PROCESSING':
+    case 'QUARANTINED':
     case 'BRONZE':
     case 'ASSIGNED':
     case 'PUBLISHED_WITH_QUARANTINE':
@@ -280,6 +217,8 @@ export function statusTone(status: string | null | undefined): StatusTone {
 const STATUS_LABELS = new Map([
   ['ACTIVE', 'Đang hoạt động'],
   ['COMPLETED', 'Hoàn tất'],
+  ['SUCCEEDED', 'Thành công'],
+  ['UNKNOWN', 'Chưa xác định'],
   ['SUCCESS', 'Thành công'],
   ['CLEANED', 'Đã làm sạch'],
   ['PUBLISHED', 'Đã xuất bản'],
@@ -351,29 +290,42 @@ export function Button({
   children,
   variant = 'outline',
   icon,
+  loading = false,
+  reading = false,
+  disabled,
   className,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'outline' | 'soft' | 'ghost'
   icon?: ReactNode
+  loading?: boolean
+  reading?: boolean
 }) {
   const styles = {
-    primary: 'bg-[#b91830] text-white hover:bg-[#9e1429] disabled:bg-[#b91830]/60',
+    primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
     outline: 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
-    soft: 'border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100',
+    soft: 'border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100',
     ghost: 'text-slate-600 hover:bg-slate-100',
   }[variant]
   return (
     <button
       type="button"
       className={cn(
-        'inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830] disabled:cursor-not-allowed disabled:opacity-70',
+        'inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-70',
         styles,
         className
       )}
       {...props}
+      aria-busy={loading || reading || props['aria-busy']}
+      disabled={disabled || loading || reading}
     >
-      {icon}
+      {loading ? (
+        <DatabaseLoader compact />
+      ) : reading ? (
+        <Skeleton aria-hidden="true" className="h-3 w-4 bg-current opacity-35" />
+      ) : (
+        icon
+      )}
       {children}
     </button>
   )
@@ -388,19 +340,60 @@ export function FilterChip({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function LoadingState({ label = 'Đang tải dữ liệu…' }: { label?: string }) {
+export function DatabaseLoader({ compact = false }: { compact?: boolean }) {
   return (
-    <div
-      className="flex items-center justify-center gap-2 py-10 text-sm text-slate-500"
-      role="status"
+    <span
+      className={cn('database-loader', compact && 'database-loader-compact')}
+      aria-hidden="true"
     >
-      <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
-      {label}
+      <span />
+      <span />
+      <span />
+    </span>
+  )
+}
+
+export function PendingOverlay({ label, description }: { label: string; description?: string }) {
+  return (
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-sidebar/45 p-4">
+      <div
+        role="status"
+        className="flex w-full max-w-xs items-center gap-3 rounded-lg border bg-card p-4 text-foreground shadow-sm"
+      >
+        <DatabaseLoader />
+        <div className="min-w-0">
+          <p className="text-sm font-semibold">{label}</p>
+          {description && (
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
 
-export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+export function LoadingState({ label = 'Đang tải dữ liệu…' }: { label?: string }) {
+  return (
+    <div className="space-y-3 p-4" role="status">
+      <span className="sr-only">{label}</span>
+      <div aria-hidden="true" className="space-y-3">
+        <Skeleton className="h-3 w-2/5" />
+        <Skeleton className="h-3 w-4/5" />
+        <Skeleton className="h-3 w-3/5" />
+      </div>
+    </div>
+  )
+}
+
+export function ErrorState({
+  message,
+  onRetry,
+  retrying = false,
+}: {
+  message: string
+  onRetry?: () => void
+  retrying?: boolean
+}) {
   return (
     <div
       role="alert"
@@ -411,7 +404,11 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
         {message}
       </div>
       {onRetry && (
-        <Button onClick={onRetry} icon={<RefreshCw className="size-3.5" aria-hidden="true" />}>
+        <Button
+          onClick={onRetry}
+          reading={retrying}
+          icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
+        >
           Thử lại
         </Button>
       )}
@@ -421,8 +418,8 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
 
 export function EmptyState({ title, description }: { title: string; description?: string }) {
   return (
-    <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
-      <Image src={emptyData} alt="" width={92} height={92} className="size-20 object-contain" />
+    <div className="flex flex-col items-center gap-2 px-4 py-7 text-center">
+      <Database aria-hidden="true" className="size-5 text-slate-500" />
       <p className="text-sm font-bold text-[#17233d]">{title}</p>
       {description && <p className="max-w-md text-xs leading-5 text-[#65718d]">{description}</p>}
     </div>

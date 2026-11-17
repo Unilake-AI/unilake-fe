@@ -15,7 +15,6 @@ import {
   Clock,
   FileSpreadsheet,
   History,
-  LoaderCircle,
   Search,
   Upload,
 } from 'lucide-react'
@@ -39,6 +38,7 @@ import {
   statusLabel,
   statusTone,
 } from '@/components/page/page-parts'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { DatasetItem } from '@/types/datasets'
 import type { IngestionJob } from '@/types/ingestion'
 import type { StaffContext } from '@/types/staff-context'
@@ -121,10 +121,7 @@ function JobTrackerCard({ jobId, initialJob }: { jobId: number; initialJob: Inge
             role="status"
             className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-900"
           >
-            <LoaderCircle
-              className="mt-0.5 size-4 shrink-0 animate-spin text-amber-600"
-              aria-hidden="true"
-            />
+            <Skeleton className="mt-1 size-3 shrink-0 bg-amber-200" aria-hidden="true" />
             <div>
               <p className="font-semibold">Đang xử lý tệp dữ liệu (RUNNING)</p>
               <p className="mt-0.5 text-amber-800">
@@ -211,6 +208,7 @@ function JobTrackerCard({ jobId, initialJob }: { jobId: number; initialJob: Inge
         {query.isError && (
           <ErrorState
             message={getApiErrorMessage(query.error, 'Không cập nhật được trạng thái job.')}
+            retrying={query.isFetching}
             onRetry={() => void query.refetch()}
           />
         )}
@@ -587,6 +585,7 @@ function UploadContent({ context }: { context: StaffContext }) {
                       datasetsQuery.error,
                       'Không tải được danh sách bộ dữ liệu.'
                     )}
+                    retrying={datasetsQuery.isFetching}
                     onRetry={() => void datasetsQuery.refetch()}
                   />
                 ) : datasets.length === 0 ? (
@@ -625,7 +624,7 @@ function UploadContent({ context }: { context: StaffContext }) {
                                 setSelectedDataset(ds)
                                 setValidationError(null)
                               }}
-                              className="mt-0.5 size-4 accent-indigo-600"
+                              className="mt-0.5 size-4 accent-primary"
                             />
                             <div className="min-w-0 flex-1 space-y-0.5">
                               <div className="flex flex-wrap items-center gap-2">
@@ -795,7 +794,7 @@ function UploadContent({ context }: { context: StaffContext }) {
                     setUploadProgress(null)
                     uploadMutation.reset()
                   }}
-                  className="block w-full cursor-pointer rounded-xl border-2 border-dashed border-[#c8c3ff] bg-[#f8f8ff] p-6 text-xs text-[#34415f] file:mr-3 file:rounded-lg file:border-0 file:bg-[#5146e7] file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-[#4539d4]"
+                  className="block w-full cursor-pointer rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 text-sm text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-primary/90"
                 />
                 <p className="text-[11px] text-slate-500">
                   Tên tệp chỉ dùng chữ cái không dấu, số, dấu gạch ngang, gạch dưới và dấu chấm. Tệp
@@ -804,152 +803,157 @@ function UploadContent({ context }: { context: StaffContext }) {
               </div>
 
               {selectedFile && (
-                <div className="space-y-3 rounded-md border border-slate-200 bg-slate-50 p-3">
-                  <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-800">
-                    <input
-                      type="checkbox"
-                      checked={customizeParser}
-                      onChange={(e) => setCustomizeParser(e.target.checked)}
-                      className="size-4 accent-indigo-600"
-                    />
-                    Tùy chỉnh cấu hình đọc tệp (Parser options)
-                  </label>
+                <details className="rounded-md border bg-slate-50 px-3">
+                  <summary className="py-2.5 text-sm font-medium">
+                    Nâng cao{customizeParser ? ' · Đang dùng cấu hình tùy chỉnh' : ''}
+                  </summary>
+                  <div className="space-y-3 pb-3">
+                    <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-800">
+                      <input
+                        type="checkbox"
+                        checked={customizeParser}
+                        onChange={(e) => setCustomizeParser(e.target.checked)}
+                        className="size-4 accent-primary"
+                      />
+                      Tùy chỉnh cấu hình đọc tệp (Parser options)
+                    </label>
 
-                  {customizeParser && isCsv && (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="space-y-1">
-                        <label
-                          htmlFor="csv-encoding"
-                          className="block text-xs font-medium text-slate-700"
-                        >
-                          Bảng mã (Encoding)
-                        </label>
-                        <select
-                          id="csv-encoding"
-                          value={csvEncoding}
-                          onChange={(e) => setCsvEncoding(e.target.value)}
-                          className={inputClass}
-                        >
-                          {CSV_ENCODING_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
+                    {customizeParser && isCsv && (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="space-y-1">
+                          <label
+                            htmlFor="csv-encoding"
+                            className="block text-xs font-medium text-slate-700"
+                          >
+                            Bảng mã (Encoding)
+                          </label>
+                          <select
+                            id="csv-encoding"
+                            value={csvEncoding}
+                            onChange={(e) => setCsvEncoding(e.target.value)}
+                            className={inputClass}
+                          >
+                            {CSV_ENCODING_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label
+                            htmlFor="csv-delimiter"
+                            className="block text-xs font-medium text-slate-700"
+                          >
+                            Dấu phân cách (Delimiter)
+                          </label>
+                          <select
+                            id="csv-delimiter"
+                            value={csvDelimiter}
+                            onChange={(e) => setCsvDelimiter(e.target.value)}
+                            className={inputClass}
+                          >
+                            {CSV_DELIMITER_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label
+                            htmlFor="csv-quote-char"
+                            className="block text-xs font-medium text-slate-700"
+                          >
+                            Ký tự trích dẫn (Quote char)
+                          </label>
+                          <select
+                            id="csv-quote-char"
+                            value={csvQuoteChar}
+                            onChange={(e) => setCsvQuoteChar(e.target.value)}
+                            className={inputClass}
+                          >
+                            {CSV_QUOTE_CHAR_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label
+                            htmlFor="csv-skip-rows"
+                            className="block text-xs font-medium text-slate-700"
+                          >
+                            Số dòng bỏ qua (Skip rows)
+                          </label>
+                          <input
+                            id="csv-skip-rows"
+                            type="number"
+                            min={0}
+                            value={skipRows}
+                            onChange={(e) => setSkipRows(e.target.value)}
+                            className={inputClass}
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <label
-                          htmlFor="csv-delimiter"
-                          className="block text-xs font-medium text-slate-700"
-                        >
-                          Dấu phân cách (Delimiter)
-                        </label>
-                        <select
-                          id="csv-delimiter"
-                          value={csvDelimiter}
-                          onChange={(e) => setCsvDelimiter(e.target.value)}
-                          className={inputClass}
-                        >
-                          {CSV_DELIMITER_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="space-y-1">
-                        <label
-                          htmlFor="csv-quote-char"
-                          className="block text-xs font-medium text-slate-700"
-                        >
-                          Ký tự trích dẫn (Quote char)
-                        </label>
-                        <select
-                          id="csv-quote-char"
-                          value={csvQuoteChar}
-                          onChange={(e) => setCsvQuoteChar(e.target.value)}
-                          className={inputClass}
-                        >
-                          {CSV_QUOTE_CHAR_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="space-y-1">
-                        <label
-                          htmlFor="csv-skip-rows"
-                          className="block text-xs font-medium text-slate-700"
-                        >
-                          Số dòng bỏ qua (Skip rows)
-                        </label>
-                        <input
-                          id="csv-skip-rows"
-                          type="number"
-                          min={0}
-                          value={skipRows}
-                          onChange={(e) => setSkipRows(e.target.value)}
-                          className={inputClass}
-                        />
-                      </div>
-                    </div>
-                  )}
+                    )}
 
-                  {customizeParser && isExcel && (
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <div className="space-y-1">
-                        <label
-                          htmlFor="excel-sheet-name"
-                          className="block text-xs font-medium text-slate-700"
-                        >
-                          Tên sheet (tùy chọn)
-                        </label>
-                        <input
-                          id="excel-sheet-name"
-                          type="text"
-                          maxLength={200}
-                          value={excelSheetName}
-                          onChange={(e) => setExcelSheetName(e.target.value)}
-                          placeholder="Mặc định sheet đầu tiên"
-                          className={inputClass}
-                        />
+                    {customizeParser && isExcel && (
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <div className="space-y-1">
+                          <label
+                            htmlFor="excel-sheet-name"
+                            className="block text-xs font-medium text-slate-700"
+                          >
+                            Tên sheet (tùy chọn)
+                          </label>
+                          <input
+                            id="excel-sheet-name"
+                            type="text"
+                            maxLength={200}
+                            value={excelSheetName}
+                            onChange={(e) => setExcelSheetName(e.target.value)}
+                            placeholder="Mặc định sheet đầu tiên"
+                            className={inputClass}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label
+                            htmlFor="excel-header-row"
+                            className="block text-xs font-medium text-slate-700"
+                          >
+                            Dòng tiêu đề (Header row)
+                          </label>
+                          <input
+                            id="excel-header-row"
+                            type="number"
+                            min={1}
+                            value={excelHeaderRow}
+                            onChange={(e) => setExcelHeaderRow(e.target.value)}
+                            className={inputClass}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label
+                            htmlFor="excel-skip-rows"
+                            className="block text-xs font-medium text-slate-700"
+                          >
+                            Số dòng bỏ qua (Skip rows)
+                          </label>
+                          <input
+                            id="excel-skip-rows"
+                            type="number"
+                            min={0}
+                            value={skipRows}
+                            onChange={(e) => setSkipRows(e.target.value)}
+                            className={inputClass}
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <label
-                          htmlFor="excel-header-row"
-                          className="block text-xs font-medium text-slate-700"
-                        >
-                          Dòng tiêu đề (Header row)
-                        </label>
-                        <input
-                          id="excel-header-row"
-                          type="number"
-                          min={1}
-                          value={excelHeaderRow}
-                          onChange={(e) => setExcelHeaderRow(e.target.value)}
-                          className={inputClass}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label
-                          htmlFor="excel-skip-rows"
-                          className="block text-xs font-medium text-slate-700"
-                        >
-                          Số dòng bỏ qua (Skip rows)
-                        </label>
-                        <input
-                          id="excel-skip-rows"
-                          type="number"
-                          min={0}
-                          value={skipRows}
-                          onChange={(e) => setSkipRows(e.target.value)}
-                          className={inputClass}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                </details>
               )}
 
               {(validationError || uploadMutation.isError) && (
@@ -982,16 +986,10 @@ function UploadContent({ context }: { context: StaffContext }) {
 
               <div className="flex justify-end">
                 <Button
+                  loading={uploadMutation.isPending}
                   type="submit"
                   variant="primary"
-                  disabled={uploadMutation.isPending}
-                  icon={
-                    uploadMutation.isPending ? (
-                      <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
-                    ) : (
-                      <Upload className="size-3.5" aria-hidden="true" />
-                    )
-                  }
+                  icon={<Upload className="size-3.5" aria-hidden="true" />}
                 >
                   {uploadMutation.isPending ? 'Đang tải lên…' : 'Tải lên và nạp dữ liệu'}
                 </Button>

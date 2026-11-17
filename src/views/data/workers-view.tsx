@@ -15,13 +15,13 @@ import {
   EmptyState,
   ErrorState,
   KpiCard,
-  LoadingState,
   PageHeader,
   Tag,
   formatDateTime,
   statusLabel,
   statusTone,
 } from '@/components/page/page-parts'
+import { TableSkeleton } from '@/components/ui/table-skeleton'
 
 const WORKER_POLL_MS = 5000
 
@@ -59,13 +59,8 @@ export function WorkersView() {
             </label>
             <Button
               onClick={() => void workersQuery.refetch()}
-              disabled={workersQuery.isFetching}
-              icon={
-                <RefreshCw
-                  className={`size-3.5 ${workersQuery.isFetching ? 'animate-spin' : ''}`}
-                  aria-hidden="true"
-                />
-              }
+              reading={workersQuery.isFetching}
+              icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
             >
               Làm mới
             </Button>
@@ -112,11 +107,12 @@ export function WorkersView() {
         bodyClassName="p-0"
       >
         {workersQuery.isPending ? (
-          <LoadingState label="Đang tải danh sách worker…" />
+          <TableSkeleton columns={6} label="Đang tải danh sách worker…" />
         ) : workersQuery.isError ? (
           <div className="p-4">
             <ErrorState
               message={getApiErrorMessage(workersQuery.error, 'Không tải được trạng thái worker.')}
+              retrying={workersQuery.isFetching}
               onRetry={() => void workersQuery.refetch()}
             />
           </div>

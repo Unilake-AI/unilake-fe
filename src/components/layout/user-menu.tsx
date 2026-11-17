@@ -6,6 +6,7 @@ import Link from 'next/link'
 
 import { Check, ChevronDown, LogOut, Settings, Shield } from 'lucide-react'
 
+import { DatabaseLoader } from '@/components/page/page-parts'
 import {
   Dialog,
   DialogClose,
@@ -25,7 +26,7 @@ import type { UserMenuProps } from '@/types/layout/user-menu'
 import { SessionsPanel } from '@/views/admin/sessions-panel'
 
 const actionClass =
-  'flex h-10 w-full items-center gap-3 rounded-lg px-5 text-left text-sm font-medium transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2'
+  'flex h-10 w-full items-center gap-3 rounded-lg px-5 text-left text-sm font-medium transition-colors hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2'
 
 export function getInitials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean)
@@ -38,34 +39,60 @@ export function UserMenu({ role, onNavigate }: UserMenuProps) {
   const { user, roles, logout, isLoggingOut } = useAuth()
   const [expanded, setExpanded] = useState(false)
   const actionsId = useId()
-  const actions = useRef<HTMLDivElement>(null)
+  const container = useRef<HTMLDivElement>(null)
+  const trigger = useRef<HTMLButtonElement>(null)
   const displayName = user?.fullName ?? user?.username ?? 'Người dùng'
   const secondaryLine = user?.email ?? user?.username
   const isStaff = getWorkspaceForRole(role) === 'STAFF'
   const switchableRoles = ROLE_PRIORITY.filter((item) => roles.includes(item))
 
   useEffect(() => {
-    if (expanded) actions.current?.scrollIntoView?.({ block: 'nearest' })
+    if (!expanded) return
+    function closeOutside(event: PointerEvent) {
+      if (
+        event.target instanceof Element &&
+        !document.querySelector('[role=dialog][data-state=open]') &&
+        !container.current?.contains(event.target)
+      )
+        setExpanded(false)
+    }
+    function closeOnEscape(event: KeyboardEvent) {
+      if (
+        event.key !== 'Escape' ||
+        event.defaultPrevented ||
+        !container.current?.contains(document.activeElement)
+      )
+        return
+      setExpanded(false)
+      trigger.current?.focus()
+    }
+    document.addEventListener('pointerdown', closeOutside)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
   }, [expanded])
 
   return (
-    <div>
+    <div ref={container} className="relative">
       <button
+        ref={trigger}
         type="button"
         aria-label="Mở menu người dùng"
         aria-controls={actionsId}
         aria-expanded={expanded}
         title={displayName}
         onClick={() => setExpanded(!expanded)}
-        className="group flex h-11 w-full items-center gap-3 overflow-hidden rounded-[10px] px-[18px] text-left text-sm font-medium text-slate-200 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 aria-expanded:bg-white/10"
+        className="group flex h-11 items-center gap-2 rounded-md px-2 text-left text-sm font-medium text-slate-200 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 aria-expanded:bg-white/10"
       >
         <span
           aria-hidden="true"
-          className="grid size-6 shrink-0 place-items-center rounded-full bg-rose-100 text-[10px] font-bold text-rose-800"
+          className="grid size-8 shrink-0 place-items-center rounded-full bg-rose-100 text-[10px] font-bold text-rose-800"
         >
           {getInitials(displayName)}
         </span>
-        <span className="min-w-0 flex-1 items-center justify-between gap-2 pr-0.5 [display:var(--sidebar-label-display,flex)]">
+        <span className="hidden min-w-0 max-w-40 items-center gap-2 sm:flex">
           <span className="min-w-0 truncate">{displayName}</span>
           <ChevronDown
             className="size-4 shrink-0 text-slate-400 transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none"
@@ -74,14 +101,18 @@ export function UserMenu({ role, onNavigate }: UserMenuProps) {
         </span>
       </button>
 
-      <div id={actionsId} ref={actions} hidden={!expanded} className="mt-1 space-y-1">
+      <div
+        id={actionsId}
+        hidden={!expanded}
+        className="absolute right-0 top-full mt-2 w-52 space-y-1 rounded-lg border bg-card p-1.5 shadow-sm"
+      >
         <Dialog>
           <DialogTrigger asChild>
             <button
               type="button"
               aria-label="Cài đặt"
               title="Cài đặt"
-              className={`${actionClass} text-slate-200 hover:text-white`}
+              className={`${actionClass} text-slate-700`}
             >
               <Settings className="size-5 shrink-0" aria-hidden="true" />
               <span className="[display:var(--sidebar-label-display,flex)]">Cài đặt</span>
@@ -111,7 +142,7 @@ export function UserMenu({ role, onNavigate }: UserMenuProps) {
                       <DialogClose asChild>
                         <Link
                           href={ROLE_ROUTE_PREFIXES[item]}
-                          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
                           onClick={onNavigate}
                           className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
                         >
@@ -132,7 +163,7 @@ export function UserMenu({ role, onNavigate }: UserMenuProps) {
               <DialogClose asChild>
                 <Link
                   href="/staff/profile"
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
                   onClick={onNavigate}
                   className="text-sm font-medium text-rose-700 hover:underline"
                 >
@@ -149,10 +180,15 @@ export function UserMenu({ role, onNavigate }: UserMenuProps) {
           aria-label={isLoggingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}
           title="Đăng xuất"
           disabled={isLoggingOut}
+          aria-busy={isLoggingOut}
           onClick={() => logout()}
-          className={`${actionClass} text-rose-200 hover:text-rose-100 disabled:opacity-50`}
+          className={`${actionClass} text-rose-700 disabled:opacity-50`}
         >
-          <LogOut className="size-5 shrink-0" aria-hidden="true" />
+          {isLoggingOut ? (
+            <DatabaseLoader compact />
+          ) : (
+            <LogOut className="size-5 shrink-0" aria-hidden="true" />
+          )}
           <span className="[display:var(--sidebar-label-display,flex)]">
             {isLoggingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}
           </span>

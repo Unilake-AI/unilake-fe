@@ -29,6 +29,10 @@ describe('DataDashboardView', () => {
   })
 
   it('hiển thị đầy đủ thống kê từ API thực tế và không bịa phần trăm chất lượng tổng', async () => {
+    let finishRecentJobs: () => void = () => undefined
+    const recentJobs = new Promise<void>((resolve) => {
+      finishRecentJobs = resolve
+    })
     http.defaults.adapter = (config) => {
       const key = `${config.method} ${config.url}`
       const map: Record<string, unknown> = {
@@ -69,16 +73,25 @@ describe('DataDashboardView', () => {
         },
         'get /cleaning-runs': [],
       }
-      return Promise.resolve({ data: map[key], status: 200, statusText: 'OK', headers: {}, config })
+      const response = { data: map[key], status: 200, statusText: 'OK', headers: {}, config }
+      return key === 'get /ingestion/jobs'
+        ? recentJobs.then(() => response)
+        : Promise.resolve(response)
     }
 
-    const { client } = renderDashboard()
+    const { client, container } = renderDashboard()
     try {
+      expect(screen.getByText('Đang tải thống kê lượt nạp…')).toBeInTheDocument()
+      expect(container.querySelector('.database-loader')).not.toBeInTheDocument()
       expect(await screen.findByText('25')).toBeInTheDocument()
       expect(screen.getByText('12.0%')).toBeInTheDocument()
       expect(screen.getByText('1 (1 đang chạy job)')).toBeInTheDocument()
       expect(screen.getByText('9')).toBeInTheDocument()
       expect(screen.queryByText(/96,8%/)).not.toBeInTheDocument()
+      expect(screen.getByText('Đang tải các lần nạp gần đây…')).toBeInTheDocument()
+      finishRecentJobs()
+      expect(await screen.findByText('Chưa có lần nạp dữ liệu nào')).toBeInTheDocument()
+      expect(screen.queryByText('Đang tải các lần nạp gần đây…')).not.toBeInTheDocument()
     } finally {
       client.clear()
     }

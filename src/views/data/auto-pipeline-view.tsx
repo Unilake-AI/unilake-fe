@@ -26,8 +26,11 @@ import {
   PageHeader,
   formatDateTime,
 } from '@/components/page/page-parts'
+import { TableSkeleton } from '@/components/ui/table-skeleton'
 import type { AutoSilverPolicy } from '@/types/auto-pipeline'
 import type { SilverProfileRead } from '@/types/silver-profiles'
+
+import { IngestionFlowMonitor } from './ingestion-flow-monitor'
 
 const inputClass = 'w-full rounded-md border border-slate-300 bg-white p-2 text-sm'
 const PAGE_SIZE = 20
@@ -180,6 +183,7 @@ function PolicyEditor({
         />
       )}
       <Button
+        loading={save.isPending}
         type="submit"
         variant="primary"
         disabled={!valid || (enabled && !profileAvailable) || save.isPending}
@@ -314,6 +318,7 @@ export function AutoPipelineView() {
               Tự làm mới mỗi 5 giây
             </label>
             <Button
+              reading={jobs.isFetching || workers.isFetching}
               onClick={() => {
                 void jobs.refetch()
                 void workers.refetch()
@@ -324,6 +329,7 @@ export function AutoPipelineView() {
           </>
         }
       />
+      <IngestionFlowMonitor refresh={refresh} />
       <Card title="Chọn bộ dữ liệu và cách tự xử lý">
         <form
           className="mb-3 flex gap-2"
@@ -348,6 +354,7 @@ export function AutoPipelineView() {
         ) : datasets.isError ? (
           <ErrorState
             message={getApiErrorMessage(datasets.error, 'Không tải được bộ dữ liệu.')}
+            retrying={datasets.isFetching}
             onRetry={() => void datasets.refetch()}
           />
         ) : (
@@ -421,10 +428,11 @@ export function AutoPipelineView() {
           <Button type="submit">Lọc lượt chạy</Button>
         </form>
         {jobs.isPending ? (
-          <LoadingState />
+          <TableSkeleton columns={6} />
         ) : jobs.isError ? (
           <ErrorState
             message={getApiErrorMessage(jobs.error, 'Không tải được các lượt tự xử lý.')}
+            retrying={jobs.isFetching}
             onRetry={() => void jobs.refetch()}
           />
         ) : jobs.data.length === 0 ? (
@@ -505,10 +513,11 @@ export function AutoPipelineView() {
       )}
       <Card title="Tiến trình xử lý Silver">
         {workers.isPending ? (
-          <LoadingState />
+          <TableSkeleton columns={4} />
         ) : workers.isError ? (
           <ErrorState
             message={getApiErrorMessage(workers.error, 'Không tải được tiến trình xử lý Silver.')}
+            retrying={workers.isFetching}
             onRetry={() => void workers.refetch()}
           />
         ) : workers.data.length === 0 ? (

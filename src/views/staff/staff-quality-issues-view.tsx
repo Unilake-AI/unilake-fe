@@ -15,13 +15,13 @@ import {
   Card,
   EmptyState,
   ErrorState,
-  LoadingState,
   PageHeader,
   Tag,
   formatDateTime,
   statusLabel,
   statusTone,
 } from '@/components/page/page-parts'
+import { TableSkeleton } from '@/components/ui/table-skeleton'
 import type { StaffQualityIssueStatusFilter } from '@/types/quality-issues'
 import type { StaffContext } from '@/types/staff-context'
 
@@ -90,13 +90,8 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
         actions={
           <Button
             onClick={() => void issuesQuery.refetch()}
-            disabled={issuesQuery.isFetching}
-            icon={
-              <RefreshCw
-                className={`size-3.5 ${issuesQuery.isFetching ? 'animate-spin' : ''}`}
-                aria-hidden="true"
-              />
-            }
+            reading={issuesQuery.isFetching}
+            icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
           >
             Làm mới
           </Button>
@@ -145,7 +140,7 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
       {/* Danh sách yêu cầu */}
       <Card title="Danh sách yêu cầu xử lý" bodyClassName="p-0">
         {issuesQuery.isPending ? (
-          <LoadingState label="Đang tải danh sách yêu cầu xử lý…" />
+          <TableSkeleton columns={7} label="Đang tải danh sách yêu cầu xử lý…" />
         ) : issuesQuery.isError ? (
           <div className="p-4">
             <ErrorState
@@ -153,6 +148,7 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
                 issuesQuery.error,
                 'Không tải được danh sách yêu cầu xử lý dữ liệu lỗi.'
               )}
+              retrying={issuesQuery.isFetching}
               onRetry={() => void issuesQuery.refetch()}
             />
           </div>

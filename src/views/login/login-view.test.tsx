@@ -195,9 +195,15 @@ describe('LoginView', () => {
 
     const button = await screen.findByRole('button', { name: /Đang xác thực/ })
     expect(button).toBeDisabled()
+    expect(button).toHaveAttribute('aria-busy', 'true')
+    expect(screen.getByRole('status')).toHaveTextContent('Đang đăng nhập…')
+    expect(button.querySelector('.database-loader')?.children).toHaveLength(3)
 
     resolve(loginResponse('admin'))
     await waitFor(() => expect(push).toHaveBeenCalledWith('/admin'))
+    expect(await screen.findByRole('button', { name: 'Đăng nhập' })).not.toBeDisabled()
+    expect(button.querySelector('.database-loader')).not.toBeInTheDocument()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 
   it('đóng được thông báo lỗi', async () => {

@@ -38,6 +38,7 @@ import {
   statusLabel,
   statusTone,
 } from '@/components/page/page-parts'
+import { TableSkeleton } from '@/components/ui/table-skeleton'
 import type { IngestionJobStatusFilter } from '@/types/ingestion'
 import type { StaffContext } from '@/types/staff-context'
 
@@ -101,6 +102,7 @@ function JobDetailSection({
     return (
       <ErrorState
         message={getApiErrorMessage(jobQuery.error, 'Không tải được chi tiết lần nạp dữ liệu.')}
+        retrying={jobQuery.isFetching}
         onRetry={() => void jobQuery.refetch()}
       />
     )
@@ -202,13 +204,14 @@ function JobDetailSection({
       <div className="space-y-2">
         <p className="font-semibold text-slate-800">Chuỗi các lần chạy (Attempts)</p>
         {attemptsQuery.isPending ? (
-          <LoadingState label="Đang tải lịch sử lần chạy…" />
+          <TableSkeleton columns={6} label="Đang tải lịch sử lần chạy…" />
         ) : attemptsQuery.isError ? (
           <ErrorState
             message={getApiErrorMessage(
               attemptsQuery.error,
               'Không tải được lịch sử các lần chạy.'
             )}
+            retrying={attemptsQuery.isFetching}
             onRetry={() => void attemptsQuery.refetch()}
           />
         ) : attemptsQuery.data.length === 0 ? (
@@ -352,13 +355,8 @@ function IngestionContent({
                 void statsQuery.refetch()
                 void metricsQuery.refetch()
               }}
-              disabled={jobsQuery.isFetching}
-              icon={
-                <RefreshCw
-                  className={`size-3.5 ${jobsQuery.isFetching ? 'animate-spin' : ''}`}
-                  aria-hidden="true"
-                />
-              }
+              reading={jobsQuery.isFetching}
+              icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
             >
               Làm mới
             </Button>
@@ -497,7 +495,7 @@ function IngestionContent({
         bodyClassName="p-0"
       >
         {jobsQuery.isPending ? (
-          <LoadingState label="Đang tải danh sách lần nạp dữ liệu…" />
+          <TableSkeleton columns={8} label="Đang tải danh sách lần nạp dữ liệu…" />
         ) : jobsQuery.isError ? (
           <div className="p-4">
             <ErrorState
@@ -505,6 +503,7 @@ function IngestionContent({
                 jobsQuery.error,
                 'Không tải được danh sách lần nạp dữ liệu.'
               )}
+              retrying={jobsQuery.isFetching}
               onRetry={() => void jobsQuery.refetch()}
             />
           </div>
@@ -557,10 +556,10 @@ function IngestionContent({
                           <td className="px-3 py-2.5 text-slate-600">
                             {formatDateTime(job.created_at)}
                           </td>
-                          <td className="max-w-[180px] truncate px-3 py-2.5 font-mono text-slate-900">
+                          <td className="max-w-[180px] break-words px-3 py-2.5 font-mono text-slate-900">
                             {job.source_table ?? '—'}
                           </td>
-                          <td className="max-w-[180px] truncate px-3 py-2.5 text-slate-700">
+                          <td className="max-w-[180px] break-words px-3 py-2.5 text-slate-700">
                             {dsName ?? `#${job.dataset_id}`}
                           </td>
                           <td className="px-3 py-2.5 text-slate-600">
@@ -594,7 +593,7 @@ function IngestionContent({
               </table>
             </div>
 
-            <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3 text-xs text-slate-500">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 px-4 py-3 text-xs text-slate-500">
               <span>
                 Hiển thị {jobs.length} lần nạp (từ vị trí {offset + 1})
               </span>

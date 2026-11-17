@@ -215,7 +215,7 @@ export function AutoSilverJobDetail({
             <Button disabled={retry.isPending} onClick={() => setConfirmRetry(false)}>
               Hủy
             </Button>
-            <Button variant="primary" disabled={retry.isPending} onClick={() => retry.mutate()}>
+            <Button variant="primary" loading={retry.isPending} onClick={() => retry.mutate()}>
               {retry.isPending ? 'Đang yêu cầu…' : 'Xác nhận thử lại Silver'}
             </Button>
           </DialogFooter>

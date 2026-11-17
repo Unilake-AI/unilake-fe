@@ -29,6 +29,7 @@ import {
   statusLabel,
   statusTone,
 } from '@/components/page/page-parts'
+import { TableSkeleton } from '@/components/ui/table-skeleton'
 
 import { DATA_DOMAINS, domainLabel } from './data-helpers'
 
@@ -215,7 +216,7 @@ function CreateDatasetPanel({ onClose }: { onClose: () => void }) {
           <Button variant="outline" onClick={onClose} disabled={createMutation.isPending}>
             Hủy
           </Button>
-          <Button type="submit" variant="primary" disabled={createMutation.isPending}>
+          <Button loading={createMutation.isPending} type="submit" variant="primary">
             {createMutation.isPending ? 'Đang đăng ký…' : 'Đăng ký bộ dữ liệu'}
           </Button>
         </div>
@@ -280,13 +281,8 @@ export function DatasetsView() {
           <>
             <Button
               onClick={() => void listQuery.refetch()}
-              disabled={listQuery.isFetching}
-              icon={
-                <RefreshCw
-                  className={`size-3.5 ${listQuery.isFetching ? 'animate-spin' : ''}`}
-                  aria-hidden="true"
-                />
-              }
+              reading={listQuery.isFetching}
+              icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
             >
               Làm mới
             </Button>
@@ -369,11 +365,12 @@ export function DatasetsView() {
       {/* Danh sách bộ dữ liệu */}
       <Card title="Danh sách bộ dữ liệu Bronze" bodyClassName="p-0">
         {listQuery.isPending ? (
-          <LoadingState label="Đang tải danh sách bộ dữ liệu…" />
+          <TableSkeleton columns={7} label="Đang tải danh sách bộ dữ liệu…" />
         ) : listQuery.isError ? (
           <div className="p-4">
             <ErrorState
               message={getApiErrorMessage(listQuery.error, 'Không tải được danh sách bộ dữ liệu.')}
+              retrying={listQuery.isFetching}
               onRetry={() => void listQuery.refetch()}
             />
           </div>
@@ -492,6 +489,7 @@ export function DatasetsView() {
           ) : detailQuery.isError ? (
             <ErrorState
               message={getApiErrorMessage(detailQuery.error, 'Không tải được chi tiết bộ dữ liệu.')}
+              retrying={detailQuery.isFetching}
               onRetry={() => void detailQuery.refetch()}
             />
           ) : (

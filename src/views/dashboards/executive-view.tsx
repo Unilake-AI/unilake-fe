@@ -126,6 +126,7 @@ export function ExecutiveView() {
   return (
     <div className="space-y-5">
       <PageHeader
+        dashboard
         breadcrumb={['Điều hành', 'Tổng quan']}
         title="Tổng quan điều hành toàn trường"
         description="Bức tranh liên kết ba phân hệ Tuyển sinh – Đào tạo – Nhân sự phục vụ Ban Giám hiệu ra quyết định."
@@ -133,9 +134,9 @@ export function ExecutiveView() {
       />
       <MockNotice />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border lg:grid-cols-4">
         {KPIS.map((kpi) => (
-          <KpiCard key={kpi.label} {...kpi} />
+          <KpiCard dashboard key={kpi.label} {...kpi} />
         ))}
       </div>
 
