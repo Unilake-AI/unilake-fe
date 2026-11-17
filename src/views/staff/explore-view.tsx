@@ -81,6 +81,7 @@ export function ExploreView() {
       ) : catalog.isError ? (
         <ErrorState
           message={getApiErrorMessage(catalog.error, 'Không tải được danh sách bộ dữ liệu.')}
+          retrying={catalog.isFetching}
           onRetry={() => void catalog.refetch()}
         />
       ) : entries.length === 0 ? (

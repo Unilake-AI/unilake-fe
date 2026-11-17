@@ -122,7 +122,7 @@ describe('StaffOverviewView', () => {
         expect(await screen.findByText('12')).toBeInTheDocument()
         expect(screen.queryByText('Lĩnh vực được cấp:')).not.toBeInTheDocument()
         expect(screen.queryByRole('link', { name: 'Nạp dữ liệu' })).not.toBeInTheDocument()
-        expect(screen.getByRole('link', { name: 'Yêu cầu dữ liệu lỗi' })).toHaveAttribute(
+        expect(screen.getByRole('link', { name: 'Quản lý yêu cầu' })).toHaveAttribute(
           'href',
           '/staff/quality-issues'
         )

@@ -7,14 +7,20 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CircleAlert, LoaderCircle } from 'lucide-react'
+import { CircleAlert } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { API_CreateDataSource, API_UpdateDataSource } from '@/api/admindata/data-sources'
 import { API_ListSourceSystems } from '@/api/admindata/datasets'
 import { getApiErrorMessage } from '@/api/http'
 import { API_GetDataSource } from '@/api/shared/data-sources'
-import { Card, ErrorState, LoadingState, PageHeader } from '@/components/page/page-parts'
+import {
+  DatabaseLoader,
+  Card,
+  ErrorState,
+  LoadingState,
+  PageHeader,
+} from '@/components/page/page-parts'
 import {
   SOURCE_SYSTEMS,
   SOURCE_TYPE_CONFIG,
@@ -183,11 +189,10 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
             <button
               type="submit"
               disabled={save.isPending}
+              aria-busy={save.isPending}
               className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#b91830] px-3 text-xs font-semibold text-white hover:bg-[#9e1429] disabled:opacity-70"
             >
-              {save.isPending && (
-                <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
-              )}
+              {save.isPending && <DatabaseLoader compact />}
               {save.isPending ? 'Đang lưu…' : isEdit ? 'Lưu thay đổi' : 'Lưu nguồn dữ liệu'}
             </button>
           </>
@@ -423,6 +428,7 @@ export function SourceEditView({ id }: { id: number }) {
     return (
       <ErrorState
         message={getApiErrorMessage(detail.error, 'Không tải được nguồn dữ liệu.')}
+        retrying={detail.isFetching}
         onRetry={() => void detail.refetch()}
       />
     )

@@ -37,7 +37,8 @@ export function DomainSelector({ side = 'bottom' }: { side?: 'bottom' | 'right' 
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label="Chọn phân hệ nghiệp vụ"
-        className="flex h-10 w-full items-center gap-3 overflow-hidden rounded-[10px] px-[22px] text-left text-sm font-medium text-slate-200 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 data-[state=open]:bg-white/10"
+        title="Chọn phân hệ nghiệp vụ"
+        className="flex h-10 w-full items-center gap-3 overflow-hidden rounded-[10px] px-4 text-left text-sm font-medium text-slate-200 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 data-[state=open]:bg-white/10"
       >
         <Landmark className="size-4 shrink-0" aria-hidden="true" />
         <span className="min-w-0 flex-1 items-center gap-2 [display:var(--sidebar-label-display,flex)]">

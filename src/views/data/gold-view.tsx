@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useIsFetching, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
   API_GoldSources,
@@ -28,6 +28,7 @@ import {
   LoadingState,
   formatDateTime,
 } from '@/components/page/page-parts'
+import { TableSkeleton } from '@/components/ui/table-skeleton'
 
 const statusNames: Record<string, string> = {
   QUEUED: 'Đang chờ',
@@ -88,6 +89,7 @@ const inputClass = 'rounded-lg border border-slate-300 bg-white p-2 text-sm'
 
 export function GoldView() {
   const client = useQueryClient()
+  const refreshing = useIsFetching({ queryKey: ['gold'] }) > 0
   const [domain, setDomain] = useState<GoldDomain | ''>('')
   const [sourcePage, setSourcePage] = useState(0)
   const [jobPage, setJobPage] = useState(0)
@@ -155,6 +157,7 @@ export function GoldView() {
     },
   })
   const download = useMutation({
+    meta: { readOnly: true },
     mutationFn: API_GoldReport,
     onSuccess: (blob, id) => {
       const url = URL.createObjectURL(blob)
@@ -186,7 +189,10 @@ export function GoldView() {
         title="Tổng hợp & Báo cáo Gold"
         description="Silver công bố xong sẽ tự tạo lượt Gold. Theo dõi công bố Gold, đồng bộ dữ liệu vào DB và tải báo cáo theo từng nguồn."
         actions={
-          <Button onClick={() => void client.invalidateQueries({ queryKey: ['gold'] })}>
+          <Button
+            reading={refreshing}
+            onClick={() => void client.invalidateQueries({ queryKey: ['gold'] })}
+          >
             Làm mới
           </Button>
         }
@@ -249,13 +255,14 @@ export function GoldView() {
         subtitle="Nguồn đã có trước khi triển khai Gold có thể cần bấm Tạo Gold một lần."
       >
         {sources.isPending ? (
-          <LoadingState />
+          <TableSkeleton columns={4} />
         ) : sources.isError ? (
           <ErrorState
             message={getApiErrorMessage(
               sources.error,
               'Chưa lấy được thông tin Gold. Vui lòng thử lại.'
             )}
+            retrying={sources.isFetching}
             onRetry={() => void sources.refetch()}
           />
         ) : !sources.data?.length ? (
@@ -302,6 +309,7 @@ export function GoldView() {
                     <td>
                       {item.sync_status === 'NOT_STARTED' ? (
                         <Button
+                          loading={update.isPending && update.variables === item.silver_snapshot_id}
                           disabled={update.isPending}
                           onClick={() => update.mutate(item.silver_snapshot_id)}
                         >
@@ -326,13 +334,14 @@ export function GoldView() {
         subtitle="Khi Silver thay đổi, số liệu cũ được ẩn ở đây cho đến khi Gold cập nhật xong. Lịch sử vẫn được giữ lại."
       >
         {metrics.isPending ? (
-          <LoadingState />
+          <TableSkeleton columns={4} />
         ) : metrics.isError ? (
           <ErrorState
             message={getApiErrorMessage(
               metrics.error,
               'Chưa lấy được thông tin Gold. Vui lòng thử lại.'
             )}
+            retrying={metrics.isFetching}
             onRetry={() => void metrics.refetch()}
           />
         ) : !metrics.data?.length ? (
@@ -385,7 +394,7 @@ export function GoldView() {
       </Card>
       <Card title="Lịch sử xử lý Gold">
         {jobs.isPending ? (
-          <LoadingState />
+          <TableSkeleton columns={5} />
         ) : jobs.isError ? (
           <ErrorState
             message={getApiErrorMessage(
@@ -428,6 +437,7 @@ export function GoldView() {
                       )}
                       {item.status === 'SUCCEEDED' && (
                         <Button
+                          reading={download.isPending && download.variables === item.job_id}
                           disabled={download.isPending}
                           onClick={() => download.mutate(item.job_id)}
                         >
@@ -470,7 +480,7 @@ export function GoldView() {
           </p>
           <div className="flex gap-2">
             <Button
-              disabled={retry.isPending}
+              loading={retry.isPending}
               variant="primary"
               onClick={() => retry.mutate(retryId)}
             >
@@ -549,7 +559,11 @@ export function GoldView() {
                   </p>
                 )}
                 {detail.data.status === 'SUCCEEDED' && (
-                  <Button disabled={download.isPending} onClick={() => download.mutate(selected)}>
+                  <Button
+                    reading={download.isPending && download.variables === selected}
+                    disabled={download.isPending}
+                    onClick={() => download.mutate(selected)}
+                  >
                     Tải báo cáo CSV
                   </Button>
                 )}

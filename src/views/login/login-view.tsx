@@ -1,26 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  CircleAlert,
-  Clock,
-  Eye,
-  EyeOff,
-  Info,
-  Layers3,
-  LoaderCircle,
-  LockKeyhole,
-  LogIn,
-  ShieldCheck,
-  Sparkles,
-  UserRound,
-  X,
-} from 'lucide-react'
+import { CircleAlert, Clock, Eye, EyeOff, X } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -31,6 +17,7 @@ import aiLeavesLeft from '@/assets/login/ai-leaves-left.png'
 import aiLeavesTop from '@/assets/login/ai-leaves-top-left.png'
 import aiAmbient from '@/assets/login/ai-login-ambient.webp'
 import aiSky from '@/assets/login/ai-sky-background.webp'
+import { DatabaseLoader, PendingOverlay } from '@/components/page/page-parts'
 import { getDefaultHomeForRoles, toRoleCode } from '@/config/roles'
 import { SESSION_EXPIRED_PARAM, storeSession } from '@/lib/session'
 import type { LoginFormValues } from '@/types/auth'
@@ -54,6 +41,7 @@ const DEFAULT_LOGIN_ERROR = 'Tên đăng nhập hoặc mật khẩu chưa đúng
 
 export function LoginView() {
   const router = useRouter()
+  const [isNavigating, startNavigation] = useTransition()
   const [showPassword, setShowPassword] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const [sessionExpired, setSessionExpired] = useState(false)
@@ -70,6 +58,7 @@ export function LoginView() {
     resolver: zodResolver(loginSchema),
     defaultValues: { username: '', password: '' },
   })
+  const isSigningIn = isSubmitting || isNavigating
 
   async function onSubmit(values: LoginFormValues) {
     setServerError(null)
@@ -86,8 +75,10 @@ export function LoginView() {
 
       const redirectPath = getDefaultHomeForRoles([role])
 
-      router.push(redirectPath)
-      router.refresh()
+      startNavigation(() => {
+        router.push(redirectPath)
+        router.refresh()
+      })
     } catch (err: unknown) {
       setServerError(
         getApiErrorMessage(
@@ -101,11 +92,11 @@ export function LoginView() {
 
   return (
     <main className={styles.page}>
-      <div className={styles.sky} aria-hidden="true">
-        <Image src={aiSky} alt="" fill sizes="100vw" priority />
+      <div className={styles.backdrop} aria-hidden="true">
+        <Image src={aiSky} alt="" fill sizes="60vw" />
       </div>
       <div className={styles.ambient} aria-hidden="true">
-        <Image src={aiAmbient} alt="" fill sizes="70vw" />
+        <Image src={aiAmbient} alt="" fill sizes="50vw" />
       </div>
       <Image
         className={styles.leavesTop}
@@ -131,156 +122,138 @@ export function LoginView() {
         height={180}
         aria-hidden="true"
       />
-      <section className={styles.intro} aria-label="Giới thiệu UniLake AI">
-        <div className={styles.introCopy}>
-          <h1>
-            <Image className={styles.introLogo} src="/logo.png" alt="" width={96} height={96} />
-            UniLake AI
-          </h1>
-          <p className={styles.introTagline}>Nền tảng Data Lake</p>
-          <p className={styles.introDescription}>
-            Gom dữ liệu từ các phòng ban, làm sạch và chuẩn hóa qua 3 tầng dữ liệu Bronze – Silver –
-            Gold, kiểm soát chất lượng dữ liệu và hỗ trợ lãnh đạo ra quyết định bằng Hỏi AI.
-          </p>
-        </div>
-        <ul className={styles.features} aria-label="Các tính năng chính">
-          <li>
-            <span className={styles.featureIcon}>
-              <Layers3 size={21} />
-            </span>
-            <span>
-              <strong>Tích hợp dữ liệu</strong>
-              <small>Tuyển sinh · Đào tạo · Nhân sự</small>
-            </span>
-          </li>
-          <li>
-            <span className={styles.featureIcon}>
-              <ShieldCheck size={21} />
-            </span>
-            <span>
-              <strong>Dữ liệu tin cậy</strong>
-              <small>Làm sạch & kiểm soát chất lượng</small>
-            </span>
-          </li>
-          <li>
-            <span className={styles.featureIcon}>
-              <Sparkles size={21} />
-            </span>
-            <span>
-              <strong>Hỏi AI thông minh</strong>
-              <small>Tra cứu, phân tích và ra quyết định</small>
-            </span>
-          </li>
-        </ul>
-        <div className={styles.campus} aria-hidden="true">
-          <Image src={campus} alt="" width={563} height={355} priority />
-        </div>
-      </section>
-      <section className={styles.formArea} aria-label="Đăng nhập hệ thống">
-        <div className={styles.card}>
-          <header className={styles.formHeading}>
-            <h2>Đăng nhập</h2>
-            <p>Vui lòng đăng nhập bằng tài khoản công vụ của nhà trường.</p>
-          </header>
-          {sessionExpired && !serverError && (
-            <div role="status" className={styles.statusBox}>
-              <Clock size={18} aria-hidden="true" />
-              <span>
-                <strong>Phiên đăng nhập đã hết hạn</strong>
-                <br />
-                Vui lòng đăng nhập lại để tiếp tục làm việc.
-              </span>
-            </div>
-          )}
-          {serverError && (
-            <div role="alert" className={styles.errorBox}>
-              <CircleAlert size={18} aria-hidden="true" />
-              <span>
-                <strong>Đăng nhập không thành công</strong>
-                <br />
-                {serverError}
-              </span>
-              <button
-                type="button"
-                aria-label="Đóng thông báo lỗi"
-                onClick={() => setServerError(null)}
+      <div className={styles.panel}>
+        <section className={styles.intro} aria-label="Giới thiệu UniLake AI">
+          <div className={styles.cover} aria-hidden="true">
+            <Image src={campus} alt="" fill sizes="(max-width: 680px) 100vw, 570px" priority />
+          </div>
+          <div className={styles.introCopy}>
+            <p className={styles.introTagline}>Nền tảng Data Lake</p>
+            <p className={styles.introDescription}>
+              Tích hợp, chuẩn hóa và tra cứu dữ liệu Tuyển sinh, Đào tạo và Nhân sự.
+            </p>
+          </div>
+        </section>
+        <section className={styles.formArea} aria-label="Đăng nhập hệ thống">
+          <div className={styles.brand}>
+            <Image className={styles.brandLogo} src="/logo.png" alt="" width={44} height={44} />
+            <span>UniLake AI</span>
+          </div>
+          <div className={styles.formContent}>
+            <header className={styles.formHeading}>
+              <h1>Đăng nhập</h1>
+              <p>Dùng tài khoản do Trường Đại học Duy Tân cấp.</p>
+            </header>
+            <div className={styles.formBody}>
+              {sessionExpired && !serverError && (
+                <div role="status" className={styles.statusBox}>
+                  <Clock size={18} aria-hidden="true" />
+                  <span>
+                    <strong>Phiên đăng nhập đã hết hạn</strong>
+                    <br />
+                    Vui lòng đăng nhập lại để tiếp tục làm việc.
+                  </span>
+                </div>
+              )}
+              {serverError && (
+                <div role="alert" className={styles.errorBox}>
+                  <CircleAlert size={18} aria-hidden="true" />
+                  <span>
+                    <strong>Đăng nhập không thành công</strong>
+                    <br />
+                    {serverError}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Đóng thông báo lỗi"
+                    onClick={() => setServerError(null)}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              )}
+              <form
+                noValidate
+                className={styles.form}
+                onSubmit={(event) => void handleSubmit(onSubmit)(event)}
               >
-                <X size={16} />
-              </button>
-            </div>
-          )}
-          <form
-            noValidate
-            className={styles.form}
-            onSubmit={(event) => void handleSubmit(onSubmit)(event)}
-          >
-            <div className={styles.field}>
-              <label htmlFor="username">Tên đăng nhập hoặc email</label>
-              <div className={styles.inputWrap}>
-                <UserRound size={17} aria-hidden="true" />
-                <input
-                  id="username"
-                  type="text"
-                  autoComplete="username"
-                  placeholder="Nhập tên đăng nhập hoặc email"
-                  aria-invalid={errors.username ? true : undefined}
-                  aria-describedby={errors.username ? 'username-error' : undefined}
-                  {...register('username')}
-                />
-              </div>
-              {errors.username && (
-                <p id="username-error" className={styles.fieldError} role="alert">
-                  {errors.username.message}
-                </p>
-              )}
-            </div>
-            <div className={styles.field}>
-              <label htmlFor="password">Mật khẩu</label>
-              <div className={styles.inputWrap}>
-                <LockKeyhole size={17} aria-hidden="true" />
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  placeholder="Nhập mật khẩu"
-                  aria-invalid={errors.password ? true : undefined}
-                  aria-describedby={errors.password ? 'password-error' : undefined}
-                  {...register('password')}
-                />
+                <div className={styles.field}>
+                  <label htmlFor="username">Tên đăng nhập hoặc email</label>
+                  <div className={styles.inputWrap}>
+                    <input
+                      id="username"
+                      readOnly={isSigningIn}
+                      type="text"
+                      autoComplete="username"
+                      autoCapitalize="none"
+                      spellCheck={false}
+                      placeholder="Nhập tên đăng nhập hoặc email"
+                      aria-invalid={errors.username ? true : undefined}
+                      aria-describedby={errors.username ? 'username-error' : undefined}
+                      {...register('username')}
+                    />
+                  </div>
+                  {errors.username && (
+                    <p id="username-error" className={styles.fieldError} role="alert">
+                      {errors.username.message}
+                    </p>
+                  )}
+                </div>
+                <div className={styles.field}>
+                  <label htmlFor="password">Mật khẩu</label>
+                  <div className={styles.inputWrap}>
+                    <input
+                      id="password"
+                      readOnly={isSigningIn}
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      placeholder="Nhập mật khẩu"
+                      aria-invalid={errors.password ? true : undefined}
+                      aria-describedby={errors.password ? 'password-error' : undefined}
+                      {...register('password')}
+                    />
+                    <button
+                      type="button"
+                      disabled={isSigningIn}
+                      onClick={() => setShowPassword((current) => !current)}
+                      aria-controls="password"
+                      aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <p id="password-error" className={styles.fieldError} role="alert">
+                      {errors.password.message}
+                    </p>
+                  )}
+                </div>
                 <button
-                  type="button"
-                  onClick={() => setShowPassword((current) => !current)}
-                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  type="submit"
+                  disabled={isSigningIn}
+                  aria-busy={isSigningIn}
+                  className={styles.submit}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {isSigningIn && <DatabaseLoader compact />}
+                  {isSigningIn ? 'Đang xác thực…' : 'Đăng nhập'}
                 </button>
-              </div>
-              {errors.password && (
-                <p id="password-error" className={styles.fieldError} role="alert">
-                  {errors.password.message}
-                </p>
-              )}
+              </form>
             </div>
-            <button type="submit" disabled={isSubmitting} className={styles.submit}>
-              {isSubmitting ? (
-                <LoaderCircle size={18} className={styles.spinner} aria-hidden="true" />
-              ) : (
-                <LogIn size={18} aria-hidden="true" />
-              )}
-              {isSubmitting ? 'Đang xác thực…' : 'Đăng nhập'}
-            </button>
-          </form>
-          <aside className={styles.notice}>
-            <Info size={20} aria-hidden="true" />
-            <span>
-              <strong>Lưu ý</strong>
-              <br />
-              Sử dụng tài khoản được cấp bởi Trường Đại học Duy Tân. Nếu gặp vấn đề khi đăng nhập,
-              vui lòng liên hệ Quản trị hệ thống.
-            </span>
-          </aside>
-        </div>
-      </section>
+            <aside className={styles.notice}>
+              <span>
+                <strong>Cần hỗ trợ?</strong> Liên hệ quản trị hệ thống nếu bạn gặp sự cố về tài
+                khoản.
+              </span>
+            </aside>
+          </div>
+        </section>
+      </div>
+      {isSigningIn && (
+        <PendingOverlay
+          label="Đang đăng nhập…"
+          description="Đang kết nối với hệ thống UniLake AI."
+        />
+      )}
     </main>
   )
 }

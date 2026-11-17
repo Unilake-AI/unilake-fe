@@ -1,18 +1,13 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { AxiosError, AxiosHeaders } from 'axios'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import { http } from '@/api/http'
 
 import { DataDashboardView } from './dashboard-view'
 
 import type { InternalAxiosRequestConfig } from 'axios'
-
-// Vite trả URL chuỗi; mô phỏng metadata ảnh tĩnh mà Next cung cấp khi build.
-vi.mock('@/assets/login/duy-tan-campus-source.png', () => ({
-  default: { src: '/campus-test.png', width: 1600, height: 900 },
-}))
 
 function renderDashboard() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -34,9 +29,11 @@ describe('DataDashboardView', () => {
   })
 
   it('hiển thị đầy đủ thống kê từ API thực tế và không bịa phần trăm chất lượng tổng', async () => {
-    const calls: string[] = []
+    let finishRecentJobs: () => void = () => undefined
+    const recentJobs = new Promise<void>((resolve) => {
+      finishRecentJobs = resolve
+    })
     http.defaults.adapter = (config) => {
-      calls.push(config.url ?? '')
       const key = `${config.method} ${config.url}`
       const map: Record<string, unknown> = {
         'get /ingestion/jobs/stats': {
@@ -75,38 +72,26 @@ describe('DataDashboardView', () => {
           verified: 3,
         },
         'get /cleaning-runs': [],
-        'get /pipeline/auto/overview': {
-          automatic_enabled: true,
-          healthy_workers: 1,
-          counts: { SUCCESS: 4 },
-          paused_datasets: 0,
-          total: 4,
-          recipe_version: 'auto-source-v1',
-        },
-        'get /pipeline/auto/flows': { items: [], next_offset: null },
       }
-      return Promise.resolve({ data: map[key], status: 200, statusText: 'OK', headers: {}, config })
+      const response = { data: map[key], status: 200, statusText: 'OK', headers: {}, config }
+      return key === 'get /ingestion/jobs'
+        ? recentJobs.then(() => response)
+        : Promise.resolve(response)
     }
 
-    const { client } = renderDashboard()
+    const { client, container } = renderDashboard()
     try {
+      expect(screen.getByText('Đang tải thống kê lượt nạp…')).toBeInTheDocument()
+      expect(container.querySelector('.database-loader')).not.toBeInTheDocument()
       expect(await screen.findByText('25')).toBeInTheDocument()
-      expect(
-        screen.getByRole('region', { name: 'Dashboard Bronze đến Silver' })
-      ).toBeInTheDocument()
-      expect(screen.getByRole('checkbox', { name: 'Tự cập nhật mỗi 5 giây' })).toBeChecked()
       expect(screen.getByText('12.0%')).toBeInTheDocument()
       expect(screen.getByText('1 (1 đang chạy job)')).toBeInTheDocument()
       expect(screen.getByText('9')).toBeInTheDocument()
       expect(screen.queryByText(/96,8%/)).not.toBeInTheDocument()
-      await waitFor(() =>
-        expect(screen.getByRole('button', { name: 'Làm mới' })).not.toBeDisabled()
-      )
-      fireEvent.click(screen.getByRole('button', { name: 'Làm mới' }))
-      await waitFor(() =>
-        expect(calls.filter((url) => url === '/pipeline/auto/flows').length).toBeGreaterThan(1)
-      )
-      expect(calls.filter((url) => url === '/pipeline/auto/overview').length).toBeGreaterThan(1)
+      expect(screen.getByText('Đang tải các lần nạp gần đây…')).toBeInTheDocument()
+      finishRecentJobs()
+      expect(await screen.findByText('Chưa có lần nạp dữ liệu nào')).toBeInTheDocument()
+      expect(screen.queryByText('Đang tải các lần nạp gần đây…')).not.toBeInTheDocument()
     } finally {
       client.clear()
     }

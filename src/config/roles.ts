@@ -94,9 +94,17 @@ export const ROLE_PRIORITY: RoleCode[] = [
 
 const ROLE_SET = new Set<RoleCode>(ROLE_PRIORITY)
 
-export const ROLE_ROUTE_PREFIXES: Record<RoleCode, string> = Object.fromEntries(
-  ROLE_PRIORITY.map((role) => [role, ROLE_DEFINITIONS[role].homePath])
-) as Record<RoleCode, string>
+export const ROLE_ROUTE_PREFIXES = {
+  ADMIN: '/admin',
+  DATA_ADMIN: '/data',
+  VIEWER: '/viewer',
+  ADMISSIONS_MANAGER: '/manager',
+  ADMISSIONS_STAFF: '/staff',
+  ACADEMIC_MANAGER: '/manager',
+  ACADEMIC_STAFF: '/staff',
+  HR_MANAGER: '/manager',
+  HR_STAFF: '/staff',
+} as const satisfies Record<RoleCode, string>
 
 const DEPARTMENT_DOMAINS: Partial<Record<RoleCode, Exclude<DomainCode, 'all'>>> = {
   ADMISSIONS_MANAGER: 'admissions',

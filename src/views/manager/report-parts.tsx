@@ -157,20 +157,39 @@ export function MetricList({ items }: { items: ManagerMetric[] }) {
       />
     )
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {items.map((item) => (
-        <div
-          key={JSON.stringify([item.scope, item.entity, item.metric, item.dimensions])}
-          className="rounded-xl border border-slate-200 p-4"
-        >
-          <p className="text-sm font-semibold">{label(item.entity)}</p>
-          <p className="mt-2 text-3xl font-bold text-indigo-700">
-            {number(item.value)} <span className="text-xs font-normal text-slate-500">bản ghi</span>
-          </p>
-          <p className="mt-2 text-xs text-slate-600">{item.dataset_name}</p>
-          <p className="mt-1 break-all text-xs text-slate-500">Nguồn: {item.scope}</p>
-        </div>
-      ))}
+    <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Số bản ghi theo nguồn">
+      <table className="w-full min-w-[360px] text-left text-xs">
+        <thead>
+          <tr>
+            <th scope="col" className="px-3 py-2">
+              Loại dữ liệu
+            </th>
+            <th scope="col" className="px-3 py-2">
+              Bộ dữ liệu và nguồn
+            </th>
+            <th scope="col" className="px-3 py-2 text-right">
+              Bản ghi
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr key={JSON.stringify([item.scope, item.entity, item.metric, item.dimensions])}>
+              <th scope="row" className="px-3 py-2.5 font-medium">
+                {label(item.entity)}
+              </th>
+              <td className="px-3 py-2.5">
+                <p>{item.dataset_name}</p>
+                <p className="break-all text-muted-foreground">Nguồn: {item.scope}</p>
+              </td>
+              <td className="px-3 py-2.5 text-right font-semibold tabular-nums">
+                {number(item.value)}
+                <span className="sr-only"> bản ghi</span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }

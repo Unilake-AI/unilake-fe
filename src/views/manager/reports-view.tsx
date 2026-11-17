@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { getApiErrorMessage } from '@/api/http'
 import {
@@ -16,6 +16,8 @@ import {
   API_ManagerRecipes,
 } from '@/api/manager/reports'
 import type { ManagerContext, AnalyticsFilters, IssueFilters } from '@/api/manager/reports'
+import { CountChart } from '@/components/charts/count-chart'
+import { DetailDrawer } from '@/components/page/detail-drawer'
 import {
   Button,
   Card,
@@ -24,17 +26,17 @@ import {
   KpiCard,
   LoadingState,
   PageHeader,
+  Tag,
+  statusTone,
   formatDateTime,
 } from '@/components/page/page-parts'
 
-import { BusinessSync, ManagerRecords, databaseStatus, databaseError } from './records-view'
 import { ManagerGate, MetricList, Paging, inputClass, label, number } from './report-parts'
 
-type Mode = 'overview' | 'analytics' | 'datasets' | 'issues' | 'records'
+type Mode = 'overview' | 'analytics' | 'datasets' | 'issues'
 type Domain = 'hr' | 'academic' | 'admissions'
 const titles = {
   overview: 'Tổng quan phân hệ',
-  records: 'Dữ liệu nghiệp vụ phòng ban',
   analytics: 'Phân tích dữ liệu',
   datasets: 'Bộ dữ liệu phòng ban',
   issues: 'Yêu cầu sửa dữ liệu',
@@ -48,7 +50,7 @@ export function ManagerReportsView({ mode = 'overview' }: { mode?: Mode }) {
     <ManagerGate>
       {(context) => (
         <ManagerWorkspace
-          key={JSON.stringify([context.user_id, context.roles, context.departments])}
+          key={JSON.stringify([context.roles, context.departments])}
           context={context}
           mode={mode}
         />
@@ -67,14 +69,19 @@ function ManagerWorkspace({ context, mode }: { context: ManagerContext; mode: Mo
     available.find((domain) => domain.domain === context.default_domain) ?? available[0]
   const [domain, setDomain] = useState<Domain>((initial?.domain ?? 'hr') as Domain)
   const client = useQueryClient()
+  const refreshing = useIsFetching({ queryKey: ['manager'] }) > 0
   return (
     <div className="space-y-5">
       <PageHeader
+        dashboard={mode === 'overview'}
         breadcrumb={['Quản lý đơn vị', label(domain)]}
         title={titles[mode]}
         description={`${label(domain)} · Báo cáo trong phạm vi phòng phụ trách đang hiệu lực.`}
         actions={
-          <Button onClick={() => void client.invalidateQueries({ queryKey: ['manager'] })}>
+          <Button
+            reading={refreshing}
+            onClick={() => void client.invalidateQueries({ queryKey: ['manager'] })}
+          >
             Làm mới
           </Button>
         }
@@ -99,20 +106,19 @@ function ManagerWorkspace({ context, mode }: { context: ManagerContext; mode: Mo
         </span>
       </div>
       <div key={domain}>
-        {mode === 'overview' && <Overview domain={domain} userId={context.user_id} />}
-        {mode === 'analytics' && <Analytics domain={domain} userId={context.user_id} />}
-        {mode === 'datasets' && <Datasets domain={domain} userId={context.user_id} />}
-        {mode === 'issues' && <Issues domain={domain} userId={context.user_id} />}
-        {mode === 'records' && <ManagerRecords domain={domain} userId={context.user_id} />}
+        {mode === 'overview' && <Overview domain={domain} />}
+        {mode === 'analytics' && <Analytics domain={domain} />}
+        {mode === 'datasets' && <Datasets domain={domain} />}
+        {mode === 'issues' && <Issues domain={domain} />}
       </div>
     </div>
   )
 }
 
-function Overview({ domain, userId }: { domain: Domain; userId: number }) {
+function Overview({ domain }: { domain: Domain }) {
   const [page, setPage] = useState(0)
   const query = useQuery({
-    queryKey: ['manager', 'overview', userId, domain, page],
+    queryKey: ['manager', 'overview', domain, page],
     queryFn: () => API_ManagerOverview({ domain, limit: size, offset: page * size }),
     ...polling,
   })
@@ -127,23 +133,59 @@ function Overview({ domain, userId }: { domain: Domain; userId: number }) {
   const data = query.data
   return (
     <div className="space-y-5">
-      <div
-        role="status"
-        className="rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-900"
-      >
-        <strong>{label(data.status)}</strong>
-        <p className="mt-1 text-xs">
-          Cập nhật gần nhất: {formatDateTime(data.last_updated_at)} ·{' '}
-          {number(data.sources.current ?? 0)}/{number(data.sources.total ?? 0)} nguồn đã đồng bộ ·{' '}
-          {number(data.sources.failed ?? 0)} nguồn lỗi
-        </p>
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border lg:grid-cols-4">
+        <KpiCard dashboard label="Bộ dữ liệu được quản lý" value={number(data.datasets)} />
+        <KpiCard
+          dashboard
+          label="Yêu cầu cần xử lý"
+          value={number(data.issues.assigned)}
+          tone="amber"
+        />
+        <KpiCard
+          dashboard
+          label="Đang chờ xác minh"
+          value={number(data.issues.pending_verification)}
+        />
+        <KpiCard
+          dashboard
+          label="Đã xác minh"
+          value={number(data.issues.verified)}
+          tone="emerald"
+        />
       </div>
-      {data.database_sync && <BusinessSync stats={data.database_sync} />}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Bộ dữ liệu được quản lý" value={number(data.datasets)} />
-        <KpiCard label="Yêu cầu cần xử lý" value={number(data.issues.assigned)} tone="amber" />
-        <KpiCard label="Đang chờ xác minh" value={number(data.issues.pending_verification)} />
-        <KpiCard label="Đã xác minh" value={number(data.issues.verified)} tone="emerald" />
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <Card
+          title="Tiến độ yêu cầu sửa dữ liệu"
+          subtitle="Số yêu cầu trong phạm vi phân hệ đang xem"
+        >
+          <CountChart
+            unit="yêu cầu"
+            data={[
+              { label: 'Cần xử lý', count: data.issues.assigned, tone: 'warning' },
+              { label: 'Chờ xác minh', count: data.issues.pending_verification },
+              { label: 'Đã xác minh', count: data.issues.verified, tone: 'success' },
+            ]}
+          />
+        </Card>
+        <Card title="Đồng bộ nguồn báo cáo">
+          <div role="status" className="space-y-3 text-sm">
+            <Tag tone={statusTone(data.status)}>{label(data.status)}</Tag>
+            <dl className="grid grid-cols-[1fr_auto] items-baseline gap-2">
+              <dt>Nguồn đã đồng bộ</dt>
+              <dd className="font-semibold tabular-nums">
+                {data.sources.current == null ? '—' : number(data.sources.current)}/
+                {data.sources.total == null ? '—' : number(data.sources.total)}
+              </dd>
+              <dt>Nguồn lỗi</dt>
+              <dd className="font-semibold tabular-nums">
+                {data.sources.failed == null ? '—' : number(data.sources.failed)}
+              </dd>
+            </dl>
+            <p className="text-xs text-muted-foreground">
+              Cập nhật gần nhất {formatDateTime(data.last_updated_at)}
+            </p>
+          </div>
+        </Card>
       </div>
       <Card
         title="Số bản ghi theo từng nguồn"
@@ -156,15 +198,12 @@ function Overview({ domain, userId }: { domain: Domain; userId: number }) {
   )
 }
 
-function Analytics({ domain, userId }: { domain: Domain; userId: number }) {
+function Analytics({ domain }: { domain: Domain }) {
   const [entity, setEntity] = useState('')
   const [metric, setMetric] = useState('record_count')
   const [dataset, setDataset] = useState('')
   const [page, setPage] = useState(0)
-  const recipes = useQuery({
-    queryKey: ['manager', 'recipes', userId],
-    queryFn: API_ManagerRecipes,
-  })
+  const recipes = useQuery({ queryKey: ['manager', 'recipes'], queryFn: API_ManagerRecipes })
   const fields = recipes.data?.dimensions[domain] ?? {}
   const params: AnalyticsFilters = {
     domain,
@@ -175,7 +214,7 @@ function Analytics({ domain, userId }: { domain: Domain; userId: number }) {
     offset: page * size,
   }
   const query = useQuery({
-    queryKey: ['manager', 'analytics', userId, params],
+    queryKey: ['manager', 'analytics', params],
     queryFn: () => API_ManagerAnalytics(params),
     ...polling,
   })
@@ -286,9 +325,9 @@ function Analytics({ domain, userId }: { domain: Domain; userId: number }) {
                       <span>{group}</span>
                       <strong>{number(item.value)} bản ghi</strong>
                     </div>
-                    <div aria-hidden="true" className="mt-2 h-2 rounded bg-indigo-50">
+                    <div aria-hidden="true" className="mt-2 h-2 rounded bg-slate-100">
                       <div
-                        className="h-2 rounded bg-indigo-500"
+                        className="h-2 rounded bg-[#334f72]"
                         style={{ width: `${(item.value / max) * 100}%` }}
                       />
                     </div>
@@ -310,16 +349,16 @@ function Analytics({ domain, userId }: { domain: Domain; userId: number }) {
   )
 }
 
-function Datasets({ domain, userId }: { domain: Domain; userId: number }) {
+function Datasets({ domain }: { domain: Domain }) {
   const [page, setPage] = useState(0)
   const [selected, setSelected] = useState<number | null>(null)
   const query = useQuery({
-    queryKey: ['manager', 'datasets', userId, domain, page],
+    queryKey: ['manager', 'datasets', domain, page],
     queryFn: () => API_ManagerDatasets({ domain, limit: size, offset: page * size }),
     ...polling,
   })
   const detail = useQuery({
-    queryKey: ['manager', 'dataset', userId, selected],
+    queryKey: ['manager', 'dataset', selected],
     queryFn: () => API_ManagerDataset(selected!),
     enabled: selected !== null,
     ...polling,
@@ -346,7 +385,7 @@ function Datasets({ domain, userId }: { domain: Domain; userId: number }) {
                 {query.data.items.map((item) => (
                   <div
                     key={item.dataset_id}
-                    className="flex flex-wrap items-center justify-between gap-3 py-4"
+                    className="flex flex-wrap items-center justify-between gap-3 py-2.5"
                   >
                     <div>
                       <p className="text-sm font-semibold">{item.dataset_name}</p>
@@ -366,60 +405,49 @@ function Datasets({ domain, userId }: { domain: Domain; userId: number }) {
           </>
         )}
       </Card>
-      {selected !== null && (
-        <Card
-          title={detail.data?.dataset_name ?? 'Chi tiết bộ dữ liệu'}
-          right={<Button onClick={() => setSelected(null)}>Đóng chi tiết</Button>}
-        >
-          {detail.isPending ? (
-            <LoadingState />
-          ) : detail.isError ? (
-            <ErrorState
-              message={getApiErrorMessage(detail.error, 'Không thể tải chi tiết.')}
-              onRetry={() => void detail.refetch()}
-            />
-          ) : (
-            <>
-              <p className="mb-4 text-sm text-slate-600">{detail.data.description}</p>
-              {!detail.data.sources.length ? (
-                <EmptyState title="Chưa có nguồn báo cáo đã công bố" />
-              ) : (
-                <div className="space-y-3">
-                  {detail.data.sources.map((source) => (
-                    <div key={source.scope} className="rounded-xl border p-4">
-                      <p className="text-sm font-semibold">
-                        Báo cáo Gold: {label(source.sync_status)}
+      <DetailDrawer
+        open={Boolean(selected !== null)}
+        onClose={() => setSelected(null)}
+        title={detail.data?.dataset_name ?? 'Chi tiết bộ dữ liệu'}
+      >
+        {detail.isPending ? (
+          <LoadingState />
+        ) : detail.isError ? (
+          <ErrorState
+            message={getApiErrorMessage(detail.error, 'Không thể tải chi tiết.')}
+            onRetry={() => void detail.refetch()}
+          />
+        ) : (
+          <>
+            <p className="mb-4 text-sm text-slate-600">{detail.data.description}</p>
+            {!detail.data.sources.length ? (
+              <EmptyState title="Chưa có nguồn báo cáo đã công bố" />
+            ) : (
+              <div className="space-y-3">
+                {detail.data.sources.map((source) => (
+                  <div key={source.scope} className="rounded-xl border p-4">
+                    <p className="text-sm font-semibold">{label(source.sync_status)}</p>
+                    <p className="mt-1 break-all text-xs text-slate-500">Nguồn: {source.scope}</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Công bố: {formatDateTime(source.finished_at)}
+                    </p>
+                    {source.error_code && (
+                      <p className="mt-2 text-xs text-rose-700">
+                        Nguồn đang gặp lỗi tổng hợp. Liên hệ quản trị dữ liệu.
                       </p>
-                      <p className="mt-1 text-sm">
-                        Dữ liệu nghiệp vụ: {databaseStatus(source.database_sync_status)}
-                      </p>
-                      {source.database_sync_error && (
-                        <p className="mt-2 text-xs text-amber-800">
-                          {databaseError(source.database_sync_error)}
-                        </p>
-                      )}
-                      <p className="mt-1 break-all text-xs text-slate-500">Nguồn: {source.scope}</p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        Công bố: {formatDateTime(source.finished_at)}
-                      </p>
-                      {source.error_code && (
-                        <p className="mt-2 text-xs text-rose-700">
-                          Nguồn đang gặp lỗi tổng hợp. Liên hệ quản trị dữ liệu.
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </Card>
-      )}
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </DetailDrawer>
     </div>
   )
 }
 
-function Issues({ domain, userId }: { domain: Domain; userId: number }) {
+function Issues({ domain }: { domain: Domain }) {
   const [page, setPage] = useState(0)
   const [status, setStatus] = useState('')
   const [selected, setSelected] = useState('')
@@ -430,17 +458,17 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
     offset: page * size,
   }
   const query = useQuery({
-    queryKey: ['manager', 'issues', userId, params],
+    queryKey: ['manager', 'issues', params],
     queryFn: () => API_ManagerIssues(params),
     ...polling,
   })
   const stats = useQuery({
-    queryKey: ['manager', 'issue-stats', userId, domain, status],
+    queryKey: ['manager', 'issue-stats', domain, status],
     queryFn: () => API_ManagerIssueStats({ domain, status: params.status }),
     ...polling,
   })
   const detail = useQuery({
-    queryKey: ['manager', 'issue', userId, selected],
+    queryKey: ['manager', 'issue', selected],
     queryFn: () => API_ManagerIssue(selected),
     enabled: Boolean(selected),
     ...polling,
@@ -492,12 +520,13 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
                 {query.data.map((item) => (
                   <div
                     key={item.issue_id}
-                    className="flex flex-wrap items-center justify-between gap-3 py-4"
+                    className="flex flex-wrap items-center justify-between gap-3 py-2.5"
                   >
                     <div>
                       <p className="text-sm font-semibold">{item.title}</p>
                       <p className="mt-1 text-xs text-slate-500">
-                        {label(item.status)} · {item.department_name} · Người phụ trách:{' '}
+                        <Tag tone={statusTone(item.status)}>{label(item.status)}</Tag> ·{' '}
+                        {item.department_name} · Người phụ trách:{' '}
                         {item.assignee_user_id ?? 'Chưa phân công'}
                       </p>
                     </div>
@@ -515,42 +544,39 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
           </>
         )}
       </Card>
-      {selected && (
-        <Card
-          title={detail.data?.title ?? 'Chi tiết yêu cầu'}
-          right={<Button onClick={() => setSelected('')}>Đóng chi tiết</Button>}
-        >
-          {detail.isPending ? (
-            <LoadingState />
-          ) : detail.isError ? (
-            <ErrorState
-              message={getApiErrorMessage(detail.error, 'Không thể tải yêu cầu.')}
-              onRetry={() => void detail.refetch()}
-            />
-          ) : (
-            <div className="space-y-4">
-              <p className="whitespace-pre-wrap text-sm">{detail.data.description}</p>
-              <p className="text-sm">
-                Trạng thái: {label(detail.data.status)} ·{' '}
-                {number(detail.data.quarantine_records.length)} bản ghi cần kiểm tra
-              </p>
-              <h3 className="text-sm font-semibold">Lịch sử xử lý</h3>
-              {!detail.data.history.length ? (
-                <p className="text-sm text-slate-500">Chưa có lịch sử.</p>
-              ) : (
-                detail.data.history.map((event) => (
-                  <div key={event.event_id} className="rounded-lg border p-3 text-sm">
-                    {label(event.to_status)} · Người thực hiện: {event.actor_id}
-                    <p className="mt-1 text-xs text-slate-500">
-                      {formatDateTime(event.created_at)}
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-        </Card>
-      )}
+      <DetailDrawer
+        open={Boolean(selected)}
+        onClose={() => setSelected('')}
+        title={detail.data?.title ?? 'Chi tiết yêu cầu'}
+      >
+        {detail.isPending ? (
+          <LoadingState />
+        ) : detail.isError ? (
+          <ErrorState
+            message={getApiErrorMessage(detail.error, 'Không thể tải yêu cầu.')}
+            onRetry={() => void detail.refetch()}
+          />
+        ) : (
+          <div className="space-y-4">
+            <p className="whitespace-pre-wrap text-sm">{detail.data.description}</p>
+            <p className="text-sm">
+              Trạng thái: {label(detail.data.status)} ·{' '}
+              {number(detail.data.quarantine_records.length)} bản ghi cần kiểm tra
+            </p>
+            <h3 className="text-sm font-semibold">Lịch sử xử lý</h3>
+            {!detail.data.history.length ? (
+              <p className="text-sm text-slate-500">Chưa có lịch sử.</p>
+            ) : (
+              detail.data.history.map((event) => (
+                <div key={event.event_id} className="rounded-lg border p-3 text-sm">
+                  {label(event.to_status)} · Người thực hiện: {event.actor_id}
+                  <p className="mt-1 text-xs text-slate-500">{formatDateTime(event.created_at)}</p>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </DetailDrawer>
     </div>
   )
 }

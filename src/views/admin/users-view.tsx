@@ -4,7 +4,14 @@ import { useState } from 'react'
 
 import { Search } from 'lucide-react'
 
-import { Card, KpiCard, MockNotice, PageHeader, Tag } from '@/components/page/page-parts'
+import {
+  Card,
+  EmptyState,
+  KpiCard,
+  MockNotice,
+  PageHeader,
+  Tag,
+} from '@/components/page/page-parts'
 import { ROLE_PRIORITY } from '@/config/roles'
 import type { StatusTone } from '@/types/page/page-parts'
 import type { RoleCode } from '@/types/roles'
@@ -13,7 +20,7 @@ import { SessionsPanel } from './sessions-panel'
 
 const ROLE_TONE: Record<RoleCode, StatusTone> = {
   ADMIN: 'amber',
-  DATA_ADMIN: 'emerald',
+  DATA_ADMIN: 'sky',
   VIEWER: 'slate',
   ADMISSIONS_MANAGER: 'indigo',
   ADMISSIONS_STAFF: 'sky',
@@ -154,8 +161,6 @@ export function UsersView() {
         />
       </div>
 
-      <SessionsPanel />
-
       <Card
         title="Tài khoản"
         subtitle={`Hiển thị ${rows.length} / ${USERS.length} tài khoản`}
@@ -193,48 +198,53 @@ export function UsersView() {
         }
         bodyClassName="p-0"
       >
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[820px] text-left text-xs">
-            <thead className="bg-slate-50 font-mono text-[10px] uppercase tracking-wider text-slate-500">
-              <tr>
-                {[
-                  'Tài khoản',
-                  'Vai trò',
-                  'Phân hệ được truy cập',
-                  'Đơn vị',
-                  'Trạng thái',
-                  'Đăng nhập gần nhất',
-                ].map((h) => (
-                  <th key={h} scope="col" className="px-3 py-2 font-medium">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {rows.map((user) => (
-                <tr key={user.email}>
-                  <td className="px-3 py-2.5">
-                    <p className="font-semibold text-slate-900">{user.name}</p>
-                    <p className="font-mono text-[10px] text-slate-400">{user.email}</p>
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <Tag tone={ROLE_TONE[user.role]}>{user.role}</Tag>
-                  </td>
-                  <td className="px-3 py-2.5 text-slate-600">{user.domains}</td>
-                  <td className="px-3 py-2.5 text-slate-600">{user.unit}</td>
-                  <td className="px-3 py-2.5">
-                    <Tag tone={user.locked ? 'rose' : 'emerald'}>
-                      {user.locked ? 'Đã khóa' : 'Đang hoạt động'}
-                    </Tag>
-                  </td>
-                  <td className="px-3 py-2.5 text-slate-600">{user.lastLogin}</td>
+        {rows.length === 0 ? (
+          <EmptyState title="Không tìm thấy tài khoản phù hợp" />
+        ) : (
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Bảng tài khoản">
+            <table className="w-full min-w-[720px] text-left text-xs">
+              <thead className="bg-slate-50 font-mono text-[10px] uppercase tracking-wider text-slate-500">
+                <tr>
+                  {[
+                    'Tài khoản',
+                    'Vai trò',
+                    'Phân hệ được truy cập',
+                    'Đơn vị',
+                    'Trạng thái',
+                    'Đăng nhập gần nhất',
+                  ].map((h) => (
+                    <th key={h} scope="col" className="px-3 py-2 font-medium">
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {rows.map((user) => (
+                  <tr key={user.email}>
+                    <td className="px-3 py-2.5">
+                      <p className="font-semibold text-slate-900">{user.name}</p>
+                      <p className="text-xs text-slate-600">{user.email}</p>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <Tag tone={ROLE_TONE[user.role]}>{user.role}</Tag>
+                    </td>
+                    <td className="px-3 py-2.5 text-slate-600">{user.domains}</td>
+                    <td className="px-3 py-2.5 text-slate-600">{user.unit}</td>
+                    <td className="px-3 py-2.5">
+                      <Tag tone={user.locked ? 'rose' : 'emerald'}>
+                        {user.locked ? 'Đã khóa' : 'Đang hoạt động'}
+                      </Tag>
+                    </td>
+                    <td className="px-3 py-2.5 text-slate-600">{user.lastLogin}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Card>
+      <SessionsPanel />
     </div>
   )
 }

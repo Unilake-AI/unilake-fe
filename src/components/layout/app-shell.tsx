@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 
+import Image from 'next/image'
+
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { Menu, X } from 'lucide-react'
 
@@ -19,12 +21,12 @@ import type { AppShellProps } from '@/types/layout/app-shell'
 import { NotificationButton, NotificationPanel, getUnreadNotifications } from './notifications'
 import { Sidebar } from './sidebar'
 import { UserMenu } from './user-menu'
+import logoText from '../../../public/logo_text.png'
 
-const TABLET_QUERY = '(min-width: 768px) and (max-width: 1279px)'
+const DESKTOP_NAV = '(min-width: 768px) and (hover: hover) and (pointer: fine)'
 
 export function AppShell({ role, children }: AppShellProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean | 'auto'>('auto')
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const notificationTrigger = useRef<HTMLButtonElement>(null)
   const mobileNavigationTrigger = useRef<HTMLButtonElement>(null)
@@ -46,7 +48,7 @@ export function AppShell({ role, children }: AppShellProps) {
   )
 
   useEffect(() => {
-    const desktop = window.matchMedia('(min-width: 768px)')
+    const desktop = window.matchMedia(DESKTOP_NAV)
     const closeMobileMenu = () => {
       if (desktop.matches) setMobileMenuOpen(false)
     }
@@ -54,69 +56,66 @@ export function AppShell({ role, children }: AppShellProps) {
     return () => desktop.removeEventListener('change', closeMobileMenu)
   }, [])
 
-  function toggleSidebar() {
-    const tablet = window.matchMedia(TABLET_QUERY).matches
-    setSidebarCollapsed((value) => !(value === 'auto' ? tablet : value))
-  }
-
   return (
     <DomainProvider role={role}>
       <Dialog open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <div className="flex min-h-dvh min-w-0 bg-[#f6f8fc] text-[#101a32] antialiased">
-          <div className="sticky top-0 hidden h-dvh shrink-0 md:block">
-            <Sidebar
-              role={role}
-              collapsed={notificationsOpen || sidebarCollapsed}
-              onToggleCollapsed={toggleSidebar}
-              actions={
-                <>
-                  {notificationButton}
-                  <UserMenu role={role} />
-                </>
-              }
+        <a
+          href="#workspace-content"
+          className="sr-only z-[70] focus:not-sr-only focus:fixed focus:left-3 focus:top-2 focus:rounded-md focus:bg-white focus:p-3"
+        >
+          Chuyển đến nội dung
+        </a>
+        <header className="workspace-header fixed inset-x-0 top-0 z-40 flex items-center justify-between gap-3 border-b border-white/10 bg-sidebar px-3 text-white sm:px-5">
+          <div className="flex min-w-0 items-center gap-2">
+            <DialogTrigger asChild>
+              <button
+                ref={mobileNavigationTrigger}
+                type="button"
+                className="workspace-menu-button grid size-11 shrink-0 place-items-center rounded-md hover:bg-white/10"
+                aria-label="Mở menu điều hướng"
+              >
+                <Menu className="size-5" aria-hidden="true" />
+              </button>
+            </DialogTrigger>
+            <Image
+              src={logoText}
+              alt="UniLake AI"
+              priority
+              className="h-auto w-28 object-contain sm:w-36"
             />
           </div>
+          <div className="flex shrink-0 items-center gap-1">
+            {notificationButton}
+            <UserMenu role={role} />
+          </div>
+        </header>
 
-          <main className="dashboard-content min-w-0 flex-1 bg-[radial-gradient(circle_at_60%_10%,rgba(230,233,255,.55),transparent_55%)] p-4 md:p-6">
-            <div className="mb-4 md:hidden">
-              <DialogTrigger asChild>
-                <button
-                  ref={mobileNavigationTrigger}
-                  type="button"
-                  className="grid size-10 place-items-center rounded-lg border border-slate-200 bg-white text-slate-800 hover:bg-slate-100"
-                  aria-label="Mở menu điều hướng"
-                >
-                  <Menu className="size-5" aria-hidden="true" />
-                </button>
-              </DialogTrigger>
-            </div>
-            {children}
-          </main>
+        <div className="workspace-rail fixed left-0 z-30">
+          <Sidebar role={role} />
         </div>
 
+        <main
+          id="workspace-content"
+          tabIndex={-1}
+          className="dashboard-content workspace-main min-h-dvh min-w-0 bg-background px-3 pb-6 text-foreground antialiased sm:px-6"
+        >
+          {children}
+        </main>
+
         <DialogPortal>
-          <DialogOverlay className="bg-[#081126]/65 duration-200 motion-reduce:animate-none md:hidden" />
+          <DialogOverlay className="workspace-menu-overlay bg-slate-950/45 motion-reduce:animate-none" />
           <DialogPrimitive.Content
             aria-describedby={undefined}
-            className="fixed inset-y-0 left-0 z-50 max-w-[86vw] outline-none duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left-full data-[state=open]:slide-in-from-left-full motion-reduce:animate-none md:hidden"
+            className="workspace-mobile-menu fixed bottom-0 left-0 z-50 w-60 max-w-[86vw] bg-sidebar pt-12 outline-none motion-safe:data-[state=open]:animate-in motion-safe:data-[state=open]:slide-in-from-left-4"
           >
             <DialogTitle className="sr-only">Menu điều hướng</DialogTitle>
             <DialogClose
-              className="absolute right-3 top-5 z-10 flex size-9 items-center justify-center rounded-lg text-white transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2"
+              className="absolute right-2 top-1 grid size-10 place-items-center rounded-md text-white hover:bg-white/10"
               aria-label="Đóng menu"
             >
               <X className="size-5" aria-hidden="true" />
             </DialogClose>
-            <Sidebar
-              role={role}
-              onCloseMobile={() => setMobileMenuOpen(false)}
-              actions={
-                <>
-                  {notificationButton}
-                  <UserMenu role={role} onNavigate={() => setMobileMenuOpen(false)} />
-                </>
-              }
-            />
+            <Sidebar role={role} onCloseMobile={() => setMobileMenuOpen(false)} />
           </DialogPrimitive.Content>
         </DialogPortal>
       </Dialog>

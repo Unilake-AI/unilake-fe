@@ -12,7 +12,6 @@ import {
   Check,
   CircleAlert,
   Copy,
-  LoaderCircle,
   MessageSquare,
   SearchX,
   Send,
@@ -21,9 +20,7 @@ import {
 
 import { getApiErrorMessage } from '@/api/http'
 import { API_AskNlq } from '@/api/shared/nlq'
-import robotAnalytics from '@/assets/dashboard/ai-robot-analytics.webp'
-import emptyAiQuery from '@/assets/dashboard/empty-ai-query.webp'
-import { Card, PageHeader, Tag } from '@/components/page/page-parts'
+import { Card, EmptyState, LoadingState, PageHeader, Tag } from '@/components/page/page-parts'
 import { getDomain } from '@/config/domains'
 import { useDomain } from '@/hooks/use-domain'
 import { addQueryHistory, readQueryHistory } from '@/lib/query-history'
@@ -146,6 +143,7 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
   }, [])
 
   const ask = useMutation({
+    meta: { readOnly: true },
     mutationFn: async ({ text }: { id: number; text: string }) => {
       const started = performance.now()
       const result = await API_AskNlq(text)
@@ -210,7 +208,6 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
         breadcrumb={[getDomain(domain.code).shortLabel, 'Hỏi AI']}
         title="Hỏi AI — Truy vấn bằng ngôn ngữ tự nhiên"
         description="Đặt câu hỏi bằng tiếng Việt để tìm thông tin, thống kê và phân tích dữ liệu trong hệ thống."
-        illustration={robotAnalytics}
       />
 
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_310px]">
@@ -218,7 +215,7 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
           <Card
             title={
               <span className="flex items-center gap-2">
-                <Sparkles className="size-5 text-[#5146e7]" />
+                <Sparkles className="size-5 text-primary" />
                 Gợi ý câu hỏi thường gặp
               </span>
             }
@@ -230,7 +227,7 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
                   type="button"
                   disabled={ask.isPending}
                   onClick={() => send(item)}
-                  className="min-h-14 rounded-xl border border-[#e4e3ff] bg-[#f5f5ff] px-4 py-3 text-left text-sm font-semibold text-[#3236a4] transition-colors hover:bg-[#ecebff] disabled:opacity-60"
+                  className="min-h-10 rounded-md border bg-card px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-muted disabled:opacity-60"
                 >
                   {item}
                 </button>
@@ -240,15 +237,15 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
 
           <form
             onSubmit={onSubmit}
-            className="flex gap-2 rounded-2xl border-2 border-[#7872ff] bg-white p-2 shadow-[0_8px_24px_rgba(73,73,180,.10)]"
+            className="flex flex-wrap gap-2 rounded-lg border bg-card p-2 focus-within:border-ring"
           >
             <label htmlFor="ask-input" className="sr-only">
               Câu hỏi về dữ liệu
             </label>
-            <Sparkles className="ml-2 mt-3 size-5 shrink-0 text-[#5146e7]" />
+            <Sparkles className="ml-2 mt-3 size-5 shrink-0 text-primary" />
             <input
               id="ask-input"
-              className="h-11 min-w-0 flex-1 rounded-md px-2 text-sm focus-visible:outline-none"
+              className="h-10 min-w-0 flex-1 rounded-md px-2 text-sm focus-visible:outline-none"
               placeholder={`Nhập câu hỏi về dữ liệu ${domain.code === 'all' ? 'Tuyển sinh, Đào tạo hoặc Nhân sự' : domain.shortLabel}…`}
               value={question}
               maxLength={500}
@@ -257,37 +254,26 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
             <button
               type="submit"
               disabled={ask.isPending || !question.trim()}
-              className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#5146e7] px-4 text-sm font-semibold text-white hover:bg-[#4539d4] disabled:opacity-60"
+              aria-busy={ask.isPending}
+              className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
             >
-              <Send className="size-4" />
+              <Send className="size-4" aria-hidden="true" />
               Gửi câu hỏi
             </button>
           </form>
 
           {turns.length === 0 && (
-            <div className="flex min-h-64 flex-col items-center justify-center rounded-2xl bg-gradient-to-b from-white/60 to-transparent px-4 text-center">
-              <Image
-                src={emptyAiQuery}
-                alt=""
-                width={150}
-                height={150}
-                className="h-32 w-48 object-contain"
-              />
-              <h2 className="mt-2 text-xl font-bold text-[#101a38]">
-                Hãy thử đặt câu hỏi đầu tiên
-              </h2>
-              <p className="mt-2 max-w-md text-sm text-[#596884]">
-                Bạn có thể hỏi về số liệu, thống kê, so sánh hoặc phân tích dữ liệu liên quan đến{' '}
-                {domain.shortLabel}.
-              </p>
-            </div>
+            <EmptyState
+              title="Hãy thử đặt câu hỏi đầu tiên"
+              description={`Bạn có thể hỏi về số liệu, thống kê hoặc so sánh trong phân hệ ${domain.shortLabel}.`}
+            />
           )}
 
           <div className="space-y-4" aria-live="polite">
             {turns.map((turn) => (
               <div key={turn.id} className="space-y-2">
                 <div className="flex justify-end">
-                  <p className="max-w-[80%] rounded-lg bg-indigo-600 px-3 py-2 text-sm text-white">
+                  <p className="max-w-[80%] rounded-lg bg-sidebar px-3 py-2 text-sm text-white">
                     {turn.question}
                   </p>
                 </div>
@@ -317,13 +303,7 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
                   bodyClassName="space-y-3"
                 >
                   {turn.state === 'processing' && (
-                    <p className="flex items-center gap-2 text-sm text-slate-600" role="status">
-                      <LoaderCircle
-                        className="size-4 animate-spin text-indigo-600"
-                        aria-hidden="true"
-                      />
-                      Đang tìm dữ liệu để trả lời câu hỏi của bạn…
-                    </p>
+                    <LoadingState label="Đang tìm dữ liệu để trả lời câu hỏi của bạn…" />
                   )}
                   {turn.state === 'error' && (
                     <div className="space-y-2">
@@ -335,7 +315,7 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
                         type="button"
                         onClick={() => send(turn.question)}
                         disabled={ask.isPending}
-                        className="text-xs font-semibold text-indigo-700 hover:underline disabled:opacity-60"
+                        className="text-xs font-semibold text-primary hover:underline disabled:opacity-60"
                       >
                         Thử lại
                       </button>
@@ -368,14 +348,14 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
         <Card
           title={
             <span className="flex items-center gap-2">
-              <MessageSquare className="size-5 text-[#5146e7]" />
+              <MessageSquare className="size-5 text-primary" />
               Lịch sử truy vấn
             </span>
           }
           right={
             <Link
               href={historyHref}
-              className="flex items-center gap-1 text-xs font-semibold text-[#5146e7]"
+              className="flex items-center gap-1 text-xs font-semibold text-primary"
             >
               Xem tất cả <ArrowRight className="size-4" />
             </Link>
