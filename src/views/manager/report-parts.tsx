@@ -11,6 +11,15 @@ import { Button, Card, EmptyState, ErrorState, LoadingState } from '@/components
 
 export const names: Record<string, string> = {
   hr: 'Nhân sự',
+  department: 'Phòng ban',
+  position: 'Chức vụ',
+  qualification: 'Văn bằng',
+  curriculum: 'Khung chương trình',
+  curriculum_course: 'Học phần trong khung',
+  class_lecturer: 'Phân công giảng dạy',
+  enrollment_grade: 'Kết quả học tập',
+  admission_year: 'Năm tuyển sinh',
+  admission_method: 'Phương thức tuyển sinh',
   academic: 'Đào tạo',
   admissions: 'Tuyển sinh',
   employee: 'Nhân sự',
@@ -74,8 +83,10 @@ export function ManagerGate({ children }: { children: (context: ManagerContext) 
     queryKey: ['manager', 'context'],
     queryFn: API_ManagerContext,
     refetchInterval: 15_000,
+    refetchOnMount: 'always',
   })
-  if (context.isPending) return <LoadingState label="Đang kiểm tra quyền quản lý…" />
+  if (context.isPending || (!context.isFetchedAfterMount && !context.isError))
+    return <LoadingState label="Đang kiểm tra quyền quản lý…" />
   if (context.isError)
     return (
       <ErrorState
@@ -85,19 +96,19 @@ export function ManagerGate({ children }: { children: (context: ManagerContext) 
     )
   if (!context.data.departments.length)
     return (
-      <Card title="Chưa có phân công phòng ban">
+      <Card title="Chưa cấu hình phòng phụ trách">
         <EmptyState
-          title="Cần phân công đang hiệu lực"
-          description="Liên hệ quản trị viên để gán phòng phụ trách phù hợp với vai trò quản lý."
+          title="Cần cấu hình phòng theo vai trò"
+          description="Liên hệ quản trị viên để thiết lập phòng phụ trách đang hoạt động theo vai trò quản lý."
         />
       </Card>
     )
   return (
     <>
-      {context.data.needs_department_assignment && (
+      {context.data.needs_department_configuration && (
         <p role="status" className="rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
-          Một số lĩnh vực chưa có phân công phòng ban. Chỉ dữ liệu thuộc phạm vi đang hiệu lực được
-          hiển thị.
+          Một số phòng phụ trách theo vai trò chưa được cấu hình hoặc đã ngừng hoạt động. Dữ liệu
+          của các phòng đã sẵn sàng được hiển thị.
         </p>
       )}
       {children(context.data)}

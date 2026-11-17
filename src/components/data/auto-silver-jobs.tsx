@@ -247,11 +247,8 @@ export function AutoSilverForIngestion({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold">Xử lý Silver tự động</h3>
         {canManage && (
-          <Link
-            href="/data/auto-pipeline"
-            className="text-xs font-semibold text-[#a9162e] underline"
-          >
-            Cấu hình tự chạy
+          <Link href="/data/pipeline" className="text-xs font-semibold text-[#a9162e] underline">
+            Theo dõi tự chạy
           </Link>
         )}
       </div>
