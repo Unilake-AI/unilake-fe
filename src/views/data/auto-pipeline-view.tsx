@@ -265,7 +265,7 @@ function DatasetPolicy({ datasetId }: { datasetId: number }) {
   )
 }
 
-export function AutoPipelineView() {
+export function AutoPipelineView({ initialJobId: _initialJobId }: { initialJobId?: number } = {}) {
   const [datasetId, setDatasetId] = useState('')
   const [datasetSearch, setDatasetSearch] = useState('')
   const [search, setSearch] = useState('')

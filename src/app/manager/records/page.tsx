@@ -1,7 +1,5 @@
-import { ManagerReportsView } from '@/views/manager/reports-view'
+import { redirect } from 'next/navigation'
 
-export const metadata = { title: 'Dữ liệu nghiệp vụ phòng ban | UniLake AI' }
-
-export default function ManagerRecordsPage() {
-  return <ManagerReportsView mode="records" />
+export default function LegacyManagerPage() {
+  redirect('/manager')
 }

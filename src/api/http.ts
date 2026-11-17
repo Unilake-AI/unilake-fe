@@ -327,6 +327,9 @@ export function getApiErrorMessage(
     return 'Không thể kết nối. Vui lòng kiểm tra mạng và thử lại.'
   }
   const { status } = error.response
+  if (status === 503 && getApiErrorCode(error) === 'NLQ_UNAVAILABLE') {
+    return 'Hỏi UniLake AI chưa sẵn sàng. Bạn có thể xem báo cáo tại Tổng quan.'
+  }
   if (status >= 500) {
     return 'Hệ thống đang gặp sự cố. Vui lòng thử lại sau.'
   }

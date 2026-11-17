@@ -9,7 +9,7 @@
   --sidebar-label-display: flex;
   --sidebar-label-opacity: 1;
   --sidebar-section-rows: 1fr;
-  width: 240px;
+  width: 260px;
 }
 
 .sidebar[data-mobile='true'] {
@@ -23,7 +23,7 @@
 }
 
 .sidebar[data-mobile='false'] .details {
-  flex: 1 0 148px;
+  flex: 1 0 168px;
 }
 
 .section {

@@ -44,6 +44,8 @@ const gold: GoldSource = {
   job_id: 'gold-job',
   status: 'SUCCEEDED',
   sync_status: 'CURRENT',
+  database_sync_status: 'SYNCED',
+  database_sync_error: null,
   error_code: null,
 }
 

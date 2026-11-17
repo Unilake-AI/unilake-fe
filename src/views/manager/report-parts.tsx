@@ -7,7 +7,14 @@ import { useQuery } from '@tanstack/react-query'
 import { getApiErrorMessage } from '@/api/http'
 import { API_ManagerContext } from '@/api/manager/reports'
 import type { ManagerContext, ManagerMetric } from '@/api/manager/reports'
-import { Button, Card, EmptyState, ErrorState, LoadingState } from '@/components/page/page-parts'
+import {
+  Button,
+  Card,
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  formatDateTime,
+} from '@/components/page/page-parts'
 
 export const names: Record<string, string> = {
   hr: 'Nhân sự',
@@ -181,6 +188,9 @@ export function MetricList({ items }: { items: ManagerMetric[] }) {
               <td className="px-3 py-2.5">
                 <p>{item.dataset_name}</p>
                 <p className="break-all text-muted-foreground">Nguồn: {item.scope}</p>
+                <p className="text-muted-foreground">
+                  Cập nhật: {formatDateTime(item.finished_at)}
+                </p>
               </td>
               <td className="px-3 py-2.5 text-right font-semibold tabular-nums">
                 {number(item.value)}

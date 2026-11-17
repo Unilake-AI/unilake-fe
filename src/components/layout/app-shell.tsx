@@ -66,7 +66,7 @@ export function AppShell({ role, children }: AppShellProps) {
           Chuyển đến nội dung
         </a>
         <header className="workspace-header fixed inset-x-0 top-0 z-40 flex items-center justify-between gap-3 border-b border-white/10 bg-sidebar px-3 text-white sm:px-5">
-          <div className="flex min-w-0 items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <DialogTrigger asChild>
               <button
                 ref={mobileNavigationTrigger}

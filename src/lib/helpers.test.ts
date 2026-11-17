@@ -91,7 +91,10 @@ describe('query history', () => {
     askedAt: '2026-10-19T00:00:00Z',
   })
 
-  beforeEach(() => localStorage.clear())
+  beforeEach(() => {
+    localStorage.clear()
+    localStorage.setItem('user', JSON.stringify({ user_id: 11 }))
+  })
 
   it('lưu mới nhất lên đầu và xoá được', () => {
     addQueryHistory(entry('a'))
@@ -101,10 +104,21 @@ describe('query history', () => {
     expect(readQueryHistory()).toEqual([])
   })
 
-  it('bỏ qua dữ liệu hỏng trong localStorage', () => {
-    localStorage.setItem(QUERY_HISTORY_KEY, '{không phải json')
+  it('không lộ lịch sử giữa các tài khoản trên cùng trình duyệt', () => {
+    addQueryHistory(entry('a'))
+    localStorage.setItem('user', JSON.stringify({ user_id: 12 }))
     expect(readQueryHistory()).toEqual([])
-    localStorage.setItem(QUERY_HISTORY_KEY, '{"a": 1}')
+    addQueryHistory(entry('b'))
+    localStorage.setItem('user', JSON.stringify({ user_id: 11 }))
+    expect(readQueryHistory().map((item) => item.id)).toEqual(['a'])
+    localStorage.removeItem('user')
+    expect(readQueryHistory()).toEqual([])
+  })
+
+  it('bỏ qua dữ liệu hỏng trong localStorage', () => {
+    localStorage.setItem(`${QUERY_HISTORY_KEY}:11`, '{không phải json')
+    expect(readQueryHistory()).toEqual([])
+    localStorage.setItem(`${QUERY_HISTORY_KEY}:11`, '{"a": 1}')
     expect(readQueryHistory()).toEqual([])
   })
 })
