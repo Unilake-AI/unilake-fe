@@ -72,6 +72,11 @@ describe('ROLE_MENUS', () => {
       '/data/catalog',
       '/data/lineage',
     ])
-    expect(ROLE_MENUS.MANAGER[0]?.items.map((item) => item.href)).toContain('/manager')
+    expect(ROLE_MENUS.MANAGER[0]?.items.map((item) => item.href)).toEqual([
+      '/manager',
+      '/manager/ask',
+      '/manager/quality-issues',
+      '/manager/approvals',
+    ])
   })
 })

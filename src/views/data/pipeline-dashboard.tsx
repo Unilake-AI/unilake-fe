@@ -17,7 +17,7 @@ import {
   formatDateTime,
 } from '@/components/page/page-parts'
 
-import { FLOW_STEP_PRESENTATION, IngestionFlowCard } from './ingestion-flow-monitor'
+import { FLOW_STEP_PRESENTATION, IngestionFlowCard } from './ingestion-flow-card'
 
 export function PipelineDashboard({ refresh }: { refresh: boolean }) {
   const [selectedId, setSelectedId] = useState<number | null>(null)

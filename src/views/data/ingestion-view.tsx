@@ -405,7 +405,7 @@ function JobDetails({
   )
 }
 
-function RunJobPanel({
+export function RunJobPanel({
   onClose,
   onCreated,
 }: {
@@ -580,7 +580,7 @@ function RunJobPanel({
   )
 }
 
-function UploadFilePanel({
+export function UploadFilePanel({
   onClose,
   onCreated,
 }: {
@@ -950,7 +950,6 @@ function UploadFilePanel({
 }
 
 export function IngestionView({ initialJobId }: { initialJobId?: number }) {
-  const [activePanel, setActivePanel] = useState<'none' | 'run' | 'upload'>('none')
   const [selectedJobId, setSelectedJobId] = useState<number | null>(initialJobId ?? null)
   const [statusFilter, setStatusFilter] = useState('')
   const [datasetFilter, setDatasetFilter] = useState('')

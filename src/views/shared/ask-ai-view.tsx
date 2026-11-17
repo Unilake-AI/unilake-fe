@@ -7,16 +7,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 import { useMutation } from '@tanstack/react-query'
-import {
-  ArrowRight,
-  Check,
-  CircleAlert,
-  Copy,
-  MessageSquare,
-  SearchX,
-  Send,
-  Sparkles,
-} from 'lucide-react'
+import { Check, CircleAlert, Copy, MessageSquare, SearchX, Send, Sparkles } from 'lucide-react'
 
 import { getApiErrorMessage } from '@/api/http'
 import { API_AskNlq } from '@/api/shared/nlq'
@@ -131,7 +122,7 @@ function SqlBlock({ sql }: { sql: string }) {
   )
 }
 
-export function AskAiView({ historyHref }: { historyHref: string }) {
+export function AskAiView({ historyHref }: { historyHref?: string } = {}) {
   const { domain } = useDomain()
   const [question, setQuestion] = useState('')
   const [turns, setTurns] = useState<NlqConversationTurn[]>([])
@@ -206,8 +197,8 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
     <div className="space-y-5">
       <PageHeader
         breadcrumb={[getDomain(domain.code).shortLabel, 'Hỏi AI']}
-        title="Hỏi AI — Truy vấn bằng ngôn ngữ tự nhiên"
-        description="Đặt câu hỏi bằng tiếng Việt để tìm thông tin, thống kê và phân tích dữ liệu trong hệ thống."
+        title="Hỏi UniLake AI"
+        description="Đặt câu hỏi bằng tiếng Việt trong phạm vi dữ liệu được cấp quyền. Kết quả thống kê hỗ trợ tìm hiểu, chưa tự xác nhận nguyên nhân."
       />
 
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_310px]">
@@ -337,7 +328,14 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
                           nhóm ngành rộng hơn.
                         </p>
                       )}
-                      {turn.result.sql && <SqlBlock sql={turn.result.sql} />}
+                      {turn.result.sql && (
+                        <details>
+                          <summary className="cursor-pointer text-xs text-slate-500">
+                            Chi tiết truy vấn
+                          </summary>
+                          <SqlBlock sql={turn.result.sql} />
+                        </details>
+                      )}
                     </>
                   )}
                 </Card>
@@ -348,17 +346,16 @@ export function AskAiView({ historyHref }: { historyHref: string }) {
         <Card
           title={
             <span className="flex items-center gap-2">
-              <MessageSquare className="size-5 text-primary" />
-              Lịch sử truy vấn
+              <MessageSquare className="size-5 text-[#5146e7]" />
+              Lịch sử truy vấn gần đây
             </span>
           }
           right={
-            <Link
-              href={historyHref}
-              className="flex items-center gap-1 text-xs font-semibold text-primary"
-            >
-              Xem tất cả <ArrowRight className="size-4" />
-            </Link>
+            historyHref ? (
+              <Link href={historyHref} className="text-xs font-semibold text-indigo-700">
+                Xem tất cả
+              </Link>
+            ) : undefined
           }
         >
           {historyEntries.length === 0 ? (

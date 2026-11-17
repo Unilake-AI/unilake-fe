@@ -11,6 +11,8 @@ import {
   BookOpen,
   Bot,
   CheckCircle2,
+  CircleUser,
+  ClipboardCheck,
   Database,
   FileBarChart,
   FileText,
@@ -23,6 +25,7 @@ import {
   KeyRound,
   Layers,
   LayoutDashboard,
+  LayoutGrid,
   PanelLeftClose,
   PanelLeftOpen,
   Play,
@@ -48,6 +51,7 @@ import styles from './sidebar.module.css'
 
 const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
   LayoutDashboard,
+  LayoutGrid,
   Users,
   Shield,
   Settings,
@@ -59,6 +63,8 @@ const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
   BookOpen,
   ShieldCheck,
   CheckCircle2,
+  ClipboardCheck,
+  CircleUser,
   KeyRound,
   Bot,
   BarChart3,
@@ -158,16 +164,26 @@ export function Sidebar({ role, onCloseMobile }: SidebarProps) {
                       aria-current={isActive ? 'page' : undefined}
                       aria-label={item.title}
                       title={!onCloseMobile ? item.title : undefined}
-                      className={`flex min-h-10 items-center gap-3 overflow-hidden rounded-md px-3.5 py-1 text-sm transition-colors duration-150 focus-visible:-outline-offset-2 ${
+                      className={`flex min-h-11 items-center gap-3 overflow-hidden rounded-lg px-3.5 py-2 text-sm transition-colors duration-150 focus-visible:-outline-offset-2 ${
                         isActive
-                          ? 'bg-primary font-semibold text-white'
+                          ? 'bg-primary font-semibold text-white shadow-sm'
                           : 'font-medium text-[#e2e7f0] hover:bg-white/10 hover:text-white'
                       }`}
                     >
                       <IconComponent className="size-5 shrink-0" aria-hidden="true" />
-                      <span aria-hidden="true" className={`${styles.details} leading-snug`}>
-                        {item.title}
-                      </span>
+                      <div className={`${styles.details} flex min-w-0 flex-col text-left`}>
+                        <span aria-hidden="true" className="truncate leading-snug">
+                          {item.title}
+                        </span>
+                        {item.description && (
+                          <span
+                            aria-hidden="true"
+                            className="truncate text-[11px] font-normal leading-tight text-slate-400"
+                          >
+                            {item.description}
+                          </span>
+                        )}
+                      </div>
                     </Link>
                   </li>
                 )
@@ -176,6 +192,22 @@ export function Sidebar({ role, onCloseMobile }: SidebarProps) {
           </div>
         ))}
       </nav>
+
+      {getWorkspaceForRole(role) === 'MANAGER' && (
+        <div className="shrink-0 border-t border-white/10 p-2">
+          <div
+            className="flex min-h-11 cursor-pointer items-center gap-3 overflow-hidden rounded-lg px-3.5 py-2 text-sm font-medium text-[#e2e7f0] transition-colors hover:bg-white/10 hover:text-white"
+            title="Tài khoản cá nhân"
+          >
+            <CircleUser className="size-5 shrink-0" aria-hidden="true" />
+            <div className={`${styles.details} flex min-w-0 flex-col text-left`}>
+              <span aria-hidden="true" className="truncate leading-snug">
+                Tài khoản cá nhân
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   )
 }

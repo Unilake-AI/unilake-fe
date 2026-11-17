@@ -1,7 +1,5 @@
-import { QueryHistoryView } from '@/views/shared/query-history-view'
+import { redirect } from 'next/navigation'
 
-export const metadata = { title: 'Lịch sử truy vấn | UniLake AI' }
-
-export default function QueryHistoryPage() {
-  return <QueryHistoryView askHref="/manager/ask" />
+export default function LegacyHistoryPage() {
+  redirect('/manager/ask?tab=history')
 }
