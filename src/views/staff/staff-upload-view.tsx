@@ -63,15 +63,6 @@ import {
 
 const DATASET_PAGE_SIZE = 20
 
-const newDatasetSchema = z.object({
-  datasetName: z
-    .string()
-    .trim()
-    .min(1, 'Vui lòng nhập tên bộ dữ liệu mới.')
-    .max(200, 'Tên bộ dữ liệu tối đa 200 ký tự.'),
-  description: z.string().max(4000, 'Mô tả tối đa 4000 ký tự.').optional(),
-})
-
 const inputClass =
   'h-10 w-full rounded-lg border border-[#cbd4e3] bg-white px-3 text-sm text-[#17233d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6761ed]/30 disabled:bg-slate-50 disabled:text-slate-500'
 
@@ -222,19 +213,12 @@ function UploadContent({ context }: { context: StaffContext }) {
   const hasMultipleDomains = context.domains.length > 1 || context.default_domain == null
   const singleDomain = context.default_domain ?? context.domains[0]?.domain ?? null
 
-  const [mode, setMode] = useState<'existing' | 'new'>('existing')
-
   // Existing dataset search & pagination
   const [searchInput, setSearchInput] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
   const [datasetDomainFilter, setDatasetDomainFilter] = useState<string>('')
   const [datasetOffset, setDatasetOffset] = useState(0)
   const [selectedDataset, setSelectedDataset] = useState<DatasetItem | null>(null)
-
-  // New dataset fields
-  const [datasetName, setDatasetName] = useState('')
-  const [description, setDescription] = useState('')
-  const [newDomain, setNewDomain] = useState<string>(singleDomain ?? '')
 
   // File & parser options
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -250,12 +234,6 @@ function UploadContent({ context }: { context: StaffContext }) {
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [submittedJob, setSubmittedJob] = useState<IngestionJob | null>(null)
-
-  useEffect(() => {
-    if (!hasMultipleDomains && singleDomain) {
-      setNewDomain(singleDomain)
-    }
-  }, [hasMultipleDomains, singleDomain])
 
   const effectiveFilterDomain = hasMultipleDomains
     ? (datasetDomainFilter as UploadDomain | '') || undefined
@@ -278,12 +256,11 @@ function UploadContent({ context }: { context: StaffContext }) {
         limit: DATASET_PAGE_SIZE,
         offset: datasetOffset,
       }),
-    enabled: mode === 'existing',
   })
 
   const uploadMutation = useMutation({
     mutationFn: API_UploadIngestion,
-    onSuccess: (job, variables) => {
+    onSuccess: (job) => {
       setSubmittedJob(job)
       setSelectedFile(null)
       if (fileInputRef.current) {
@@ -291,10 +268,6 @@ function UploadContent({ context }: { context: StaffContext }) {
       }
       setCustomizeParser(false)
       setUploadProgress(null)
-      if (variables.mode === 'new') {
-        setDatasetName('')
-        setDescription('')
-      }
       toast.success(`Đã tiếp nhận tệp vào hàng đợi nạp dữ liệu (Job #${job.ingestion_job_id}).`)
       void queryClient.invalidateQueries({ queryKey: ['ingestion-jobs'] })
       void queryClient.invalidateQueries({ queryKey: ['datasets'] })
@@ -405,62 +378,29 @@ function UploadContent({ context }: { context: StaffContext }) {
       return
     }
 
-    if (mode === 'existing') {
-      if (!selectedDataset) {
-        setValidationError('Vui lòng chọn một bộ dữ liệu từ danh sách trước khi tải lên.')
-        return
-      }
-      setUploadProgress(0)
-      uploadMutation.mutate({
-        mode: 'existing',
-        file,
-        datasetId: selectedDataset.dataset_id,
-        parserOptions,
-        onUploadProgress: (percent) => setUploadProgress(percent),
-      })
+    if (!selectedDataset) {
+      setValidationError('Vui lòng chọn một bộ dữ liệu từ danh sách trước khi tải lên.')
       return
     }
-
-    const parsedNew = newDatasetSchema.safeParse({
-      datasetName,
-      description: description || undefined,
-    })
-    if (!parsedNew.success) {
-      setValidationError(
-        parsedNew.error.issues[0]?.message ?? 'Thông tin bộ dữ liệu mới chưa hợp lệ.'
-      )
-      return
-    }
-
-    if (hasMultipleDomains && !newDomain) {
-      setValidationError('Vui lòng chọn lĩnh vực cho bộ dữ liệu mới.')
-      return
-    }
-
     setUploadProgress(0)
     uploadMutation.mutate({
-      mode: 'new',
+      mode: 'existing',
       file,
-      datasetName: parsedNew.data.datasetName,
-      description: parsedNew.data.description,
-      domain: hasMultipleDomains ? (newDomain as UploadDomain) : undefined,
+      datasetId: selectedDataset.dataset_id,
       parserOptions,
       onUploadProgress: (percent) => setUploadProgress(percent),
     })
   }
 
   const datasets = datasetsQuery.data ?? []
-  const selectedTargetName =
-    mode === 'existing'
-      ? (selectedDataset?.dataset_name ?? 'Chưa chọn bộ dữ liệu')
-      : datasetName.trim() || 'Chưa nhập tên bộ dữ liệu mới'
+  const selectedTargetName = selectedDataset?.dataset_name ?? 'Chưa chọn bộ dữ liệu'
 
   return (
     <div className="space-y-5">
       <PageHeader
         breadcrumb={['Không gian nhân viên', 'Nạp dữ liệu']}
         title="Nạp dữ liệu"
-        description={`Tải tệp ${context.accepted_extensions.join(', ')} (tối đa ${formatBytes(context.max_file_bytes)}, ${formatNumber(context.max_records)} dòng) vào bộ dữ liệu đã có hoặc tạo bộ dữ liệu mới.`}
+        description={`Tải tệp ${context.accepted_extensions.join(', ')} (tối đa ${formatBytes(context.max_file_bytes)}, ${formatNumber(context.max_records)} dòng) vào bộ dữ liệu do Trưởng phòng (Manager) quy hoạch.`}
         actions={
           <Link
             href="/staff/ingestion"
@@ -478,266 +418,158 @@ function UploadContent({ context }: { context: StaffContext }) {
 
       <div className="grid gap-5 xl:grid-cols-[1fr_340px]">
         <div className="space-y-5">
-          {/* Chọn chế độ nạp */}
+          {/* Chọn bộ dữ liệu có sẵn */}
           <Card
             title={
               <span className="flex items-center gap-3">
                 <span className="flex size-9 items-center justify-center rounded-full bg-[#fce8ee] text-[#b91830]">
                   1
                 </span>
-                Chọn nơi lưu dữ liệu
+                Chọn bộ dữ liệu tiếp nhận
               </span>
             }
           >
-            <div
-              className="mb-4 grid grid-cols-1 overflow-hidden rounded-lg border border-[#dfe4f2] sm:grid-cols-2"
-              role="tablist"
-              aria-label="Chế độ nạp dữ liệu"
-            >
-              <button
-                type="button"
-                role="tab"
-                aria-selected={mode === 'existing'}
-                onClick={() => {
-                  setMode('existing')
-                  setValidationError(null)
-                }}
-                className={`min-h-11 border-b-2 px-3 py-2 text-sm font-semibold transition-colors ${
-                  mode === 'existing'
-                    ? 'border-[#d51e3d] bg-[#fce8ee] text-[#b91830]'
-                    : 'border-transparent bg-white text-[#34415f] hover:bg-[#f8f9fd]'
-                }`}
-              >
-                Nạp vào bộ dữ liệu đã có
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={mode === 'new'}
-                onClick={() => {
-                  setMode('new')
-                  setValidationError(null)
-                }}
-                className={`min-h-11 border-b-2 px-3 py-2 text-sm font-semibold transition-colors ${
-                  mode === 'new'
-                    ? 'border-[#d51e3d] bg-[#fce8ee] text-[#b91830]'
-                    : 'border-transparent bg-white text-[#34415f] hover:bg-[#f8f9fd]'
-                }`}
-              >
-                Tạo bộ dữ liệu mới và nạp
-              </button>
-            </div>
-
-            {mode === 'existing' ? (
-              <div className="space-y-3">
-                <form className="flex flex-wrap gap-2" onSubmit={handleSearchSubmit}>
-                  <div className="relative min-w-[200px] flex-1">
-                    <label htmlFor="dataset-search" className="sr-only">
-                      Tìm kiếm bộ dữ liệu theo tên
-                    </label>
-                    <Search
-                      className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-slate-400"
-                      aria-hidden="true"
-                    />
-                    <input
-                      id="dataset-search"
-                      type="search"
-                      value={searchInput}
-                      onChange={(e) => setSearchInput(e.target.value)}
-                      placeholder="Tìm bộ dữ liệu theo tên…"
-                      className={`${inputClass} pl-8`}
-                    />
-                  </div>
-                  {hasMultipleDomains && (
-                    <div>
-                      <label htmlFor="dataset-domain-filter" className="sr-only">
-                        Lọc theo lĩnh vực
-                      </label>
-                      <select
-                        id="dataset-domain-filter"
-                        aria-label="Lọc bộ dữ liệu theo lĩnh vực"
-                        className={inputClass}
-                        value={datasetDomainFilter}
-                        onChange={(e) => {
-                          setDatasetDomainFilter(e.target.value)
-                          setDatasetOffset(0)
-                        }}
-                      >
-                        <option value="">Tất cả lĩnh vực được cấp</option>
-                        {context.domains.map((d) => (
-                          <option key={d.domain} value={d.domain}>
-                            {d.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                  <Button type="submit" variant="outline" className="h-9">
-                    Tìm kiếm
-                  </Button>
-                </form>
-
-                {datasetsQuery.isPending ? (
-                  <LoadingState label="Đang tải danh sách bộ dữ liệu…" />
-                ) : datasetsQuery.isError ? (
-                  <ErrorState
-                    message={getApiErrorMessage(
-                      datasetsQuery.error,
-                      'Không tải được danh sách bộ dữ liệu.'
-                    )}
-                    retrying={datasetsQuery.isFetching}
-                    onRetry={() => void datasetsQuery.refetch()}
-                  />
-                ) : datasets.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center rounded-xl border border-[#dfe4f2] bg-[#f7f8fd] px-4 py-6 text-center">
-                    <Image
-                      src={emptySearch}
-                      alt=""
-                      width={140}
-                      height={100}
-                      className="h-24 w-auto object-contain"
-                    />
-                    <h3 className="mt-2 text-sm font-bold text-[#111a35]">
-                      Không tìm thấy bộ dữ liệu phù hợp
-                    </h3>
-                    <p className="mt-1 text-xs text-[#65718d]">
-                      Bạn có thể thử từ khóa khác hoặc chuyển sang tab Tạo bộ dữ liệu mới.
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="divide-y divide-slate-200 rounded-md border border-slate-200">
-                      {datasets.map((ds) => {
-                        const isSelected = selectedDataset?.dataset_id === ds.dataset_id
-                        return (
-                          <label
-                            key={ds.dataset_id}
-                            className={`flex cursor-pointer items-start gap-3 p-3 text-xs transition-colors ${
-                              isSelected ? 'bg-indigo-50/70' : 'hover:bg-slate-50'
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name="selected-dataset"
-                              checked={isSelected}
-                              onChange={() => {
-                                setSelectedDataset(ds)
-                                setValidationError(null)
-                              }}
-                              className="mt-0.5 size-4 accent-primary"
-                            />
-                            <div className="min-w-0 flex-1 space-y-0.5">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className="font-semibold text-slate-900">
-                                  {ds.dataset_name}
-                                </span>
-                                <Tag tone="indigo">{domainLabel(ds.domain, context.domains)}</Tag>
-                                <Tag tone={statusTone(ds.status)}>{statusLabel(ds.status)}</Tag>
-                              </div>
-                              {ds.description && (
-                                <p className="line-clamp-2 text-slate-500">{ds.description}</p>
-                              )}
-                            </div>
-                          </label>
-                        )
-                      })}
-                    </div>
-
-                    <div className="flex items-center justify-between pt-1 text-xs text-slate-500">
-                      <span>
-                        Hiển thị {datasets.length} bộ dữ liệu (vị trí {datasetOffset + 1}–
-                        {datasetOffset + datasets.length})
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <Button
-                          disabled={datasetOffset === 0 || datasetsQuery.isFetching}
-                          onClick={() =>
-                            setDatasetOffset((prev) => Math.max(0, prev - DATASET_PAGE_SIZE))
-                          }
-                          icon={<ChevronLeft className="size-3.5" aria-hidden="true" />}
-                        >
-                          Trước
-                        </Button>
-                        <Button
-                          disabled={datasets.length < DATASET_PAGE_SIZE || datasetsQuery.isFetching}
-                          onClick={() => setDatasetOffset((prev) => prev + DATASET_PAGE_SIZE)}
-                          icon={<ChevronRight className="size-3.5" aria-hidden="true" />}
-                        >
-                          Sau
-                        </Button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="new-dataset-name"
-                    className="block text-xs font-semibold text-slate-700"
-                  >
-                    Tên bộ dữ liệu mới *
+            <div className="space-y-3">
+              <form className="flex flex-wrap gap-2" onSubmit={handleSearchSubmit}>
+                <div className="relative min-w-[200px] flex-1">
+                  <label htmlFor="dataset-search" className="sr-only">
+                    Tìm kiếm bộ dữ liệu theo tên
                   </label>
+                  <Search
+                    className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-slate-400"
+                    aria-hidden="true"
+                  />
                   <input
-                    id="new-dataset-name"
-                    type="text"
-                    maxLength={200}
-                    value={datasetName}
-                    onChange={(e) => setDatasetName(e.target.value)}
-                    placeholder="Ví dụ: Danh sách nhân sự học kỳ 1"
-                    className={inputClass}
+                    id="dataset-search"
+                    type="search"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    placeholder="Tìm bộ dữ liệu theo tên…"
+                    className={`${inputClass} pl-8`}
                   />
                 </div>
-
-                {hasMultipleDomains ? (
-                  <div className="space-y-1.5">
-                    <label
-                      htmlFor="new-dataset-domain"
-                      className="block text-xs font-semibold text-slate-700"
-                    >
-                      Lĩnh vực *
+                {hasMultipleDomains && (
+                  <div>
+                    <label htmlFor="dataset-domain-filter" className="sr-only">
+                      Lọc theo lĩnh vực
                     </label>
                     <select
-                      id="new-dataset-domain"
-                      value={newDomain}
-                      onChange={(e) => setNewDomain(e.target.value)}
+                      id="dataset-domain-filter"
+                      aria-label="Lọc bộ dữ liệu theo lĩnh vực"
                       className={inputClass}
+                      value={datasetDomainFilter}
+                      onChange={(e) => {
+                        setDatasetDomainFilter(e.target.value)
+                        setDatasetOffset(0)
+                      }}
                     >
-                      <option value="">Chọn lĩnh vực được cấp quyền</option>
-                      {context.domains.map((item) => (
-                        <option key={item.domain} value={item.domain}>
-                          {item.name}
+                      <option value="">Tất cả lĩnh vực được cấp</option>
+                      {context.domains.map((d) => (
+                        <option key={d.domain} value={d.domain}>
+                          {d.name}
                         </option>
                       ))}
                     </select>
                   </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-xs text-slate-600">
-                    <span>Lĩnh vực áp dụng tự động:</span>
-                    <Tag tone="indigo">{domainLabel(singleDomain ?? '', context.domains)}</Tag>
-                  </div>
                 )}
+                <Button type="submit" variant="outline" className="h-9">
+                  Tìm kiếm
+                </Button>
+              </form>
 
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="new-dataset-description"
-                    className="block text-xs font-semibold text-slate-700"
-                  >
-                    Mô tả bộ dữ liệu (tùy chọn)
-                  </label>
-                  <textarea
-                    id="new-dataset-description"
-                    rows={3}
-                    maxLength={4000}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Mô tả ngắn gọn về nguồn gốc và phạm vi dữ liệu…"
-                    className="w-full rounded-md border border-slate-300 bg-white p-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30"
+              {datasetsQuery.isPending ? (
+                <LoadingState label="Đang tải danh sách bộ dữ liệu…" />
+              ) : datasetsQuery.isError ? (
+                <ErrorState
+                  message={getApiErrorMessage(
+                    datasetsQuery.error,
+                    'Không tải được danh sách bộ dữ liệu.'
+                  )}
+                  retrying={datasetsQuery.isFetching}
+                  onRetry={() => void datasetsQuery.refetch()}
+                />
+              ) : datasets.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-xl border border-[#dfe4f2] bg-[#f7f8fd] px-4 py-6 text-center">
+                  <Image
+                    src={emptySearch}
+                    alt=""
+                    width={140}
+                    height={100}
+                    className="h-24 w-auto object-contain"
                   />
+                  <h3 className="mt-2 text-sm font-bold text-[#111a35]">
+                    Không tìm thấy bộ dữ liệu phù hợp
+                  </h3>
+                  <p className="mt-1 text-xs text-[#65718d]">
+                    Bạn có thể thử từ khóa khác hoặc liên hệ Trưởng phòng (Manager) để quy hoạch bộ dữ liệu mới.
+                  </p>
                 </div>
-              </div>
-            )}
+              ) : (
+                <>
+                  <div className="divide-y divide-slate-200 rounded-md border border-slate-200">
+                    {datasets.map((ds) => {
+                      const isSelected = selectedDataset?.dataset_id === ds.dataset_id
+                      return (
+                        <label
+                          key={ds.dataset_id}
+                          className={`flex cursor-pointer items-start gap-3 p-3 text-xs transition-colors ${
+                            isSelected ? 'bg-indigo-50/70' : 'hover:bg-slate-50'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="selected-dataset"
+                            checked={isSelected}
+                            onChange={() => {
+                              setSelectedDataset(ds)
+                              setValidationError(null)
+                            }}
+                            className="mt-0.5 size-4 accent-primary"
+                          />
+                          <div className="min-w-0 flex-1 space-y-0.5">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-semibold text-slate-900">
+                                {ds.dataset_name}
+                              </span>
+                              <Tag tone="indigo">{domainLabel(ds.domain, context.domains)}</Tag>
+                              <Tag tone={statusTone(ds.status)}>{statusLabel(ds.status)}</Tag>
+                            </div>
+                            {ds.description && (
+                              <p className="line-clamp-2 text-slate-500">{ds.description}</p>
+                            )}
+                          </div>
+                        </label>
+                      )
+                    })}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1 text-xs text-slate-500">
+                    <span>
+                      Hiển thị {datasets.length} bộ dữ liệu (vị trí {datasetOffset + 1}–
+                      {datasetOffset + datasets.length})
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        disabled={datasetOffset === 0 || datasetsQuery.isFetching}
+                        onClick={() =>
+                          setDatasetOffset((prev) => Math.max(0, prev - DATASET_PAGE_SIZE))
+                        }
+                        icon={<ChevronLeft className="size-3.5" aria-hidden="true" />}
+                      >
+                        Trước
+                      </Button>
+                      <Button
+                        disabled={datasets.length < DATASET_PAGE_SIZE || datasetsQuery.isFetching}
+                        onClick={() => setDatasetOffset((prev) => prev + DATASET_PAGE_SIZE)}
+                        icon={<ChevronRight className="size-3.5" aria-hidden="true" />}
+                      >
+                        Sau
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </Card>
 
           {/* Chọn tệp và tùy chọn đọc tệp */}
@@ -1005,7 +837,7 @@ function UploadContent({ context }: { context: StaffContext }) {
               <div>
                 <dt className="text-slate-500">Hình thức</dt>
                 <dd className="mt-0.5 font-medium text-slate-900">
-                  {mode === 'existing' ? 'Nạp vào bộ dữ liệu đã có' : 'Tạo bộ dữ liệu mới'}
+                  Nạp vào bộ dữ liệu đã có
                 </dd>
               </div>
               <div>

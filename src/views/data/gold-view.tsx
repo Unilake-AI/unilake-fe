@@ -54,6 +54,10 @@ function databaseStatus(status: string | null) {
 const syncReasons: Record<string, string> = {
   GOLD_SYNC_REQUIRED_FIELD: 'Thiếu trường bắt buộc',
   GOLD_SYNC_REFERENCE_MISSING: 'Thiếu dữ liệu liên kết',
+  GOLD_SYNC_SYSTEM_DEPARTMENT_ONLY:
+    'Phòng hệ thống chỉ nhận mã PDT, PNS, PTS; đơn vị trong file chưa có ánh xạ',
+  GOLD_SYNC_SYSTEM_DEPARTMENT_MISSING: 'Phòng hệ thống chưa được cấu hình hoặc đã ngừng hoạt động',
+  GOLD_SYNC_DEPARTMENT_MAPPING_CONFLICT: 'Mã phòng của bản ghi nguồn đã đổi so với ánh xạ trước đó',
   GOLD_SYNC_ENTITY_MAPPING_REQUIRED: 'Cần khai báo ánh xạ nghiệp vụ',
   GOLD_SYNC_SOURCE_CONFLICT: 'Mã nghiệp vụ trùng giữa các nguồn',
   GOLD_SYNC_FIELD_INVALID: 'Giá trị chưa hợp lệ',

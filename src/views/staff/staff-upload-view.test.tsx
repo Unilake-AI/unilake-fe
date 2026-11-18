@@ -221,9 +221,7 @@ describe('StaffUploadView', () => {
     }
   }, 10000)
 
-  it('tạo bộ dữ liệu mới không gửi dataset_id với STAFF 1 miền và xử lý xung đột 409', async () => {
-    let capturedForm: FormData | null = null
-    let shouldConflict = false
+  it('không cho phép STAFF tự tạo bộ dữ liệu mới và yêu cầu chọn bộ dữ liệu trước khi tải lên', async () => {
     const file = new File(['dummy'], 'nhan_su.xlsx', {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     })
@@ -242,88 +240,6 @@ describe('StaffUploadView', () => {
       if (key === 'get /datasets') {
         return Promise.resolve({ data: [], status: 200, statusText: 'OK', headers: {}, config })
       }
-      if (key === 'post /ingestion/uploads') {
-        capturedForm = config.data as FormData
-        if (shouldConflict) {
-          return Promise.reject(makeError(409, 'UPLOAD_DATASET_NAME_CONFLICT', config))
-        }
-        return Promise.resolve({
-          data: {
-            ingestion_job_id: 91,
-            data_source_id: 4,
-            dataset_id: 15,
-            status: 'QUEUED',
-            stage: 'QUEUED',
-            job_type: 'UPLOAD_V1',
-            source_table: 'nhan_su.xlsx',
-            created_at: '2026-11-10T10:00:00Z',
-            started_at: null,
-            finished_at: null,
-            requested_by: '21',
-            rows_read: null,
-            rows_written: null,
-            rows_rejected: null,
-            error_message: null,
-            output: null,
-          },
-          status: 202,
-          statusText: 'Accepted',
-          headers: {},
-          config,
-        })
-      }
-      if (key === 'get /ingestion/jobs/91') {
-        return Promise.resolve({
-          data: {
-            ingestion_job_id: 91,
-            data_source_id: 4,
-            dataset_id: 15,
-            status: 'QUEUED',
-            stage: 'QUEUED',
-            job_type: 'UPLOAD_V1',
-            source_table: 'nhan_su.xlsx',
-            created_at: '2026-11-10T10:00:00Z',
-            started_at: null,
-            finished_at: null,
-            requested_by: '21',
-            rows_read: null,
-            rows_written: null,
-            rows_rejected: null,
-            error_message: null,
-            output: null,
-          },
-          status: 200,
-          statusText: 'OK',
-          headers: {},
-          config,
-        })
-      }
-      if (key === 'get /ingestion/jobs/95') {
-        return Promise.resolve({
-          data: {
-            ingestion_job_id: 95,
-            data_source_id: 5,
-            dataset_id: 20,
-            status: 'QUEUED',
-            stage: 'QUEUED',
-            job_type: 'UPLOAD_V1',
-            source_table: 'multi.csv',
-            created_at: '2026-11-10T10:00:00Z',
-            started_at: null,
-            finished_at: null,
-            requested_by: '21',
-            rows_read: null,
-            rows_written: null,
-            rows_rejected: null,
-            error_message: null,
-            output: null,
-          },
-          status: 200,
-          statusText: 'OK',
-          headers: {},
-          config,
-        })
-      }
       return Promise.resolve({ data: {}, status: 200, statusText: 'OK', headers: {}, config })
     }
 
@@ -331,52 +247,23 @@ describe('StaffUploadView', () => {
     try {
       const user = userEvent.setup()
 
-      await user.click(await screen.findByRole('tab', { name: 'Tạo bộ dữ liệu mới và nạp' }))
+      // Xác nhận không còn tab hay ô nhập tạo bộ dữ liệu mới
+      expect(screen.queryByRole('tab', { name: /Tạo bộ dữ liệu mới/ })).not.toBeInTheDocument()
+      expect(screen.queryByLabelText(/Tên bộ dữ liệu mới/)).not.toBeInTheDocument()
 
-      // Không yêu cầu chọn domain khi chỉ có 1 miền
-      expect(screen.queryByLabelText(/Lĩnh vực \*/)).not.toBeInTheDocument()
-      expect(screen.getByText('Nhân sự')).toBeInTheDocument()
-
-      await user.type(screen.getByLabelText(/Tên bộ dữ liệu mới/), 'Hồ sơ nhân sự mới')
-      await user.type(screen.getByLabelText(/Mô tả bộ dữ liệu/), 'Mô tả đợt 1')
-      await user.upload(screen.getByLabelText(/Tệp dữ liệu/), file)
-
-      // Kiểm tra parser Excel chỉ hiển thị trường Excel
-      await user.click(screen.getByLabelText(/Tùy chỉnh cấu hình đọc tệp/))
-      expect(screen.getByLabelText(/Tên sheet/)).toBeInTheDocument()
-      expect(screen.queryByLabelText(/Dấu phân cách/)).not.toBeInTheDocument()
-
+      // Tải tệp lên nhưng chưa chọn dataset -> Báo lỗi
+      await user.upload(await screen.findByLabelText(/Tệp dữ liệu/), file)
       await user.click(screen.getByRole('button', { name: 'Tải lên và nạp dữ liệu' }))
 
-      await waitFor(() => expect(capturedForm).not.toBeNull())
-      expect(capturedForm!.get('dataset_id')).toBeNull()
-      expect(capturedForm!.get('dataset_name')).toBe('Hồ sơ nhân sự mới')
-      expect(capturedForm!.get('description')).toBe('Mô tả đợt 1')
-      expect(capturedForm!.get('domain')).toBeNull()
-
-      // Sau khi tải lên thành công, form được dọn sạch (tệp và tên bộ dữ liệu mới)
-      await waitFor(() => {
-        expect(screen.getByLabelText(/Tên bộ dữ liệu mới/)).toHaveValue('')
-      })
-      expect(screen.getByLabelText<HTMLInputElement>(/Tệp dữ liệu/).files?.length ?? 0).toBe(0)
-
-      // Kiểm tra thông báo 409 khi tạo lại tên trùng
-      shouldConflict = true
-      await user.type(screen.getByLabelText(/Tên bộ dữ liệu mới/), 'Hồ sơ nhân sự mới')
-      await user.upload(screen.getByLabelText(/Tệp dữ liệu/), file)
-      await user.click(screen.getByRole('button', { name: 'Tải lên và nạp dữ liệu' }))
       expect(
-        await screen.findByText(/Tên bộ dữ liệu đã tồn tại trong lĩnh vực này/)
+        await screen.findByText(/Vui lòng chọn một bộ dữ liệu từ danh sách trước khi tải lên/)
       ).toBeInTheDocument()
     } finally {
       client.clear()
     }
   })
 
-  it('người dùng nhiều lĩnh vực chỉ chọn được các lĩnh vực được cấp phép', async () => {
-    let capturedForm: FormData | null = null
-    const file = new File(['a,b\n1,2'], 'multi.csv', { type: 'text/csv' })
-
+  it('người dùng nhiều lĩnh vực chỉ chọn được các lĩnh vực được cấp phép trong bộ lọc', async () => {
     http.defaults.adapter = (config) => {
       const key = `${config.method} ${config.url}`
       if (key === 'get /staff/context') {
@@ -391,106 +278,15 @@ describe('StaffUploadView', () => {
       if (key === 'get /datasets') {
         return Promise.resolve({ data: [], status: 200, statusText: 'OK', headers: {}, config })
       }
-      if (key === 'post /ingestion/uploads') {
-        capturedForm = config.data as FormData
-        return Promise.resolve({
-          data: {
-            ingestion_job_id: 95,
-            data_source_id: 5,
-            dataset_id: 20,
-            status: 'QUEUED',
-            stage: 'QUEUED',
-            job_type: 'UPLOAD_V1',
-            source_table: 'multi.csv',
-            created_at: '2026-11-10T10:00:00Z',
-            started_at: null,
-            finished_at: null,
-            requested_by: '21',
-            rows_read: null,
-            rows_written: null,
-            rows_rejected: null,
-            error_message: null,
-            output: null,
-          },
-          status: 202,
-          statusText: 'Accepted',
-          headers: {},
-          config,
-        })
-      }
-      if (key === 'get /ingestion/jobs/91') {
-        return Promise.resolve({
-          data: {
-            ingestion_job_id: 91,
-            data_source_id: 4,
-            dataset_id: 15,
-            status: 'QUEUED',
-            stage: 'QUEUED',
-            job_type: 'UPLOAD_V1',
-            source_table: 'nhan_su.xlsx',
-            created_at: '2026-11-10T10:00:00Z',
-            started_at: null,
-            finished_at: null,
-            requested_by: '21',
-            rows_read: null,
-            rows_written: null,
-            rows_rejected: null,
-            error_message: null,
-            output: null,
-          },
-          status: 200,
-          statusText: 'OK',
-          headers: {},
-          config,
-        })
-      }
-      if (key === 'get /ingestion/jobs/95') {
-        return Promise.resolve({
-          data: {
-            ingestion_job_id: 95,
-            data_source_id: 5,
-            dataset_id: 20,
-            status: 'QUEUED',
-            stage: 'QUEUED',
-            job_type: 'UPLOAD_V1',
-            source_table: 'multi.csv',
-            created_at: '2026-11-10T10:00:00Z',
-            started_at: null,
-            finished_at: null,
-            requested_by: '21',
-            rows_read: null,
-            rows_written: null,
-            rows_rejected: null,
-            error_message: null,
-            output: null,
-          },
-          status: 200,
-          statusText: 'OK',
-          headers: {},
-          config,
-        })
-      }
       return Promise.resolve({ data: {}, status: 200, statusText: 'OK', headers: {}, config })
     }
 
     const { client } = renderUpload()
     try {
-      const user = userEvent.setup()
-      await user.click(await screen.findByRole('tab', { name: 'Tạo bộ dữ liệu mới và nạp' }))
-
-      const domainSelect = screen.getByLabelText(/Lĩnh vực \*/)
-      const options = Array.from((domainSelect as HTMLSelectElement).options).map((o) => o.value)
+      const domainFilter = await screen.findByLabelText(/Lọc bộ dữ liệu theo lĩnh vực/)
+      const options = Array.from((domainFilter as HTMLSelectElement).options).map((o) => o.value)
       expect(options).toEqual(['', 'academic', 'hr'])
       expect(options).not.toContain('admissions')
-
-      await user.type(screen.getByLabelText(/Tên bộ dữ liệu mới/), 'Dữ liệu đào tạo')
-      await user.selectOptions(domainSelect, 'academic')
-      await user.upload(screen.getByLabelText(/Tệp dữ liệu/), file)
-      await user.click(screen.getByRole('button', { name: 'Tải lên và nạp dữ liệu' }))
-
-      await waitFor(() => expect(capturedForm).not.toBeNull())
-      expect(capturedForm!.get('domain')).toBe('academic')
-      expect(capturedForm!.get('dataset_id')).toBeNull()
     } finally {
       client.clear()
     }

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 
 import * as DialogPrimitive from '@radix-ui/react-dialog'
-import { Menu, X } from 'lucide-react'
+import { Layers, Menu, X } from 'lucide-react'
 
 import {
   Dialog,
@@ -15,7 +15,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { getWorkspaceForRole } from '@/config/roles'
 import { DomainProvider } from '@/hooks/use-domain'
+import { cn } from '@/lib/utils'
 import type { AppShellProps } from '@/types/layout/app-shell'
 
 import { NotificationButton, NotificationPanel, getUnreadNotifications } from './notifications'
@@ -55,6 +57,8 @@ export function AppShell({ role, children }: AppShellProps) {
     desktop.addEventListener('change', closeMobileMenu)
     return () => desktop.removeEventListener('change', closeMobileMenu)
   }, [])
+
+  const isManager = getWorkspaceForRole(role) === 'MANAGER'
 
   return (
     <DomainProvider role={role}>

@@ -5,7 +5,12 @@ import { useState } from 'react'
 import Link from 'next/link'
 
 import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Filter, Sparkles } from 'lucide-react'
+import {
+  AlertCircle,
+  CheckCircle2,
+  Filter,
+  Sparkles,
+} from 'lucide-react'
 import {
   Area,
   AreaChart,
@@ -38,7 +43,7 @@ import {
 } from '@/components/page/page-parts'
 import { cn } from '@/lib/utils'
 
-import { ManagerGate, MetricList, Paging, label, number } from './report-parts'
+import { ManagerGate, MetricList, Paging, inputClass, label, number } from './report-parts'
 
 type Mode = 'overview' | 'issues'
 type Domain = 'hr' | 'academic' | 'admissions'
@@ -115,7 +120,7 @@ function ManagerWorkspace({ context, mode }: { context: ManagerContext; mode: Mo
             <label className="flex items-center gap-2 text-sm text-slate-700">
               Lĩnh vực
               <select
-                className="shadow-xs rounded-lg border border-slate-300 bg-white p-2 text-sm text-slate-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                className="rounded-lg border border-slate-300 bg-white p-2 text-sm text-slate-900 shadow-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 value={domain}
                 onChange={(event) => setDomain(event.target.value as Domain)}
               >
@@ -129,10 +134,9 @@ function ManagerWorkspace({ context, mode }: { context: ManagerContext; mode: Mo
           )}
 
           <Button
-            disabled={refreshing}
-            aria-busy={refreshing}
+            reading={refreshing}
             onClick={() => void client.invalidateQueries({ queryKey: ['manager'] })}
-            className="shadow-xs rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-xs hover:bg-slate-50"
           >
             Làm mới
           </Button>
@@ -169,47 +173,47 @@ function Overview({ domain, userId }: { domain: Domain; userId: number }) {
 
   return (
     <div className="space-y-6">
-      {/* 4 KPI Cards in 2x2 Grid (Image 2 in Light Theme) */}
+      {/* 4 KPI Cards in 2x2 Grid */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5 transition-shadow hover:shadow-sm">
+        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-shadow hover:shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             {domain === 'academic' ? 'Sinh viên' : domain === 'hr' ? 'Nhân sự' : 'Hồ sơ tuyển sinh'}
           </p>
-          <p className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-slate-900 sm:text-3xl">
+          <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl tabular-nums">
             {isPending ? '—' : domain === 'academic' ? '2.450' : domain === 'hr' ? '200' : '3.250'}
           </p>
         </div>
 
-        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5 transition-shadow hover:shadow-sm">
+        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-shadow hover:shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             {domain === 'academic' ? 'Lớp học' : domain === 'hr' ? 'Phòng ban' : 'Trúng tuyển'}
           </p>
-          <p className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-slate-900 sm:text-3xl">
+          <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl tabular-nums">
             {isPending ? '—' : domain === 'academic' ? '320' : domain === 'hr' ? '4' : '1.820'}
           </p>
         </div>
 
-        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5 transition-shadow hover:shadow-sm">
+        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-shadow hover:shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             {domain === 'academic' ? 'Tỷ lệ đạt' : domain === 'hr' ? 'Phân công' : 'Nhập học'}
           </p>
-          <p className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-slate-900 sm:text-3xl">
+          <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl tabular-nums">
             {isPending ? '—' : domain === 'academic' ? '87,5%' : domain === 'hr' ? '200' : '1.650'}
           </p>
         </div>
 
-        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5 transition-shadow hover:shadow-sm">
+        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-shadow hover:shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             {domain === 'academic' ? 'Môn học' : domain === 'hr' ? 'Giảng viên' : 'Tỷ lệ nhập học'}
           </p>
-          <p className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-slate-900 sm:text-3xl">
+          <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl tabular-nums">
             {isPending ? '—' : domain === 'academic' ? '156' : domain === 'hr' ? '100' : '90,6%'}
           </p>
         </div>
       </div>
 
-      {/* Main Trend Chart Card (Image 2) */}
-      <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-6">
+      {/* Main Trend Chart Card */}
+      <div className="rounded-xl border border-slate-200/90 bg-white p-6 shadow-xs">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-semibold text-slate-900">Xu hướng tỷ lệ đạt môn học</h3>
           <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
@@ -236,7 +240,7 @@ function Overview({ domain, userId }: { domain: Domain; userId: number }) {
                   borderRadius: '0.5rem',
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                 }}
-                formatter={(val) => [`${String(val ?? 0)}%`, 'Tỷ lệ đạt']}
+                formatter={(val) => [`${val}%`, 'Tỷ lệ đạt']}
               />
               <Area
                 type="monotone"
@@ -252,17 +256,17 @@ function Overview({ domain, userId }: { domain: Domain; userId: number }) {
         <p className="mt-3 text-xs text-slate-400">Minh họa dữ liệu, không phải KPI thực tế</p>
       </div>
 
-      {/* Deep-dive AI Callout (Image 2) */}
-      <div className="shadow-xs flex flex-col items-start justify-between gap-3 rounded-xl border border-rose-100 bg-gradient-to-r from-rose-50/70 via-white to-white p-4 transition-colors hover:border-rose-200 sm:flex-row sm:items-center">
+      {/* Deep-dive AI Callout */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl border border-rose-100 bg-gradient-to-r from-rose-50/70 via-white to-white p-4 shadow-xs transition-colors hover:border-rose-200">
         <div className="flex items-center gap-2.5">
-          <div className="grid size-8 place-items-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
+          <div className="grid size-8 place-items-center rounded-lg bg-primary/10 text-primary border border-primary/20">
             <Sparkles className="size-4" aria-hidden="true" />
           </div>
           <span className="text-sm font-semibold text-slate-900">Phân tích sâu hơn với AI</span>
         </div>
         <Link
           href={`/manager/ask?q=${encodeURIComponent('Tại sao tỷ lệ đạt học kỳ này giảm?')}`}
-          className="flex items-center gap-1.5 text-xs font-medium text-primary transition-colors hover:underline sm:text-sm"
+          className="text-xs sm:text-sm font-medium text-primary hover:underline transition-colors flex items-center gap-1.5"
         >
           <span>Tại sao tỷ lệ đạt học kỳ này giảm?</span>
           <span aria-hidden="true">→</span>
@@ -272,7 +276,10 @@ function Overview({ domain, userId }: { domain: Domain; userId: number }) {
       {/* Navigation Links and Status */}
       <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
         <div className="flex flex-wrap items-center gap-4 text-sm font-medium">
-          <Link href="/manager/ask" className="font-semibold text-primary hover:underline">
+          <Link
+            href="/manager/ask"
+            className="text-primary hover:underline font-semibold"
+          >
             Hỏi UniLake AI để phân tích thêm
           </Link>
           <span className="text-slate-300">·</span>
@@ -283,7 +290,7 @@ function Overview({ domain, userId }: { domain: Domain; userId: number }) {
             Theo dõi chất lượng dữ liệu
           </Link>
         </div>
-        <div className="flex items-center gap-2 text-xs text-slate-500">
+        <div className="text-xs text-slate-500 flex items-center gap-2">
           <Tag tone={statusTone(data.status)}>{label(data.status)}</Tag>
           {data.last_updated_at && (
             <span>Cập nhật gần nhất {formatDateTime(data.last_updated_at)}</span>
@@ -370,7 +377,7 @@ function Analytics({ domain, userId }: { domain: Domain; userId: number }) {
               >
                 <div className="flex justify-between text-sm">
                   <span className="font-medium text-slate-700">{dimLabel}</span>
-                  <span className="font-semibold tabular-nums text-primary">
+                  <span className="font-semibold text-primary tabular-nums">
                     {number(item.value)}
                   </span>
                 </div>
@@ -451,26 +458,26 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
 
   return (
     <div className="space-y-6">
-      {/* 3 Summary Stats (Image 4 in Light Theme) */}
+      {/* 3 Summary Stats (Image 4) */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5">
-          <p className="text-2xl font-bold tabular-nums tracking-tight text-slate-900 sm:text-3xl">
+        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs">
+          <p className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl tabular-nums">
             {number(totalCount)}
           </p>
           <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
             Tổng yêu cầu
           </p>
         </div>
-        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5">
-          <p className="text-2xl font-bold tabular-nums tracking-tight text-amber-600 sm:text-3xl">
+        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs">
+          <p className="text-2xl font-bold tracking-tight text-amber-600 sm:text-3xl tabular-nums">
             {number(assignedCount)}
           </p>
           <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
             Đang xử lý
           </p>
         </div>
-        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5">
-          <p className="text-2xl font-bold tabular-nums tracking-tight text-emerald-600 sm:text-3xl">
+        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs">
+          <p className="text-2xl font-bold tracking-tight text-emerald-600 sm:text-3xl tabular-nums">
             {number(verifiedCount)}
           </p>
           <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -479,8 +486,8 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
         </div>
       </div>
 
-      {/* Issues Card (Image 4 in Light Theme) */}
-      <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5">
+      {/* Issues Card (Image 4) */}
+      <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div className="flex items-center gap-2">
             <h2 className="text-base font-semibold text-slate-900">Danh sách yêu cầu</h2>
@@ -490,7 +497,7 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
             <Filter className="size-4 text-slate-400" aria-hidden="true" />
             <select
               aria-label="Lọc trạng thái yêu cầu"
-              className="shadow-xs rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-700 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-700 shadow-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               value={status}
               onChange={(event) => {
                 setStatus(event.target.value)
@@ -559,7 +566,7 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
                       </span>
                       <Button
                         onClick={() => setSelected(item.issue_id)}
-                        className="shadow-xs rounded-md border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        className="rounded-md border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50"
                       >
                         Xem yêu cầu
                       </Button>
@@ -606,13 +613,10 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
                 {label(detail.data.status)}
               </span>
             </div>
-            <p className="text-slate-600">
-              {detail.data.description || 'Không có mô tả chi tiết.'}
-            </p>
-            <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
+            <p className="text-slate-600">{detail.data.description || 'Không có mô tả chi tiết.'}</p>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs space-y-2">
               <p>
-                <span className="font-medium text-slate-500">Phòng ban:</span>{' '}
-                {detail.data.department_name}
+                <span className="font-medium text-slate-500">Phòng ban:</span> {detail.data.department_name}
               </p>
               <p>
                 <span className="font-medium text-slate-500">Người phụ trách:</span>{' '}
@@ -625,13 +629,13 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
             </div>
 
             <div className="border-t border-slate-200 pt-3">
-              <h4 className="mb-2 font-semibold text-slate-900">Lịch sử xử lý</h4>
+              <h4 className="font-semibold text-slate-900 mb-2">Lịch sử xử lý</h4>
               {detail.data.history?.length ? (
                 <div className="space-y-2">
                   {detail.data.history.map((ev) => (
                     <div
                       key={ev.event_id}
-                      className="shadow-xs rounded border border-slate-200 bg-white p-2.5 text-xs"
+                      className="rounded border border-slate-200 bg-white p-2.5 text-xs shadow-xs"
                     >
                       <p className="font-semibold text-primary">{label(ev.event_type)}</p>
                       <p className="text-slate-500">{formatDateTime(ev.created_at)}</p>
