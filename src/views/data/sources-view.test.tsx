@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { API_UpdateDataSource } from '@/api/admindata/data-sources'
+import { API_CreateSourceSystem, API_ListSourceSystems } from '@/api/admindata/datasets'
 import { API_ListDataSources } from '@/api/shared/data-sources'
 import type { DataSourceItem } from '@/types/data-sources'
 
@@ -11,6 +12,11 @@ import { SourcesView } from './sources-view'
 
 vi.mock('@/api/shared/data-sources', () => ({ API_ListDataSources: vi.fn() }))
 vi.mock('@/api/admindata/data-sources', () => ({ API_UpdateDataSource: vi.fn() }))
+
+vi.mock('@/api/admindata/datasets', () => ({
+  API_CreateSourceSystem: vi.fn(),
+  API_ListSourceSystems: vi.fn(),
+}))
 
 const listSources = vi.mocked(API_ListDataSources)
 const updateSource = vi.mocked(API_UpdateDataSource)
@@ -59,6 +65,8 @@ describe('SourcesView', () => {
   ]
 
   beforeEach(() => {
+    vi.mocked(API_CreateSourceSystem).mockReset()
+    vi.mocked(API_ListSourceSystems).mockResolvedValue([])
     listSources.mockReset()
     updateSource.mockReset()
     listSources.mockResolvedValue({ items, total: 2, page: 1, page_size: 10 })
@@ -72,6 +80,35 @@ describe('SourcesView', () => {
     expect(screen.getAllByText('HR Employee API').length).toBeGreaterThan(1) // KPI "lần nạp lỗi"
     expect(screen.getByText('5')).toBeInTheDocument() // tổng số lần nạp
     expect(listSources).toHaveBeenCalledWith({ page: 1, page_size: 10 })
+  })
+
+  it('đăng ký hệ thống nguồn và cập nhật bộ lọc nguồn', async () => {
+    const create = vi.mocked(API_CreateSourceSystem)
+    const system = {
+      source_system_id: 19,
+      source_name: 'Cổng đào tạo',
+      source_code: 'SIS',
+      source_type: 'DATABASE',
+      is_active: true,
+      created_at: '2026-11-18T10:00:00Z',
+    }
+    create.mockImplementation(() => {
+      vi.mocked(API_ListSourceSystems).mockResolvedValue([system])
+      return Promise.resolve(system)
+    })
+    const user = userEvent.setup()
+    renderView()
+    await user.click(screen.getByRole('button', { name: 'Đăng ký hệ thống nguồn' }))
+    await user.type(screen.getByLabelText('Mã hệ thống'), 'SIS')
+    await user.type(screen.getByLabelText('Tên hệ thống'), 'Cổng đào tạo')
+    await user.click(screen.getByRole('button', { name: 'Đăng ký' }))
+    expect(await screen.findByRole('option', { name: 'Cổng đào tạo' })).toBeInTheDocument()
+    expect(create.mock.calls[0]?.[0]).toEqual({
+      source_code: 'SIS',
+      source_name: 'Cổng đào tạo',
+      source_type: 'DATABASE',
+      description: undefined,
+    })
   })
 
   it('gửi bộ lọc loại nguồn và trạng thái lên API', async () => {

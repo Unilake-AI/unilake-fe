@@ -61,6 +61,15 @@ describe('DatasetsView', () => {
           config,
         })
       }
+      if (key === 'get /dataset-owner-departments') {
+        return Promise.resolve({
+          data: [{ department_id: 9, department_code: 'PNS', department_name: 'Nhân sự' }],
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config,
+        })
+      }
       if (key === 'get /datasets') {
         return Promise.resolve({
           data: [
@@ -121,6 +130,10 @@ describe('DatasetsView', () => {
       await user.type(screen.getByLabelText('Mã bộ dữ liệu (dataset_code) *'), 'HR_ATTENDANCE')
       await user.type(screen.getByLabelText('Tên bộ dữ liệu *'), 'Bảng chấm công')
       await user.selectOptions(await screen.findByLabelText('Hệ thống nguồn *'), '12')
+      await user.selectOptions(
+        screen.getByLabelText('Phòng ban sở hữu'),
+        await screen.findByRole('option', { name: 'Nhân sự (PNS)' })
+      )
       await user.type(screen.getByLabelText('Mô tả (tùy chọn)'), 'Dữ liệu chấm công')
 
       const submitBtn = screen.getAllByRole('button', { name: 'Đăng ký bộ dữ liệu' }).at(-1)
@@ -133,6 +146,7 @@ describe('DatasetsView', () => {
           dataset_name: 'Bảng chấm công',
           domain: 'hr',
           source_system_id: 12,
+          owner_department_id: 9,
           description: 'Dữ liệu chấm công',
         })
       )

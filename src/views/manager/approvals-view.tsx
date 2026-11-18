@@ -3,11 +3,17 @@
 import { useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { History } from 'lucide-react'
 
 import { getApiErrorMessage } from '@/api/http'
-import { API_ReviewQueue, API_ApproveProfile, API_RevokeApproval } from '@/api/manager/reviews'
+import {
+  API_ApproveProfile,
+  API_ProfileRevisions,
+  API_ReviewQueue,
+  API_RevokeApproval,
+} from '@/api/manager/reviews'
 import type { ReviewProfile } from '@/api/manager/reviews'
-import { EmptyState, ErrorState, LoadingState } from '@/components/page/page-parts'
+import { EmptyState, ErrorState, LoadingState, formatDateTime } from '@/components/page/page-parts'
 import { cn } from '@/lib/utils'
 
 import { ManagerGate, label } from './report-parts'
@@ -36,13 +42,11 @@ function ReviewList({ userId }: { userId: number }) {
           <span className="font-semibold text-slate-700">Phê duyệt nguồn</span>
         </div>
         <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-          Phê duyệt Source Profile
+          Phê duyệt quy tắc chuẩn hóa dữ liệu
         </h1>
         <p className="mt-1 text-sm text-slate-600">
-          Chỉ xuất hiện khi Manager được cấp quyền Domain Owner.
-        </p>
-        <p className="mt-0.5 text-xs text-slate-500">
-          Thay vì hiện JSON, SQL hoặc mapping kỹ thuật, UI nên trình bày:
+          Xem các quy tắc chuẩn hóa dữ liệu do Data Admin đề xuất, tra cứu lịch sử phiên bản và phê
+          duyệt hoặc thu hồi trong phạm vi Domain Owner.
         </p>
       </div>
 
@@ -85,7 +89,14 @@ function ReviewList({ userId }: { userId: number }) {
 function ReviewItem({ profile, grantId }: { profile: ReviewProfile; grantId: string }) {
   const [evidence, setEvidence] = useState('')
   const [partial, setPartial] = useState('')
+  const [showRevisions, setShowRevisions] = useState(false)
   const client = useQueryClient()
+
+  const revisionsQuery = useQuery({
+    queryKey: ['manager', 'reviews', 'revisions', profile.profile_id],
+    queryFn: () => API_ProfileRevisions(profile.profile_id),
+    enabled: showRevisions,
+  })
 
   const mutation = useMutation({
     mutationFn: (action: 'approve' | 'revoke') =>
@@ -200,15 +211,102 @@ function ReviewItem({ profile, grantId }: { profile: ReviewProfile; grantId: str
         </table>
       </div>
 
-      {/* Technical details toggle */}
-      <details className="rounded-lg border border-slate-200 bg-slate-50/50 p-3 text-xs">
-        <summary className="cursor-pointer font-medium text-slate-600 hover:text-slate-900">
-          Xem chi tiết mapping và quy tắc kỹ thuật
-        </summary>
-        <pre className="mt-3 max-h-60 overflow-auto whitespace-pre-wrap break-all rounded border border-slate-200 bg-white p-3 font-mono text-[11px] text-slate-700">
-          {JSON.stringify(definition, null, 2)}
-        </pre>
-      </details>
+      {/* Technical details & revision history toggles */}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowRevisions((prev) => !prev)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100"
+          >
+            <History className="size-3.5 text-primary" aria-hidden="true" />
+            <span>{showRevisions ? 'Ẩn lịch sử phiên bản' : 'Xem lịch sử phiên bản'}</span>
+          </button>
+        </div>
+
+        {showRevisions && (
+          <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-4 text-xs">
+            <h3 className="mb-2.5 font-semibold text-slate-800">
+              Lịch sử phiên bản quy tắc ({profile.profile_id})
+            </h3>
+            {revisionsQuery.isPending ? (
+              <LoadingState label="Đang tải lịch sử phiên bản…" />
+            ) : revisionsQuery.isError ? (
+              <ErrorState
+                message={getApiErrorMessage(
+                  revisionsQuery.error,
+                  'Không thể tải lịch sử phiên bản quy tắc.'
+                )}
+                onRetry={() => void revisionsQuery.refetch()}
+              />
+            ) : !revisionsQuery.data?.length ? (
+              <p className="text-slate-500">Chưa có lịch sử phiên bản nào được ghi nhận.</p>
+            ) : (
+              <div className="space-y-2">
+                {revisionsQuery.data.map((rev, idx) => (
+                  <div
+                    key={`${rev.revision}-${idx}`}
+                    className="rounded-lg border border-slate-200 bg-white p-3"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-mono font-semibold text-slate-900">
+                        Phiên bản {rev.revision}
+                      </span>
+                      <span
+                        className={cn(
+                          'rounded-full px-2.5 py-0.5 text-[11px] font-medium',
+                          rev.status === 'APPROVED'
+                            ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+                            : rev.status === 'REVOKED'
+                              ? 'border border-rose-200 bg-rose-50 text-rose-700'
+                              : 'border border-amber-200 bg-amber-50 text-amber-700'
+                        )}
+                      >
+                        {label(rev.status)}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      {rev.revoked_by != null
+                        ? `Người thu hồi: #${rev.revoked_by}`
+                        : rev.approved_by != null
+                          ? `Người duyệt: #${rev.approved_by}`
+                          : rev.actor_id != null
+                            ? `Người thực hiện: #${rev.actor_id}`
+                            : 'Hệ thống'}
+                      {' · '}
+                      {formatDateTime(rev.revoked_at ?? rev.approved_at ?? rev.created_at ?? null)}
+                    </p>
+                    {rev.approved_by != null && rev.revoked_by != null && (
+                      <p className="mt-1 text-[11px] text-slate-500">
+                        Đã duyệt bởi #{rev.approved_by} · {formatDateTime(rev.approved_at)}
+                      </p>
+                    )}
+                    {(rev.evidence || rev.note) && (
+                      <p className="mt-1.5 rounded bg-slate-50 p-2 text-slate-700">
+                        {rev.evidence || rev.note}
+                      </p>
+                    )}
+                    {(rev.revocation_reason || rev.reason) && (
+                      <p className="mt-1.5 rounded bg-rose-50 p-2 text-rose-700">
+                        Lý do thu hồi: {rev.revocation_reason || rev.reason}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        <details className="rounded-lg border border-slate-200 bg-slate-50/50 p-3 text-xs">
+          <summary className="cursor-pointer font-medium text-slate-600 hover:text-slate-900">
+            Xem chi tiết mapping và quy tắc kỹ thuật
+          </summary>
+          <pre className="mt-3 max-h-60 overflow-auto whitespace-pre-wrap break-all rounded border border-slate-200 bg-white p-3 font-mono text-[11px] text-slate-700">
+            {JSON.stringify(definition, null, 2)}
+          </pre>
+        </details>
+      </div>
 
       {/* Decision form */}
       {(profile.can_approve || profile.can_revoke) && (

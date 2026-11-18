@@ -40,7 +40,7 @@ export interface DataSourceCreatePayload {
   source_name: string
   source_type: SourceType
   connection_type: string
-  location: string
+  location: string | null
   configuration: Record<string, unknown>
   description?: string | null
   is_active: boolean

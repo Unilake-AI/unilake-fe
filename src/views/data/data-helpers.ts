@@ -15,7 +15,8 @@ export function isJobActive(
 }
 
 export function isJobRetryEligible(job: { status: string; job_type?: string | null }): boolean {
-  return job.status.toUpperCase() === 'FAILED' && (job.job_type ?? '').toUpperCase() === 'UPLOAD_V1'
+  const type = job.job_type?.toUpperCase()
+  return job.status.toUpperCase() === 'FAILED' && (type === 'UPLOAD_V1' || type === 'EXECUTION_V1')
 }
 
 export function domainLabel(domain: string | null | undefined): string {

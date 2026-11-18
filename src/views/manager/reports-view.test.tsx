@@ -84,8 +84,20 @@ function setup(
     '/manager/issues/stats': { total: 1, assigned: 1, pending_verification: 0, verified: 0 },
     '/manager/issues/issue-1': {
       ...issue,
-      quarantine_records: [],
-      quarantine_record_ids: [],
+      quarantine_records: [
+        {
+          record_id: 'qr-1',
+          cleaning_run_id: 'run-1',
+          ingestion_job_id: 105,
+          locator: 'hr_employees_q4.csv:row:18',
+          record_position: 17,
+          bronze_version: 'v1',
+          error_codes: ['REQUIRED_VALUE_MISSING'],
+          entity: 'employee',
+          source_table: 'hr_employees_q4.csv',
+        },
+      ],
+      quarantine_record_ids: ['qr-1'],
       history: [
         {
           event_id: 1,
@@ -230,13 +242,28 @@ describe('ManagerReportsView', () => {
     client.clear()
   })
 
-  it('tải yêu cầu sửa, thống kê và lịch sử từ manager API', async () => {
+  it('tải yêu cầu sửa, thống kê, hồ sơ cách ly và lọc theo assignee_user_id từ manager API', async () => {
     const { calls, client } = setup('issues')
     fireEvent.click(await screen.findByRole('button', { name: 'Xem yêu cầu' }))
     expect(await screen.findByText('Thiếu trạng thái nhân sự')).toBeInTheDocument()
+    expect(screen.getByText('hr_employees_q4.csv')).toBeInTheDocument()
+    expect(screen.getByText('hr_employees_q4.csv:row:18')).toBeInTheDocument()
     expect(screen.getByText('Lịch sử xử lý')).toBeInTheDocument()
     expect(calls.some((call) => call.url === '/manager/issues/stats')).toBe(true)
     expect(calls.some((call) => call.url === '/manager/issues/issue-1')).toBe(true)
+
+    fireEvent.change(screen.getByLabelText('Lọc theo ID nhân viên phụ trách'), {
+      target: { value: '12' },
+    })
+    await waitFor(() =>
+      expect(
+        calls.some(
+          (call) =>
+            call.url === '/manager/issues' &&
+            (call.params as { assignee_user_id?: number }).assignee_user_id === 12
+        )
+      ).toBe(true)
+    )
     client.clear()
   })
 

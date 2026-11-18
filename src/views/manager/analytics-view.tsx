@@ -1,19 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
-import {
-  BarChart3,
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Filter,
-  Layers,
-  PieChart,
-  RefreshCw,
-  Users,
-} from 'lucide-react'
+import { Filter, Search } from 'lucide-react'
 import {
   Bar,
   BarChart,
@@ -29,7 +19,7 @@ import {
 } from 'recharts'
 
 import { getApiErrorMessage } from '@/api/http'
-import { API_ManagerAnalytics } from '@/api/manager/reports'
+import { API_ManagerAnalysisOptions, API_ManagerAnalytics } from '@/api/manager/reports'
 import type { AnalyticsFilters, ManagerContext } from '@/api/manager/reports'
 import {
   Button,
@@ -37,10 +27,8 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
-  Tag,
   formatDateTime,
 } from '@/components/page/page-parts'
-import { cn } from '@/lib/utils'
 
 import { ManagerGate, Paging, label, number } from './report-parts'
 
@@ -52,15 +40,16 @@ interface DomainEntityOption {
   metrics: { id: string; label: string }[]
 }
 
-const DOMAIN_OPTIONS: Record<Domain, DomainEntityOption[]> = {
+const FALLBACK_DOMAIN_OPTIONS: Record<Domain, DomainEntityOption[]> = {
   hr: [
     {
       entity: 'employee',
       label: 'Nhân sự',
       metrics: [
-        { id: 'record_count_by_employee_status', label: 'Theo trạng thái công tác' },
+        { id: 'record_count_by_employee_status', label: 'Phân bổ theo trạng thái làm việc' },
+        { id: 'record_count_by_title', label: 'Phân bổ theo chức danh' },
         { id: 'record_count_by_department_id', label: 'Theo phòng ban / đơn vị' },
-        { id: 'record_count_by_position_id', label: 'Theo chức danh / ngạch' },
+        { id: 'record_count', label: 'Tổng số lượng nhân viên' },
       ],
     },
     {
@@ -68,6 +57,7 @@ const DOMAIN_OPTIONS: Record<Domain, DomainEntityOption[]> = {
       label: 'Phân công',
       metrics: [
         { id: 'record_count_by_assignment_status', label: 'Theo trạng thái phân công' },
+        { id: 'record_count', label: 'Tổng số bản ghi phân công' },
       ],
     },
   ],
@@ -77,8 +67,8 @@ const DOMAIN_OPTIONS: Record<Domain, DomainEntityOption[]> = {
       label: 'Sinh viên',
       metrics: [
         { id: 'record_count_by_program_id', label: 'Theo chương trình đào tạo' },
-        { id: 'record_count_by_student_status', label: 'Theo tình trạng học tập' },
-        { id: 'record_count_by_academic_year', label: 'Theo khóa học / năm học' },
+        { id: 'record_count_by_academic_status', label: 'Theo trạng thái đào tạo' },
+        { id: 'record_count', label: 'Tổng số lượng sinh viên' },
       ],
     },
     {
@@ -86,6 +76,7 @@ const DOMAIN_OPTIONS: Record<Domain, DomainEntityOption[]> = {
       label: 'Học phần',
       metrics: [
         { id: 'record_count_by_status', label: 'Theo trạng thái học phần' },
+        { id: 'record_count', label: 'Tổng số học phần' },
       ],
     },
   ],
@@ -94,9 +85,10 @@ const DOMAIN_OPTIONS: Record<Domain, DomainEntityOption[]> = {
       entity: 'admission',
       label: 'Hồ sơ tuyển sinh',
       metrics: [
-        { id: 'record_count_by_admission_status', label: 'Theo trạng thái hồ sơ' },
+        { id: 'record_count_by_admission_status', label: 'Theo trạng thái trúng tuyển / nhập học' },
         { id: 'record_count_by_admission_method_id', label: 'Theo phương thức xét tuyển' },
         { id: 'record_count_by_major_id', label: 'Theo ngành đăng ký' },
+        { id: 'record_count', label: 'Tổng số hồ sơ tuyển sinh' },
       ],
     },
   ],
@@ -105,32 +97,66 @@ const DOMAIN_OPTIONS: Record<Domain, DomainEntityOption[]> = {
 const COLORS = ['#ba1a3a', '#0d9488', '#2563eb', '#d97706', '#7c3aed', '#059669', '#e11d48']
 
 export function ManagerAnalyticsView() {
-  return (
-    <ManagerGate>
-      {(context) => <AnalyticsWorkspace context={context} />}
-    </ManagerGate>
-  )
+  return <ManagerGate>{(context) => <AnalyticsWorkspace context={context} />}</ManagerGate>
 }
 
 function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
   const defaultDomain = (context.default_domain ?? context.domains[0]?.domain ?? 'hr') as Domain
   const [domain, setDomain] = useState<Domain>(defaultDomain)
+  const [dimensionValueInput, setDimensionValueInput] = useState('')
+  const [appliedDimensionValue, setAppliedDimensionValue] = useState('')
 
-  const entityOptions = DOMAIN_OPTIONS[domain] ?? DOMAIN_OPTIONS.hr
-  const [selectedEntity, setSelectedEntity] = useState(entityOptions[0]?.entity ?? 'employee')
+  const optionsQuery = useQuery({
+    queryKey: ['manager', 'analysis-options', context.user_id, domain],
+    queryFn: () => API_ManagerAnalysisOptions(domain),
+    retry: false,
+    staleTime: 60_000,
+  })
 
-  const currentEntityConfig = entityOptions.find((e) => e.entity === selectedEntity) ?? entityOptions[0]!
+  const entityOptions = useMemo<DomainEntityOption[]>(() => {
+    const remote = optionsQuery.data?.filter((item) => !item.domain || item.domain === domain)
+    if (remote && remote.length > 0) {
+      return remote.map((item) => ({
+        entity: item.entity,
+        label: label(item.entity),
+        metrics: item.metrics.map((m) => ({
+          id: m.metric,
+          label:
+            m.name && m.name !== m.metric
+              ? m.name
+              : m.metric.startsWith('record_count_by_')
+                ? `Số bản ghi theo ${label(m.metric.slice('record_count_by_'.length)).toLowerCase()}`
+                : label(m.metric),
+        })),
+      }))
+    }
+    return FALLBACK_DOMAIN_OPTIONS[domain] ?? FALLBACK_DOMAIN_OPTIONS.hr
+  }, [optionsQuery.data, domain])
+
+  const [selectedEntity, setSelectedEntity] = useState(
+    (FALLBACK_DOMAIN_OPTIONS[defaultDomain] ?? FALLBACK_DOMAIN_OPTIONS.hr)[0]?.entity ?? 'employee'
+  )
+
+  const currentEntityConfig =
+    entityOptions.find((e) => e.entity === selectedEntity) ?? entityOptions[0]!
+
   const [selectedMetric, setSelectedMetric] = useState(
     currentEntityConfig.metrics[0]?.id ?? 'record_count_by_employee_status'
   )
+
+  const effectiveEntity = currentEntityConfig.entity
+  const effectiveMetric = currentEntityConfig.metrics.some((m) => m.id === selectedMetric)
+    ? selectedMetric
+    : (currentEntityConfig.metrics[0]?.id ?? 'record_count')
 
   const [page, setPage] = useState(0)
   const pageSize = 20
 
   const params: AnalyticsFilters = {
     domain,
-    entity: selectedEntity,
-    metric: selectedMetric,
+    entity: effectiveEntity,
+    metric: effectiveMetric,
+    dimension_value: appliedDimensionValue || undefined,
     limit: pageSize,
     offset: page * pageSize,
   }
@@ -153,11 +179,13 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
 
   function handleDomainChange(newDomain: Domain) {
     setDomain(newDomain)
-    const nextEntityOpts = DOMAIN_OPTIONS[newDomain] ?? []
+    const nextEntityOpts = FALLBACK_DOMAIN_OPTIONS[newDomain] ?? []
     if (nextEntityOpts[0]) {
       setSelectedEntity(nextEntityOpts[0].entity)
       setSelectedMetric(nextEntityOpts[0].metrics[0]?.id ?? 'record_count')
     }
+    setDimensionValueInput('')
+    setAppliedDimensionValue('')
     setPage(0)
   }
 
@@ -194,7 +222,7 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
           <label className="flex items-center gap-2 text-sm text-slate-700">
             Lĩnh vực:
             <select
-              className="rounded-lg border border-slate-300 bg-white p-2 text-sm text-slate-900 shadow-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="shadow-xs rounded-lg border border-slate-300 bg-white p-2 text-sm text-slate-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               value={domain}
               onChange={(e) => handleDomainChange(e.target.value as Domain)}
             >
@@ -209,7 +237,7 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
       </div>
 
       {/* Filter Control Bar */}
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs">
+      <div className="shadow-xs flex flex-wrap items-center gap-3 rounded-xl border border-slate-200/90 bg-white p-4">
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
           <Filter className="size-4 text-slate-400" aria-hidden="true" />
           <span>Bộ lọc:</span>
@@ -219,9 +247,9 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
           <label className="flex items-center gap-2 text-xs font-medium text-slate-700">
             Thực thể
             <select
-              value={selectedEntity}
+              value={effectiveEntity}
               onChange={(e) => handleEntityChange(e.target.value)}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 shadow-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="shadow-xs rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             >
               {entityOptions.map((opt) => (
                 <option key={opt.entity} value={opt.entity}>
@@ -234,12 +262,12 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
           <label className="flex items-center gap-2 text-xs font-medium text-slate-700">
             Chỉ số
             <select
-              value={selectedMetric}
+              value={effectiveMetric}
               onChange={(e) => {
                 setSelectedMetric(e.target.value)
                 setPage(0)
               }}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 shadow-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="shadow-xs rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             >
               {currentEntityConfig.metrics.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -248,13 +276,40 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
               ))}
             </select>
           </label>
+
+          <form
+            className="flex items-center gap-1.5"
+            onSubmit={(e) => {
+              e.preventDefault()
+              setAppliedDimensionValue(dimensionValueInput.trim())
+              setPage(0)
+            }}
+          >
+            <div className="relative">
+              <Search
+                className="pointer-events-none absolute left-2.5 top-2 size-3.5 text-slate-400"
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                aria-label="Lọc theo giá trị chiều"
+                placeholder="Lọc giá trị chiều…"
+                value={dimensionValueInput}
+                onChange={(e) => setDimensionValueInput(e.target.value)}
+                className="shadow-xs w-40 rounded-lg border border-slate-300 bg-white py-1.5 pl-8 pr-2.5 text-xs text-slate-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <Button type="submit" variant="outline" className="h-7 px-2.5 text-xs">
+              Lọc
+            </Button>
+          </form>
         </div>
 
         <div className="ml-auto flex items-center gap-2">
           <Button
             onClick={() => void query.refetch()}
             reading={query.isFetching}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50"
+            className="shadow-xs rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
           >
             Làm mới
           </Button>
@@ -281,14 +336,11 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
             {/* Bar Chart Card */}
             <Card
               title="Phân bổ số lượng bản ghi"
-              subtitle={`Thực thể ${label(selectedEntity)} theo ${currentEntityConfig.metrics.find((m) => m.id === selectedMetric)?.label.toLowerCase()}`}
+              subtitle={`Thực thể ${label(effectiveEntity)} theo ${(currentEntityConfig.metrics.find((m) => m.id === effectiveMetric)?.label ?? label(effectiveMetric)).toLowerCase()}`}
             >
               <div className="h-72 w-full pt-2">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={chartData}
-                    margin={{ top: 10, right: 10, left: -10, bottom: 25 }}
-                  >
+                  <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 25 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                     <XAxis
                       dataKey="name"
@@ -316,10 +368,7 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
             </Card>
 
             {/* Pie / Distribution Card */}
-            <Card
-              title="Cơ cấu tỷ lệ"
-              subtitle="Tỷ trọng giữa các nhóm trong trang hiện tại"
-            >
+            <Card title="Cơ cấu tỷ lệ" subtitle="Tỷ trọng giữa các nhóm trong trang hiện tại">
               <div className="h-72 w-full pt-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <RechartsPie>
@@ -371,20 +420,19 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
                   >
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-semibold text-slate-800">{dimLabel}</span>
-                      <span className="font-bold text-primary tabular-nums">
+                      <span className="font-bold tabular-nums text-primary">
                         {number(item.value)} bản ghi
                       </span>
                     </div>
 
                     <div aria-hidden="true" className="mt-2 h-2 rounded-full bg-slate-100">
-                      <div
-                        className="h-2 rounded-full bg-primary"
-                        style={{ width: `${pct}%` }}
-                      />
+                      <div className="h-2 rounded-full bg-primary" style={{ width: `${pct}%` }} />
                     </div>
 
                     <div className="mt-2 flex flex-wrap items-center justify-between text-xs text-slate-500">
-                      <span>Nguồn: {item.dataset_name} · Scope: {item.scope}</span>
+                      <span>
+                        Nguồn: {item.dataset_name} · Scope: {item.scope}
+                      </span>
                       <span>Cập nhật: {formatDateTime(item.finished_at)}</span>
                     </div>
                   </div>

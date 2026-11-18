@@ -38,7 +38,7 @@ const ISSUE_STATUS_OPTIONS = [
 ] as const
 
 function QualityIssuesContent({ context }: { context: StaffContext }) {
-  const [statusFilter, setStatusFilter] = useState<string>('')
+  const [statusFilter, setStatusFilter] = useState<string>('ASSIGNED')
   const [mineOnly, setMineOnly] = useState(true)
   const [offset, setOffset] = useState(0)
 
