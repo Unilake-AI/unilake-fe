@@ -7,19 +7,16 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, CheckCircle2, FolderPlus, Info, Save } from 'lucide-react'
+import { ArrowLeft, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
-import { API_CreateDataset, API_ListSourceSystems } from '@/api/admindata/datasets'
+import { API_ListSourceSystems } from '@/api/admindata/datasets'
 import { getApiErrorMessage } from '@/api/http'
-import {
-  Button,
-  Card,
-  ErrorState,
-  LoadingState,
-  Tag,
-} from '@/components/page/page-parts'
+import { API_ManagerCreateDataset } from '@/api/manager/catalog'
+import type { ManagerContext } from '@/api/manager/reports'
+import { Card, Tag } from '@/components/page/page-parts'
+
 import { ManagerGate } from './report-parts'
 
 const formSchema = z.object({
@@ -49,46 +46,47 @@ function toDatasetCode(str: string): string {
 export function ManagerCreateDatasetView() {
   return (
     <ManagerGate>
-      {(context) => {
-        const domain = (context.domains[0]?.domain as 'hr' | 'academic' | 'admissions') ?? 'hr'
-        const dept = context.departments[0]
-        return (
-          <CreateDatasetForm
-            domain={domain}
-            departmentId={dept?.department_id}
-            departmentName={dept?.department_name}
-          />
-        )
-      }}
+      {(context) => <CreateDatasetForm context={context} key={context.user_id} />}
     </ManagerGate>
   )
 }
 
-function CreateDatasetForm({
-  domain,
-  departmentId: _departmentId,
-  departmentName,
-}: {
-  domain: 'hr' | 'academic' | 'admissions'
-  departmentId?: number
-  departmentName?: string
-}) {
+const domainDepartments = { hr: 'PNS', academic: 'PDT', admissions: 'PTS' }
+
+function CreateDatasetForm({ context }: { context: ManagerContext }) {
+  const [domain, setDomain] = useState<'hr' | 'academic' | 'admissions'>(
+    (context.default_domain ?? context.domains[0]?.domain ?? 'hr') as
+      'hr' | 'academic' | 'admissions'
+  )
+  const department = context.departments.find(
+    (department) => department.department_code === domainDepartments[domain]
+  )
+  const departmentName = department?.department_name
   const router = useRouter()
   const queryClient = useQueryClient()
 
   const [datasetName, setDatasetName] = useState('')
   const [datasetCode, setDatasetCode] = useState('')
   const [isCodeManual, setIsCodeManual] = useState(false)
+  const [sourceSystemId, setSourceSystemId] = useState('')
   const [description, setDescription] = useState('')
   const [validationError, setValidationError] = useState<string | null>(null)
 
   const sourcesQuery = useQuery({
-    queryKey: ['source-systems'],
+    queryKey: ['source-systems', 'manager', context.user_id],
     queryFn: API_ListSourceSystems,
+    retry: false,
   })
 
+  const sourceOptions =
+    sourcesQuery.data?.filter(
+      (source) =>
+        source.owner_department_id == null ||
+        source.owner_department_id === department?.department_id
+    ) ?? []
+
   const createMutation = useMutation({
-    mutationFn: API_CreateDataset,
+    mutationFn: API_ManagerCreateDataset,
     onSuccess: (data) => {
       toast.success(`Đã tạo bộ dữ liệu "${data.dataset_name}" thành công!`)
       void queryClient.invalidateQueries({ queryKey: ['manager', 'catalog'] })
@@ -123,24 +121,30 @@ function CreateDatasetForm({
       return
     }
 
-    const defaultSourceId = sourcesQuery.data?.[0]?.source_system_id ?? 1
+    const selectedSource = sourceOptions.find(
+      (source) => String(source.source_system_id) === sourceSystemId
+    )
+    if (!selectedSource) {
+      setValidationError('Vui lòng chọn hệ thống nguồn đang hoạt động.')
+      return
+    }
 
     createMutation.mutate({
       dataset_name: datasetName.trim(),
       dataset_code: datasetCode.trim(),
       domain,
-      source_system_id: defaultSourceId,
+      source_system_id: selectedSource.source_system_id,
       description: description.trim() || undefined,
     })
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="mx-auto max-w-2xl space-y-6">
       {/* Header */}
       <div>
         <Link
           href="/manager/catalog"
-          className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 mb-2 transition-colors"
+          className="mb-2 inline-flex items-center gap-1.5 text-xs text-slate-500 transition-colors hover:text-slate-800"
         >
           <ArrowLeft className="size-3.5" />
           <span>Quay lại danh mục bộ dữ liệu</span>
@@ -148,7 +152,7 @@ function CreateDatasetForm({
         <h1 className="text-xl font-bold tracking-tight text-slate-900">
           Quy hoạch bộ dữ liệu mới
         </h1>
-        <p className="text-xs text-slate-500 mt-0.5">
+        <p className="mt-0.5 text-xs text-slate-500">
           Manager tạo bộ dữ liệu chuẩn mực để nhân viên phòng ban nạp tệp CSV/Excel vào
         </p>
       </div>
@@ -156,17 +160,17 @@ function CreateDatasetForm({
       <Card>
         <form onSubmit={handleSubmit} className="space-y-5">
           {validationError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+            <div
+              role="alert"
+              className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700"
+            >
               {validationError}
             </div>
           )}
 
           {/* Dataset Name */}
           <div className="space-y-1.5">
-            <label
-              htmlFor="dataset-name"
-              className="block text-xs font-semibold text-slate-700"
-            >
+            <label htmlFor="dataset-name" className="block text-xs font-semibold text-slate-700">
               Tên bộ dữ liệu *
             </label>
             <input
@@ -186,10 +190,7 @@ function CreateDatasetForm({
 
           {/* Dataset Code */}
           <div className="space-y-1.5">
-            <label
-              htmlFor="dataset-code"
-              className="block text-xs font-semibold text-slate-700"
-            >
+            <label htmlFor="dataset-code" className="block text-xs font-semibold text-slate-700">
               Mã bộ dữ liệu (Mã hệ thống) *
             </label>
             <input
@@ -203,31 +204,86 @@ function CreateDatasetForm({
                 setIsCodeManual(true)
                 setDatasetCode(e.target.value)
               }}
-              className="h-10 w-full rounded-lg border border-slate-300 bg-slate-50/50 font-mono px-3 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+              className="h-10 w-full rounded-lg border border-slate-300 bg-slate-50/50 px-3 font-mono text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
             />
             <p className="text-[11px] text-slate-400">
-              Tự động sinh từ tên bộ dữ liệu hoặc có thể tự chỉnh sửa (chữ thường không dấu, phân tách bằng dấu gạch dưới).
+              Tự động sinh từ tên bộ dữ liệu hoặc có thể tự chỉnh sửa (chữ thường không dấu, phân
+              tách bằng dấu gạch dưới).
             </p>
           </div>
 
+          <div className="space-y-1.5">
+            <label
+              htmlFor="manager-source-system"
+              className="block text-xs font-semibold text-slate-700"
+            >
+              Hệ thống nguồn *
+            </label>
+            <select
+              id="manager-source-system"
+              value={sourceSystemId}
+              onChange={(event) => setSourceSystemId(event.target.value)}
+              required
+              className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-xs"
+            >
+              <option value="">
+                {sourcesQuery.isPending ? 'Đang tải…' : 'Chọn hệ thống nguồn'}
+              </option>
+              {sourceOptions.map((source) => (
+                <option key={source.source_system_id} value={source.source_system_id}>
+                  {source.source_name}
+                </option>
+              ))}
+            </select>
+            {sourcesQuery.isError && (
+              <p role="alert" className="text-xs text-rose-700">
+                {getApiErrorMessage(sourcesQuery.error, 'Không tải được hệ thống nguồn.')}
+              </p>
+            )}
+            {sourcesQuery.isSuccess && sourceOptions.length === 0 && (
+              <p className="text-xs text-slate-600">
+                Cần Data Admin đăng ký hệ thống nguồn cho phòng ban.
+              </p>
+            )}
+          </div>
+
           {/* Domain & Department (Read-only Scoped) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-lg bg-slate-50 p-3 border border-slate-200/80">
+          <div className="grid grid-cols-1 gap-4 rounded-lg border border-slate-200/80 bg-slate-50 p-3 sm:grid-cols-2">
             <div>
-              <span className="block text-[11px] font-medium text-slate-500">
-                Lĩnh vực quản lý (Cố định)
-              </span>
+              <span className="block text-[11px] font-medium text-slate-500">Lĩnh vực quản lý</span>
+              {context.domains.length > 1 && (
+                <select
+                  aria-label="Lĩnh vực tạo bộ dữ liệu"
+                  className="mt-1 h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
+                  value={domain}
+                  onChange={(event) => {
+                    const nextDomain = event.target.value as typeof domain
+                    setDomain(nextDomain)
+                    setSourceSystemId('')
+                    setValidationError(null)
+                    if (!isCodeManual) {
+                      const generated = toDatasetCode(datasetName)
+                      setDatasetCode(generated ? `${nextDomain}_${generated}` : '')
+                    }
+                  }}
+                >
+                  {context.domains.map((item) => (
+                    <option key={item.domain} value={item.domain}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              )}
               <div className="mt-1 flex items-center gap-2">
                 <Tag tone="indigo">{domain.toUpperCase()}</Tag>
-                <span className="text-xs text-slate-600 font-medium">
+                <span className="text-xs font-medium text-slate-600">
                   {domain === 'hr' ? 'Nhân sự' : domain === 'academic' ? 'Đào tạo' : 'Tuyển sinh'}
                 </span>
               </div>
             </div>
 
             <div>
-              <span className="block text-[11px] font-medium text-slate-500">
-                Phòng ban sở hữu
-              </span>
+              <span className="block text-[11px] font-medium text-slate-500">Phòng ban sở hữu</span>
               <span className="mt-1 block text-xs font-semibold text-slate-800">
                 {departmentName ?? 'Phòng ban của Quản lý'}
               </span>
@@ -243,12 +299,8 @@ function CreateDatasetForm({
             </div>
 
             <div>
-              <span className="block text-[11px] font-medium text-slate-500">
-                Phân quyền nạp
-              </span>
-              <span className="mt-1 block text-xs text-slate-600">
-                Toàn bộ nhân viên phòng ban
-              </span>
+              <span className="block text-[11px] font-medium text-slate-500">Phân quyền nạp</span>
+              <span className="mt-1 block text-xs text-slate-600">Toàn bộ nhân viên phòng ban</span>
             </div>
           </div>
 
@@ -272,16 +324,21 @@ function CreateDatasetForm({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+          <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-3">
             <Link
               href="/manager/catalog"
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
             >
               Hủy
             </Link>
             <button
               type="submit"
-              disabled={createMutation.isPending || !datasetName.trim() || !datasetCode.trim()}
+              disabled={
+                createMutation.isPending ||
+                !datasetName.trim() ||
+                !datasetCode.trim() ||
+                !sourceSystemId
+              }
               className="shadow-xs inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
               <Save className="size-3.5" />

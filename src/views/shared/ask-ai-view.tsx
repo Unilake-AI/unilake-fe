@@ -39,6 +39,12 @@ const SUGGESTIONS: Record<DomainCode, string[]> = {
   hr: ['Khoa CNTT có bao nhiêu giảng viên?', 'Số giảng viên theo từng khoa?'],
 }
 
+const STAFF_SUGGESTIONS = {
+  hr: ['Thống kê tổng số nhân sự đang công tác hiện tại'],
+  academic: ['Tổng số sinh viên theo từng bộ dữ liệu'],
+  admissions: ['Tổng số hồ sơ tuyển sinh theo từng bộ dữ liệu'],
+}
+
 function formatCell(value: unknown): string {
   if (value == null) {
     return '—'
@@ -122,8 +128,19 @@ function SqlBlock({ sql }: { sql: string }) {
   )
 }
 
-export function AskAiView({ historyHref }: { historyHref?: string } = {}) {
-  const { domain } = useDomain()
+export function AskAiView({
+  historyHref,
+  workspace,
+}: { historyHref?: string; workspace?: 'STAFF' } = {}) {
+  const { domain, availableDomains } = useDomain()
+  const suggestions =
+    workspace === 'STAFF'
+      ? availableDomains.flatMap(({ code }) =>
+          code !== 'all' && (domain.code === 'all' || code === domain.code)
+            ? STAFF_SUGGESTIONS[code]
+            : []
+        )
+      : SUGGESTIONS[domain.code]
   const [question, setQuestion] = useState('')
   const [turns, setTurns] = useState<NlqConversationTurn[]>([])
   const [historyEntries, setHistoryEntries] = useState<QueryHistoryEntry[]>([])
@@ -137,7 +154,7 @@ export function AskAiView({ historyHref }: { historyHref?: string } = {}) {
     meta: { readOnly: true },
     mutationFn: async ({ text }: { id: number; text: string }) => {
       const started = performance.now()
-      const result = await API_AskNlq(text)
+      const result = await API_AskNlq(text, workspace)
       return { result, durationMs: Math.round(performance.now() - started) }
     },
     onSuccess: ({ result, durationMs }, { id, text }) => {
@@ -198,7 +215,11 @@ export function AskAiView({ historyHref }: { historyHref?: string } = {}) {
       <PageHeader
         breadcrumb={[getDomain(domain.code).shortLabel, 'Hỏi AI']}
         title="Hỏi UniLake AI"
-        description="Đặt câu hỏi bằng tiếng Việt trong phạm vi dữ liệu được cấp quyền. Kết quả thống kê hỗ trợ tìm hiểu, chưa tự xác nhận nguyên nhân."
+        description={
+          workspace === 'STAFF'
+            ? 'Tra cứu số liệu Gold đã công bố của phòng ban. Chọn câu hỏi gợi ý để xem các thống kê đang hỗ trợ.'
+            : 'Đặt câu hỏi bằng tiếng Việt trong phạm vi dữ liệu được cấp quyền.'
+        }
       />
 
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_310px]">
@@ -212,7 +233,7 @@ export function AskAiView({ historyHref }: { historyHref?: string } = {}) {
             }
           >
             <div className="grid gap-3 sm:grid-cols-2">
-              {SUGGESTIONS[domain.code].map((item) => (
+              {suggestions.map((item) => (
                 <button
                   key={item}
                   type="button"
@@ -314,6 +335,9 @@ export function AskAiView({ historyHref }: { historyHref?: string } = {}) {
                   )}
                   {turn.state === 'done' && turn.result && (
                     <>
+                      {turn.result.answer && (
+                        <p className="text-sm text-slate-700">{turn.result.answer}</p>
+                      )}
                       {turn.result.rows.length ? (
                         <>
                           <p className="text-sm text-slate-700">
@@ -321,13 +345,13 @@ export function AskAiView({ historyHref }: { historyHref?: string } = {}) {
                           </p>
                           <ResultTable rows={turn.result.rows} />
                         </>
-                      ) : (
+                      ) : !turn.result.answer ? (
                         <p className="flex items-center gap-2 text-sm text-slate-600">
                           <SearchX className="size-4 text-slate-400" aria-hidden="true" />
                           Không tìm thấy dữ liệu phù hợp. Hãy thử hỏi về một khoảng thời gian hoặc
                           nhóm ngành rộng hơn.
                         </p>
-                      )}
+                      ) : null}
                       {turn.result.sql && (
                         <details>
                           <summary className="cursor-pointer text-xs text-slate-500">

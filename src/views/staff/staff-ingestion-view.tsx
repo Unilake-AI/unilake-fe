@@ -20,10 +20,8 @@ import {
   API_GetIngestionJob,
   API_GetIngestionMetrics,
   API_GetIngestionStats,
-  API_ListIngestionAttempts,
   API_ListIngestionJobs,
 } from '@/api/shared/ingestion'
-import { AutoSilverForIngestion } from '@/components/data/auto-silver-jobs'
 import {
   Button,
   Card,
@@ -85,15 +83,6 @@ function JobDetailSection({
         : false,
   })
 
-  const attemptsQuery = useQuery({
-    queryKey: ['ingestion-jobs', jobId, 'attempts'],
-    queryFn: () => API_ListIngestionAttempts(jobId),
-    refetchInterval: () =>
-      jobQuery.data && isIngestionJobActive(jobQuery.data.status)
-        ? INGESTION_POLL_INTERVAL_MS
-        : false,
-  })
-
   if (jobQuery.isPending) {
     return <LoadingState label={`Đang tải chi tiết lần nạp #${jobId}…`} />
   }
@@ -117,10 +106,7 @@ function JobDetailSection({
     <div className="space-y-4 text-xs" id={`staff-ingestion-job-${jobId}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="font-semibold text-slate-900">
-            Chi tiết lần nạp #{job.ingestion_job_id}
-            {job.attempt_number ? ` · Lần thử #${job.attempt_number}` : ''}
-          </p>
+          <p className="font-semibold text-slate-900">Chi tiết lần nạp #{job.ingestion_job_id}</p>
           <p className="text-slate-500">
             Bộ dữ liệu: {datasetName ? `${datasetName} (#${job.dataset_id})` : `#${job.dataset_id}`}{' '}
             · Tệp nguồn: <span className="font-mono text-slate-700">{job.source_table ?? '—'}</span>
@@ -163,8 +149,6 @@ function JobDetailSection({
         </div>
       )}
 
-      {status === 'SUCCESS' && <AutoSilverForIngestion ingestionJobId={jobId} />}
-
       {job.quality_issue_id && (
         <div className="flex items-center justify-between rounded-md border border-[#ebc5cd] bg-[#fff3f5] px-3 py-2 text-[#7a1020]">
           <span>Lần nạp này gắn với yêu cầu xử lý dữ liệu lỗi.</span>
@@ -199,79 +183,6 @@ function JobDetailSection({
           )}
         </div>
       )}
-
-      {/* Lịch sử các lần thử (Attempts) */}
-      <div className="space-y-2">
-        <p className="font-semibold text-slate-800">Chuỗi các lần chạy (Attempts)</p>
-        {attemptsQuery.isPending ? (
-          <TableSkeleton columns={6} label="Đang tải lịch sử lần chạy…" />
-        ) : attemptsQuery.isError ? (
-          <ErrorState
-            message={getApiErrorMessage(
-              attemptsQuery.error,
-              'Không tải được lịch sử các lần chạy.'
-            )}
-            retrying={attemptsQuery.isFetching}
-            onRetry={() => void attemptsQuery.refetch()}
-          />
-        ) : attemptsQuery.data.length === 0 ? (
-          <p className="text-slate-500">Chưa có thông tin chuỗi lần chạy.</p>
-        ) : (
-          <div className="overflow-x-auto rounded-md border border-slate-200 bg-white">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 font-mono text-[10px] uppercase tracking-wider text-slate-500">
-                <tr>
-                  <th scope="col" className="px-3 py-2 font-medium">
-                    Lần thử
-                  </th>
-                  <th scope="col" className="px-3 py-2 font-medium">
-                    Job ID
-                  </th>
-                  <th scope="col" className="px-3 py-2 font-medium">
-                    Trạng thái
-                  </th>
-                  <th scope="col" className="px-3 py-2 font-medium">
-                    Giai đoạn
-                  </th>
-                  <th scope="col" className="px-3 py-2 font-medium">
-                    Thời gian tạo
-                  </th>
-                  <th scope="col" className="px-3 py-2 font-medium">
-                    Ghi chú lỗi
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {attemptsQuery.data.map((attempt) => (
-                  <tr key={attempt.ingestion_job_id}>
-                    <td className="px-3 py-2 font-mono font-semibold text-slate-900">
-                      #{attempt.attempt_number}
-                    </td>
-                    <td className="px-3 py-2 font-mono text-slate-700">
-                      #{attempt.ingestion_job_id}
-                    </td>
-                    <td className="px-3 py-2">
-                      <Tag tone={statusTone(attempt.status)}>{statusLabel(attempt.status)}</Tag>
-                    </td>
-                    <td className="px-3 py-2 text-slate-600">
-                      {attempt.stage ? statusLabel(attempt.stage) : '—'}
-                    </td>
-                    <td className="px-3 py-2 text-slate-500">
-                      {formatDateTime(attempt.created_at)}
-                    </td>
-                    <td className="px-3 py-2 text-rose-700">
-                      {attempt.error_message
-                        ? (getErrorMessageForCode(attempt.error_message) ??
-                          'Không thành công trong lần thử này')
-                        : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
     </div>
   )
 }
@@ -346,7 +257,7 @@ function IngestionContent({
       <PageHeader
         breadcrumb={['Không gian nhân viên', 'Lịch sử nạp dữ liệu']}
         title="Lịch sử nạp dữ liệu"
-        description="Theo dõi tiến độ xử lý tệp vào Bronze, kết quả đọc/ghi dòng và lịch sử các lần chạy tự động."
+        description="Theo dõi trạng thái nạp Bronze, số dòng đọc, ghi và bị từ chối."
         actions={
           <>
             <Button
@@ -407,7 +318,7 @@ function IngestionContent({
       </div>
 
       {metricsQuery.data && (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <KpiCard
             label="Thời gian chờ trung bình"
             value={formatDuration(metricsQuery.data.average_wait_seconds)}
@@ -423,6 +334,10 @@ function IngestionContent({
                 ? `${metricsQuery.data.failure_rate_percent.toFixed(1)}%`
                 : '—'
             }
+          />
+          <KpiCard
+            label="Lần nạp chờ lâu nhất"
+            value={formatDuration(metricsQuery.data.oldest_queued_seconds)}
           />
         </div>
       )}

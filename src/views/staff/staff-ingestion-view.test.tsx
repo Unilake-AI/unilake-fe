@@ -29,9 +29,11 @@ describe('StaffIngestionView', () => {
     vi.restoreAllMocks()
   })
 
-  it('hiển thị trạng thái FAILED, RETRY_WAIT, chuỗi attempts và không hiển thị nút Retry thủ công hay Làm sạch/Silver', async () => {
+  it('hiển thị trạng thái Bronze và không tải lịch sử thử lại hoặc tiến trình Silver', async () => {
+    const trackedPaths: string[] = []
     const trackedParams: unknown[] = []
     http.defaults.adapter = (config) => {
+      trackedPaths.push(config.url ?? '')
       const key = `${config.method} ${config.url}`
       if (key === 'get /staff/context') {
         return Promise.resolve({
@@ -175,38 +177,6 @@ describe('StaffIngestionView', () => {
           config,
         })
       }
-      if (key === 'get /ingestion/jobs/101/attempts') {
-        return Promise.resolve({
-          data: [
-            {
-              ingestion_job_id: 101,
-              root_job_id: 101,
-              attempt_number: 1,
-              status: 'FAILED',
-              stage: 'VALIDATING',
-              error_message: 'WORKER_LEASE_EXPIRED',
-              created_at: '2026-11-10T09:00:00Z',
-              started_at: '2026-11-10T09:00:01Z',
-              finished_at: '2026-11-10T09:00:02Z',
-            },
-            {
-              ingestion_job_id: 102,
-              root_job_id: 101,
-              attempt_number: 2,
-              status: 'RETRY_WAIT',
-              stage: 'QUEUED',
-              error_message: null,
-              created_at: '2026-11-10T09:01:00Z',
-              started_at: null,
-              finished_at: null,
-            },
-          ],
-          status: 200,
-          statusText: 'OK',
-          headers: {},
-          config,
-        })
-      }
       return Promise.resolve({ data: [], status: 200, statusText: 'OK', headers: {}, config })
     }
 
@@ -219,9 +189,10 @@ describe('StaffIngestionView', () => {
       expect(screen.getAllByText('Chờ thử lại').length).toBeGreaterThanOrEqual(2)
 
       await user.click(detailBtn)
-      expect(await screen.findByText('Chuỗi các lần chạy (Attempts)')).toBeInTheDocument()
-      expect(screen.getByText('#2')).toBeInTheDocument()
-      expect(screen.getByText(/Quá thời gian xử lý của worker/)).toBeInTheDocument()
+      expect(await screen.findByText(/Cấu hình đọc tệp không hợp lệ/)).toBeInTheDocument()
+      expect(screen.queryByText('Chuỗi các lần chạy (Attempts)')).not.toBeInTheDocument()
+      expect(trackedPaths).not.toContain('/ingestion/jobs/101/attempts')
+      expect(trackedPaths).not.toContain('/pipeline/auto/jobs')
 
       // Tuyệt đối không có nút Manual Retry hoặc Cleaning/Silver cho STAFF
       expect(

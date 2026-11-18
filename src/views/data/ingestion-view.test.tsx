@@ -133,10 +133,10 @@ describe('DATA_ADMIN IngestionView', () => {
     }
   })
 
-  it('chuyển tới dashboard pipeline và chỉ cho Manual Retry với UPLOAD_V1 thất bại', async () => {
+  it('cho chạy nạp từ nguồn và retry cả job thu thập lẫn job tải tệp thất bại', async () => {
     let startPayload: unknown = null
     let uploadForm: FormData | null = null
-    let retried = false
+    const retried: string[] = []
 
     const originalAdapter = http.defaults.adapter
     http.defaults.adapter = (config) => {
@@ -161,8 +161,11 @@ describe('DATA_ADMIN IngestionView', () => {
           config,
         })
       }
-      if (endpoint === 'post /ingestion/jobs/60/retry') {
-        retried = true
+      if (
+        endpoint === 'post /ingestion/jobs/60/retry' ||
+        endpoint === 'post /ingestion/jobs/70/retry'
+      ) {
+        retried.push(endpoint)
         return Promise.resolve({
           data: { ingestion_job_id: 61, data_source_id: 3, dataset_id: 8, status: 'QUEUED' },
           status: 202,
@@ -268,27 +271,36 @@ describe('DATA_ADMIN IngestionView', () => {
         </QueryClientProvider>
       )
 
-      // 1. EXECUTION_V1 FAILED không được có nút Chạy lại thủ công
+      // Job thu thập thất bại có thể chạy lại.
       await user.click(await screen.findByRole('button', { name: 'Chi tiết lần nạp #70' }))
-      expect(
-        await screen.findByText(/chỉ hỗ trợ cho các job tải tệp lên \(UPLOAD_V1\)/)
-      ).toBeInTheDocument()
-      expect(screen.queryByRole('button', { name: 'Chạy lại thủ công' })).not.toBeInTheDocument()
+      await user.click(await screen.findByRole('button', { name: 'Chạy lại thủ công' }))
+      await user.click(await screen.findByRole('button', { name: 'Xác nhận chạy lại' }))
+      await waitFor(() => expect(retried).toContain('post /ingestion/jobs/70/retry'))
 
       // 2. UPLOAD_V1 FAILED có nút Chạy lại thủ công + xác nhận
       await user.click(screen.getByRole('button', { name: 'Chi tiết lần nạp #60' }))
       await user.click(await screen.findByRole('button', { name: 'Chạy lại thủ công' }))
       await user.click(await screen.findByRole('button', { name: 'Xác nhận chạy lại' }))
-      await waitFor(() => expect(retried).toBe(true))
+      await waitFor(() => expect(retried).toContain('post /ingestion/jobs/60/retry'))
 
       // Trang giám sát chuyển người dùng sang dashboard pipeline hiện tại.
       expect(screen.getByRole('link', { name: 'Tiến trình nạp & xử lý dữ liệu' })).toHaveAttribute(
         'href',
         '/data/pipeline'
       )
-      expect(screen.queryByRole('button', { name: 'Chạy từ nguồn' })).not.toBeInTheDocument()
+      await user.click(screen.getByRole('button', { name: 'Chạy từ nguồn' }))
+      await user.selectOptions(await screen.findByLabelText('Nguồn dữ liệu *'), '3')
+      await user.selectOptions(await screen.findByLabelText('Bộ dữ liệu đích *'), '8')
+      await user.type(screen.getByLabelText('File / bảng nguồn *'), 'applicants.csv')
+      await user.click(screen.getByRole('button', { name: 'Chạy nạp dữ liệu' }))
       expect(screen.queryByRole('button', { name: 'Tải tệp lên' })).not.toBeInTheDocument()
-      expect(startPayload).toBeNull()
+      await waitFor(() =>
+        expect(startPayload).toEqual({
+          data_source_id: 3,
+          dataset_id: 8,
+          source_table: 'applicants.csv',
+        })
+      )
       expect(uploadForm).toBeNull()
     } finally {
       client.clear()

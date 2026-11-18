@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 
 import Image from 'next/image'
@@ -19,7 +19,6 @@ import {
   Upload,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { z } from 'zod'
 
 import { getApiErrorMessage, getErrorMessageForCode } from '@/api/http'
 import { API_ListDatasets } from '@/api/shared/datasets'
@@ -29,6 +28,7 @@ import emptySearch from '@/assets/dashboard/empty-search.webp'
 import {
   Button,
   Card,
+  EmptyState,
   ErrorState,
   LoadingState,
   PageHeader,
@@ -249,6 +249,7 @@ function UploadContent({ context }: { context: StaffContext }) {
         offset: datasetOffset,
       },
     ],
+    enabled: context.can_upload,
     queryFn: () =>
       API_ListDatasets({
         search: appliedSearch || undefined,
@@ -278,7 +279,14 @@ function UploadContent({ context }: { context: StaffContext }) {
   })
 
   if (!context.can_upload) {
-    return <StaffAccessDeniedState />
+    return context.departments.length === 0 ? (
+      <EmptyState
+        title="Chưa có phân công phòng ban"
+        description="Cần phân công phòng ban đang hiệu lực để nạp dữ liệu Bronze."
+      />
+    ) : (
+      <StaffAccessDeniedState />
+    )
   }
 
   const isCsv = selectedFile ? isCsvFilename(selectedFile.name) : false
@@ -501,7 +509,8 @@ function UploadContent({ context }: { context: StaffContext }) {
                     Không tìm thấy bộ dữ liệu phù hợp
                   </h3>
                   <p className="mt-1 text-xs text-[#65718d]">
-                    Bạn có thể thử từ khóa khác hoặc liên hệ Trưởng phòng (Manager) để quy hoạch bộ dữ liệu mới.
+                    Bạn có thể thử từ khóa khác hoặc liên hệ Trưởng phòng (Manager) để quy hoạch bộ
+                    dữ liệu mới.
                   </p>
                 </div>
               ) : (
@@ -836,9 +845,7 @@ function UploadContent({ context }: { context: StaffContext }) {
             <dl className="divide-y divide-[#e5e9f3] text-xs [&>div]:flex [&>div]:items-start [&>div]:justify-between [&>div]:gap-3 [&>div]:py-2 [&_dd]:max-w-[60%] [&_dd]:text-right">
               <div>
                 <dt className="text-slate-500">Hình thức</dt>
-                <dd className="mt-0.5 font-medium text-slate-900">
-                  Nạp vào bộ dữ liệu đã có
-                </dd>
+                <dd className="mt-0.5 font-medium text-slate-900">Nạp vào bộ dữ liệu đã có</dd>
               </div>
               <div>
                 <dt className="text-slate-500">Bộ dữ liệu đích</dt>

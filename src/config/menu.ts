@@ -64,6 +64,10 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
         },
       ],
     },
+    {
+      groupTitle: 'Hỗ trợ phân tích',
+      items: [{ title: 'Hỏi AI', href: '/staff/ask', iconName: 'Bot' }],
+    },
   ],
 
   MANAGER: [
@@ -143,9 +147,9 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
   ],
 }
 
-/** Chỉ mở Ask AI cho MANAGER khi còn trong menu; DATA_ADMIN và STAFF tập trung vào vận hành dữ liệu. */
 export const ASK_AI_PATHS: Partial<Record<RoleWorkspace, string>> = {
   MANAGER: '/manager/ai',
+  STAFF: '/staff/ask',
 }
 
 export function getMenuItemsForRole(role: RoleCode): MenuItem[] {

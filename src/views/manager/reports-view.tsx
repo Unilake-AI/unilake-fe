@@ -5,12 +5,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 
 import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  AlertCircle,
-  CheckCircle2,
-  Filter,
-  Sparkles,
-} from 'lucide-react'
+import { Filter, Sparkles } from 'lucide-react'
 import {
   Area,
   AreaChart,
@@ -43,7 +38,7 @@ import {
 } from '@/components/page/page-parts'
 import { cn } from '@/lib/utils'
 
-import { ManagerGate, MetricList, Paging, inputClass, label, number } from './report-parts'
+import { ManagerGate, MetricList, Paging, label, number } from './report-parts'
 
 type Mode = 'overview' | 'issues'
 type Domain = 'hr' | 'academic' | 'admissions'
@@ -120,7 +115,7 @@ function ManagerWorkspace({ context, mode }: { context: ManagerContext; mode: Mo
             <label className="flex items-center gap-2 text-sm text-slate-700">
               Lĩnh vực
               <select
-                className="rounded-lg border border-slate-300 bg-white p-2 text-sm text-slate-900 shadow-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                className="shadow-xs rounded-lg border border-slate-300 bg-white p-2 text-sm text-slate-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 value={domain}
                 onChange={(event) => setDomain(event.target.value as Domain)}
               >
@@ -136,7 +131,7 @@ function ManagerWorkspace({ context, mode }: { context: ManagerContext; mode: Mo
           <Button
             reading={refreshing}
             onClick={() => void client.invalidateQueries({ queryKey: ['manager'] })}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-xs hover:bg-slate-50"
+            className="shadow-xs rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
             Làm mới
           </Button>
@@ -175,45 +170,45 @@ function Overview({ domain, userId }: { domain: Domain; userId: number }) {
     <div className="space-y-6">
       {/* 4 KPI Cards in 2x2 Grid */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-shadow hover:shadow-sm">
+        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5 transition-shadow hover:shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             {domain === 'academic' ? 'Sinh viên' : domain === 'hr' ? 'Nhân sự' : 'Hồ sơ tuyển sinh'}
           </p>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl tabular-nums">
+          <p className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-slate-900 sm:text-3xl">
             {isPending ? '—' : domain === 'academic' ? '2.450' : domain === 'hr' ? '200' : '3.250'}
           </p>
         </div>
 
-        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-shadow hover:shadow-sm">
+        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5 transition-shadow hover:shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             {domain === 'academic' ? 'Lớp học' : domain === 'hr' ? 'Phòng ban' : 'Trúng tuyển'}
           </p>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl tabular-nums">
+          <p className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-slate-900 sm:text-3xl">
             {isPending ? '—' : domain === 'academic' ? '320' : domain === 'hr' ? '4' : '1.820'}
           </p>
         </div>
 
-        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-shadow hover:shadow-sm">
+        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5 transition-shadow hover:shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             {domain === 'academic' ? 'Tỷ lệ đạt' : domain === 'hr' ? 'Phân công' : 'Nhập học'}
           </p>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl tabular-nums">
+          <p className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-slate-900 sm:text-3xl">
             {isPending ? '—' : domain === 'academic' ? '87,5%' : domain === 'hr' ? '200' : '1.650'}
           </p>
         </div>
 
-        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-shadow hover:shadow-sm">
+        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5 transition-shadow hover:shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             {domain === 'academic' ? 'Môn học' : domain === 'hr' ? 'Giảng viên' : 'Tỷ lệ nhập học'}
           </p>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl tabular-nums">
+          <p className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-slate-900 sm:text-3xl">
             {isPending ? '—' : domain === 'academic' ? '156' : domain === 'hr' ? '100' : '90,6%'}
           </p>
         </div>
       </div>
 
       {/* Main Trend Chart Card */}
-      <div className="rounded-xl border border-slate-200/90 bg-white p-6 shadow-xs">
+      <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-semibold text-slate-900">Xu hướng tỷ lệ đạt môn học</h3>
           <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
@@ -240,7 +235,7 @@ function Overview({ domain, userId }: { domain: Domain; userId: number }) {
                   borderRadius: '0.5rem',
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                 }}
-                formatter={(val) => [`${val}%`, 'Tỷ lệ đạt']}
+                formatter={(val) => [`${String(val ?? 0)}%`, 'Tỷ lệ đạt']}
               />
               <Area
                 type="monotone"
@@ -257,16 +252,16 @@ function Overview({ domain, userId }: { domain: Domain; userId: number }) {
       </div>
 
       {/* Deep-dive AI Callout */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl border border-rose-100 bg-gradient-to-r from-rose-50/70 via-white to-white p-4 shadow-xs transition-colors hover:border-rose-200">
+      <div className="shadow-xs flex flex-col items-start justify-between gap-3 rounded-xl border border-rose-100 bg-gradient-to-r from-rose-50/70 via-white to-white p-4 transition-colors hover:border-rose-200 sm:flex-row sm:items-center">
         <div className="flex items-center gap-2.5">
-          <div className="grid size-8 place-items-center rounded-lg bg-primary/10 text-primary border border-primary/20">
+          <div className="grid size-8 place-items-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
             <Sparkles className="size-4" aria-hidden="true" />
           </div>
           <span className="text-sm font-semibold text-slate-900">Phân tích sâu hơn với AI</span>
         </div>
         <Link
           href={`/manager/ask?q=${encodeURIComponent('Tại sao tỷ lệ đạt học kỳ này giảm?')}`}
-          className="text-xs sm:text-sm font-medium text-primary hover:underline transition-colors flex items-center gap-1.5"
+          className="flex items-center gap-1.5 text-xs font-medium text-primary transition-colors hover:underline sm:text-sm"
         >
           <span>Tại sao tỷ lệ đạt học kỳ này giảm?</span>
           <span aria-hidden="true">→</span>
@@ -278,7 +273,7 @@ function Overview({ domain, userId }: { domain: Domain; userId: number }) {
         <div className="flex flex-wrap items-center gap-4 text-sm font-medium">
           <Link
             href="/manager/ask"
-            className="text-primary hover:underline font-semibold"
+            className="font-semibold text-primary hover:underline"
           >
             Hỏi UniLake AI để phân tích thêm
           </Link>
@@ -290,7 +285,7 @@ function Overview({ domain, userId }: { domain: Domain; userId: number }) {
             Theo dõi chất lượng dữ liệu
           </Link>
         </div>
-        <div className="text-xs text-slate-500 flex items-center gap-2">
+        <div className="flex items-center gap-2 text-xs text-slate-500">
           <Tag tone={statusTone(data.status)}>{label(data.status)}</Tag>
           {data.last_updated_at && (
             <span>Cập nhật gần nhất {formatDateTime(data.last_updated_at)}</span>
@@ -377,7 +372,7 @@ function Analytics({ domain, userId }: { domain: Domain; userId: number }) {
               >
                 <div className="flex justify-between text-sm">
                   <span className="font-medium text-slate-700">{dimLabel}</span>
-                  <span className="font-semibold text-primary tabular-nums">
+                  <span className="font-semibold tabular-nums text-primary">
                     {number(item.value)}
                   </span>
                 </div>
@@ -407,10 +402,18 @@ function Analytics({ domain, userId }: { domain: Domain; userId: number }) {
 function Issues({ domain, userId }: { domain: Domain; userId: number }) {
   const [page, setPage] = useState(0)
   const [status, setStatus] = useState('')
+  const [assigneeInput, setAssigneeInput] = useState('')
   const [selected, setSelected] = useState('')
+
+  const assigneeUserId =
+    assigneeInput.trim() && /^\d+$/.test(assigneeInput.trim())
+      ? Number(assigneeInput.trim())
+      : undefined
+
   const params: IssueFilters = {
     domain,
     status: status ? (status as 'ASSIGNED' | 'PENDING_VERIFICATION' | 'VERIFIED') : undefined,
+    assignee_user_id: assigneeUserId,
     limit: size,
     offset: page * size,
   }
@@ -420,8 +423,13 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
     ...polling,
   })
   const stats = useQuery({
-    queryKey: ['manager', 'issue-stats', userId, domain, status],
-    queryFn: () => API_ManagerIssueStats({ domain, status: params.status }),
+    queryKey: ['manager', 'issue-stats', userId, domain, status, assigneeUserId],
+    queryFn: () =>
+      API_ManagerIssueStats({
+        domain,
+        status: params.status,
+        assignee_user_id: assigneeUserId,
+      }),
     ...polling,
   })
   const detail = useQuery({
@@ -431,53 +439,41 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
     ...polling,
   })
 
-  const totalCount = stats.data?.total ?? 12
-  const assignedCount = stats.data?.assigned ?? 5
-  const verifiedCount = stats.data?.verified ?? 7
-
-  const sampleIssues = [
-    {
-      issue_id: 'sample-1',
-      title: 'Thiếu mã sinh viên',
-      department_name: 'Nhân viên đào tạo',
-      status: 'ASSIGNED',
-    },
-    {
-      issue_id: 'sample-2',
-      title: 'Trùng mã học phần',
-      department_name: 'Nhân viên đào tạo',
-      status: 'PENDING_VERIFICATION',
-    },
-    {
-      issue_id: 'sample-3',
-      title: 'Sai định dạng điểm',
-      department_name: 'Nhân viên đào tạo',
-      status: 'VERIFIED',
-    },
-  ]
+  const totalCount = stats.data?.total ?? 0
+  const assignedCount = stats.data?.assigned ?? 0
+  const pendingVerificationCount = stats.data?.pending_verification ?? 0
+  const verifiedCount = stats.data?.verified ?? 0
 
   return (
     <div className="space-y-6">
-      {/* 3 Summary Stats (Image 4) */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs">
-          <p className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl tabular-nums">
+      {/* 4 Summary Stats theo GET /manager/issues/stats */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5">
+          <p className="text-2xl font-bold tabular-nums tracking-tight text-slate-900 sm:text-3xl">
             {number(totalCount)}
           </p>
           <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
             Tổng yêu cầu
           </p>
         </div>
-        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs">
-          <p className="text-2xl font-bold tracking-tight text-amber-600 sm:text-3xl tabular-nums">
+        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5">
+          <p className="text-2xl font-bold tabular-nums tracking-tight text-amber-600 sm:text-3xl">
             {number(assignedCount)}
           </p>
           <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
             Đang xử lý
           </p>
         </div>
-        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs">
-          <p className="text-2xl font-bold tracking-tight text-emerald-600 sm:text-3xl tabular-nums">
+        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5">
+          <p className="text-2xl font-bold tabular-nums tracking-tight text-indigo-600 sm:text-3xl">
+            {number(pendingVerificationCount)}
+          </p>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Chờ xác minh
+          </p>
+        </div>
+        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5">
+          <p className="text-2xl font-bold tabular-nums tracking-tight text-emerald-600 sm:text-3xl">
             {number(verifiedCount)}
           </p>
           <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -486,18 +482,32 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
         </div>
       </div>
 
-      {/* Issues Card (Image 4) */}
-      <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs">
+      {/* Issues Card */}
+      <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div className="flex items-center gap-2">
             <h2 className="text-base font-semibold text-slate-900">Danh sách yêu cầu</h2>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Filter className="size-4 text-slate-400" aria-hidden="true" />
+            <input
+              type="text"
+              inputMode="numeric"
+              aria-label="Lọc theo ID nhân viên phụ trách"
+              placeholder="ID nhân viên…"
+              value={assigneeInput}
+              onChange={(event) => {
+                const val = event.target.value.replace(/[^\d]/g, '')
+                setAssigneeInput(val)
+                setPage(0)
+                setSelected('')
+              }}
+              className="shadow-xs w-32 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-700 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            />
             <select
               aria-label="Lọc trạng thái yêu cầu"
-              className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-700 shadow-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="shadow-xs rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-700 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               value={status}
               onChange={(event) => {
                 setStatus(event.target.value)
@@ -531,11 +541,14 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
           />
         ) : (
           <>
-            {query.data.length === 0 && status !== '' ? (
-              <EmptyState title="Không có yêu cầu phù hợp" />
+            {query.data.length === 0 ? (
+              <EmptyState
+                title="Không có yêu cầu xử lý dữ liệu lỗi"
+                description="Hiện chưa có yêu cầu nào khớp bộ lọc trong phạm vi phòng ban của bạn."
+              />
             ) : (
               <div className="divide-y divide-slate-100">
-                {(query.data.length > 0 ? query.data : sampleIssues).map((item) => (
+                {query.data.map((item) => (
                   <div
                     key={item.issue_id}
                     className="flex flex-wrap items-center justify-between gap-3 py-3.5 transition-colors hover:bg-slate-50/60"
@@ -543,7 +556,10 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
                     <div>
                       <p className="text-sm font-semibold text-slate-900">{item.title}</p>
                       <p className="mt-1 text-xs text-slate-500">
-                        {item.department_name ?? 'Nhân viên đào tạo'}
+                        {item.department_name ?? label(domain)}
+                        {item.assignee_user_id != null
+                          ? ` · Nhân viên phụ trách #${item.assignee_user_id}`
+                          : ' · Chưa phân công'}
                       </p>
                     </div>
 
@@ -566,7 +582,7 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
                       </span>
                       <Button
                         onClick={() => setSelected(item.issue_id)}
-                        className="rounded-md border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50"
+                        className="shadow-xs rounded-md border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
                       >
                         Xem yêu cầu
                       </Button>
@@ -600,45 +616,103 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
           />
         ) : detail.data ? (
           <div className="space-y-4 text-sm text-slate-800">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <span className="font-semibold text-slate-900">{detail.data.title}</span>
               <span
                 className={cn(
-                  'rounded-full px-3 py-0.5 text-xs font-medium',
+                  'shrink-0 rounded-full px-3 py-0.5 text-xs font-medium',
                   detail.data.status === 'VERIFIED'
                     ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
-                    : 'border border-slate-200 bg-slate-100 text-slate-700'
+                    : detail.data.status === 'PENDING_VERIFICATION'
+                      ? 'border border-amber-200 bg-amber-50 text-amber-700'
+                      : 'border border-slate-200 bg-slate-100 text-slate-700'
                 )}
               >
                 {label(detail.data.status)}
               </span>
             </div>
             <p className="text-slate-600">{detail.data.description || 'Không có mô tả chi tiết.'}</p>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs space-y-2">
+            <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
               <p>
-                <span className="font-medium text-slate-500">Phòng ban:</span> {detail.data.department_name}
+                <span className="font-medium text-slate-500">Phòng ban:</span>{' '}
+                {detail.data.department_name}
               </p>
               <p>
                 <span className="font-medium text-slate-500">Người phụ trách:</span>{' '}
-                {detail.data.assignee_user_id ?? 'Chưa phân công'}
+                {detail.data.assignee_user_id != null
+                  ? `Nhân viên #${detail.data.assignee_user_id}`
+                  : 'Chưa phân công'}
               </p>
               <p>
                 <span className="font-medium text-slate-500">Ngày tạo:</span>{' '}
                 {formatDateTime(detail.data.created_at)}
               </p>
+              <p>
+                <span className="font-medium text-slate-500">Cập nhật gần nhất:</span>{' '}
+                {formatDateTime(detail.data.updated_at)}
+              </p>
+            </div>
+
+            {/* Hồ sơ cách ly (quarantine_records) theo PDF #11 */}
+            <div className="border-t border-slate-200 pt-3">
+              <h4 className="mb-2 font-semibold text-slate-900">
+                Hồ sơ cách ly ({number(detail.data.quarantine_records?.length ?? 0)})
+              </h4>
+              {detail.data.quarantine_records?.length ? (
+                <div className="space-y-2">
+                  {detail.data.quarantine_records.map((rec) => (
+                    <div
+                      key={rec.record_id}
+                      className="space-y-1.5 rounded-lg border border-amber-200 bg-amber-50/40 p-3 text-xs"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-mono font-semibold text-slate-900">
+                          {rec.source_table || 'Không rõ tệp nguồn'}
+                        </span>
+                        <span className="rounded bg-amber-100 px-2 py-0.5 font-mono text-[11px] text-amber-800">
+                          {rec.locator || `Dòng #${rec.record_position}`}
+                        </span>
+                      </div>
+                      {rec.entity && (
+                        <p className="text-[11px] text-slate-600">
+                          Thực thể: <strong className="text-slate-800">{label(rec.entity)}</strong>
+                        </p>
+                      )}
+                      {rec.error_codes?.length > 0 && (
+                        <div className="flex flex-wrap gap-1 pt-0.5">
+                          {rec.error_codes.map((code) => (
+                            <span
+                              key={code}
+                              className="rounded border border-rose-200 bg-rose-50 px-1.5 py-0.5 font-mono text-[10px] text-rose-700"
+                            >
+                              {code}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400">Chưa có hồ sơ cách ly đi kèm.</p>
+              )}
             </div>
 
             <div className="border-t border-slate-200 pt-3">
-              <h4 className="font-semibold text-slate-900 mb-2">Lịch sử xử lý</h4>
+              <h4 className="mb-2 font-semibold text-slate-900">Lịch sử xử lý</h4>
               {detail.data.history?.length ? (
                 <div className="space-y-2">
                   {detail.data.history.map((ev) => (
                     <div
                       key={ev.event_id}
-                      className="rounded border border-slate-200 bg-white p-2.5 text-xs shadow-xs"
+                      className="shadow-xs rounded border border-slate-200 bg-white p-2.5 text-xs"
                     >
-                      <p className="font-semibold text-primary">{label(ev.event_type)}</p>
-                      <p className="text-slate-500">{formatDateTime(ev.created_at)}</p>
+                      <p className="font-semibold text-primary">
+                        {label(ev.to_status || ev.event_type)}
+                      </p>
+                      <p className="text-slate-500">
+                        Người thực hiện #{ev.actor_id} · {formatDateTime(ev.created_at)}
+                      </p>
                     </div>
                   ))}
                 </div>
