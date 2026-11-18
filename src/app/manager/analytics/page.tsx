@@ -1,5 +1,7 @@
-import { redirect } from 'next/navigation'
+import { ManagerAnalyticsView } from '@/views/manager/analytics-view'
 
-export default function LegacyManagerPage() {
-  redirect('/manager')
+export const metadata = { title: 'Phân tích dữ liệu | UniLake AI' }
+
+export default function ManagerAnalyticsPage() {
+  return <ManagerAnalyticsView />
 }

@@ -68,32 +68,65 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
 
   MANAGER: [
     {
-      groupTitle: 'Quản lý đơn vị',
+      groupTitle: 'TỔNG QUAN & PHÂN TÍCH',
       items: [
         {
-          title: 'Tổng quan',
+          title: 'Tổng quan phòng ban',
           href: '/manager',
           iconName: 'LayoutDashboard',
-          description: 'KPI và biểu đồ cố định',
+          description: 'KPI và hiện trạng dữ liệu Gold',
         },
         {
+          title: 'Phân tích dữ liệu',
+          href: '/manager/analytics',
+          iconName: 'BarChart3',
+          description: 'Khai thác biểu đồ chuyên sâu',
+        },
+      ],
+    },
+    {
+      groupTitle: 'QUẢN LÝ DỮ LIỆU',
+      items: [
+        {
+          title: 'Danh sách bộ dữ liệu',
+          href: '/manager/catalog',
+          iconName: 'FolderGit2',
+          description: 'Quản lý catalog phòng ban và lineage',
+        },
+        {
+          title: 'Tạo bộ dữ liệu mới',
+          href: '/manager/catalog/create',
+          iconName: 'PlusCircle',
+          description: 'Quy hoạch bộ dữ liệu chuẩn mực',
+        },
+      ],
+    },
+    {
+      groupTitle: 'CHẤT LƯỢNG & QUẢN TRỊ',
+      items: [
+        {
+          title: 'Theo dõi chất lượng dữ liệu',
+          href: '/manager/issues',
+          iconName: 'ShieldCheck',
+          description: 'Giám sát xử lý dữ liệu cách ly',
+        },
+        {
+          title: 'Phê duyệt quy tắc',
+          href: '/manager/review-queue',
+          iconName: 'ClipboardCheck',
+          description: 'Phê duyệt quy tắc chuẩn hóa dữ liệu',
+        },
+      ],
+    },
+    {
+      groupTitle: 'TRỢ LÝ THÔNG MINH',
+      items: [
+        {
           title: 'Hỏi UniLake AI',
-          href: '/manager/ask',
+          href: '/manager/ai',
           iconName: 'Bot',
           badge: 'AI',
           description: 'Phân tích và lịch sử truy vấn',
-        },
-        {
-          title: 'Chất lượng dữ liệu',
-          href: '/manager/quality-issues',
-          iconName: 'ShieldCheck',
-          description: 'Theo dõi lỗi và tiến độ',
-        },
-        {
-          title: 'Phê duyệt nguồn',
-          href: '/manager/approvals',
-          iconName: 'ClipboardCheck',
-          description: 'Chỉ có khi được cấp grant',
         },
       ],
     },
@@ -112,7 +145,7 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
 
 /** Chỉ mở Ask AI cho MANAGER khi còn trong menu; DATA_ADMIN và STAFF tập trung vào vận hành dữ liệu. */
 export const ASK_AI_PATHS: Partial<Record<RoleWorkspace, string>> = {
-  MANAGER: '/manager/ask',
+  MANAGER: '/manager/ai',
 }
 
 export function getMenuItemsForRole(role: RoleCode): MenuItem[] {

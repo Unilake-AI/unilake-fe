@@ -72,11 +72,14 @@ describe('ROLE_MENUS', () => {
       '/data/catalog',
       '/data/lineage',
     ])
-    expect(ROLE_MENUS.MANAGER[0]?.items.map((item) => item.href)).toEqual([
+    expect(ROLE_MENUS.MANAGER.flatMap((g) => g.items.map((item) => item.href))).toEqual([
       '/manager',
-      '/manager/ask',
-      '/manager/quality-issues',
-      '/manager/approvals',
+      '/manager/analytics',
+      '/manager/catalog',
+      '/manager/catalog/create',
+      '/manager/issues',
+      '/manager/review-queue',
+      '/manager/ai',
     ])
   })
 })
