@@ -271,7 +271,9 @@ describe('Viewer UI & API Suite', () => {
 
     // Click vào nút chuyển phân hệ "Đào tạo" trên thanh phân hệ
     const academicBtns = screen.getAllByRole('button', { name: /Đào tạo/i })
-    fireEvent.click(academicBtns[0])
+    if (academicBtns[0]) {
+      fireEvent.click(academicBtns[0])
+    }
 
     // Tiêu đề thay đổi sang phân hệ Đào tạo
     expect(await screen.findByText('Tổng quan phân hệ Đào tạo')).toBeInTheDocument()
