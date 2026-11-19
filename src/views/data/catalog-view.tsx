@@ -406,7 +406,7 @@ function CatalogFormPanel({
           <Button variant="outline" onClick={onClose} disabled={saveMutation.isPending}>
             Hủy
           </Button>
-          <Button type="submit" variant="primary" disabled={saveMutation.isPending}>
+          <Button loading={saveMutation.isPending} type="submit" variant="primary">
             {saveMutation.isPending ? 'Đang lưu…' : isEdit ? 'Lưu thay đổi' : 'Thêm vào Catalog'}
           </Button>
         </div>
@@ -478,13 +478,8 @@ export function CatalogView() {
           <>
             <Button
               onClick={() => void catalog.refetch()}
-              disabled={catalog.isFetching}
-              icon={
-                <RefreshCw
-                  className={`size-3.5 ${catalog.isFetching ? 'animate-spin' : ''}`}
-                  aria-hidden="true"
-                />
-              }
+              reading={catalog.isFetching}
+              icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
             >
               Làm mới
             </Button>
@@ -533,6 +528,7 @@ export function CatalogView() {
       ) : catalog.isError ? (
         <ErrorState
           message={getApiErrorMessage(catalog.error, 'Không tải được danh mục dữ liệu.')}
+          retrying={catalog.isFetching}
           onRetry={() => void catalog.refetch()}
         />
       ) : (
@@ -771,8 +767,8 @@ export function CatalogView() {
               Hủy
             </Button>
             <Button
+              loading={deleteMutation.isPending}
               variant="primary"
-              disabled={deleteMutation.isPending}
               onClick={() => {
                 if (confirmDelete) deleteMutation.mutate(confirmDelete)
               }}

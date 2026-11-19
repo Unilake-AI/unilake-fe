@@ -14,6 +14,7 @@ import {
   API_CreateDataset,
   API_GetDataset,
   API_ListDatasets,
+  API_ListDatasetOwnerDepartments,
   API_ListSourceSystems,
 } from '@/api/admindata/datasets'
 import { getApiErrorMessage } from '@/api/http'
@@ -29,6 +30,7 @@ import {
   statusLabel,
   statusTone,
 } from '@/components/page/page-parts'
+import { TableSkeleton } from '@/components/ui/table-skeleton'
 
 import { DATA_DOMAINS, domainLabel } from './data-helpers'
 import { DatasetOwner } from './dataset-owner'
@@ -50,6 +52,7 @@ const createDatasetSchema = z.object({
     message: 'Vui lòng chọn lĩnh vực hợp lệ.',
   }),
   source_system_id: z.number().int().positive('Vui lòng chọn hệ thống nguồn.'),
+  owner_department_id: z.number().int().positive().optional(),
   description: z.string().max(4000, 'Mô tả tối đa 4000 ký tự.').optional(),
 })
 
@@ -63,11 +66,17 @@ function CreateDatasetPanel({ onClose }: { onClose: () => void }) {
   const [domain, setDomain] = useState<'hr' | 'academic' | 'admissions'>('hr')
   const [sourceSystemId, setSourceSystemId] = useState('')
   const [description, setDescription] = useState('')
+  const [ownerId, setOwnerId] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
 
   const systemsQuery = useQuery({
     queryKey: ['source-systems'],
     queryFn: API_ListSourceSystems,
+  })
+
+  const departmentsQuery = useQuery({
+    queryKey: ['dataset-owner-departments'],
+    queryFn: API_ListDatasetOwnerDepartments,
   })
 
   const createMutation = useMutation({
@@ -90,6 +99,7 @@ function CreateDatasetPanel({ onClose }: { onClose: () => void }) {
       dataset_name: datasetName,
       domain,
       source_system_id: Number(sourceSystemId),
+      owner_department_id: ownerId ? Number(ownerId) : undefined,
       description: description.trim() ? description.trim() : undefined,
     })
 
@@ -187,6 +197,30 @@ function CreateDatasetPanel({ onClose }: { onClose: () => void }) {
           )}
         </div>
 
+        <div className="space-y-1.5">
+          <label htmlFor="ds-owner" className="block text-xs font-semibold text-slate-700">
+            Phòng ban sở hữu
+          </label>
+          <select
+            id="ds-owner"
+            className={inputClass}
+            value={ownerId}
+            onChange={(e) => setOwnerId(e.target.value)}
+          >
+            <option value="">Dùng phòng ban mặc định</option>
+            {departmentsQuery.data?.map((department) => (
+              <option key={department.department_id} value={department.department_id}>
+                {department.department_name} ({department.department_code})
+              </option>
+            ))}
+          </select>
+          {departmentsQuery.isError && (
+            <p role="alert" className="text-xs text-rose-700">
+              Không tải được danh sách phòng ban.
+            </p>
+          )}
+        </div>
+
         <div className="space-y-1.5 md:col-span-2">
           <label htmlFor="ds-description" className="block text-xs font-semibold text-slate-700">
             Mô tả (tùy chọn)
@@ -216,7 +250,7 @@ function CreateDatasetPanel({ onClose }: { onClose: () => void }) {
           <Button variant="outline" onClick={onClose} disabled={createMutation.isPending}>
             Hủy
           </Button>
-          <Button type="submit" variant="primary" disabled={createMutation.isPending}>
+          <Button loading={createMutation.isPending} type="submit" variant="primary">
             {createMutation.isPending ? 'Đang đăng ký…' : 'Đăng ký bộ dữ liệu'}
           </Button>
         </div>
@@ -263,6 +297,11 @@ export function DatasetsView() {
     queryFn: API_ListSourceSystems,
   })
 
+  const departmentsQuery = useQuery({
+    queryKey: ['dataset-owner-departments'],
+    queryFn: API_ListDatasetOwnerDepartments,
+  })
+
   const datasets = listQuery.data ?? []
 
   function handleSearch(event: FormEvent) {
@@ -281,13 +320,8 @@ export function DatasetsView() {
           <>
             <Button
               onClick={() => void listQuery.refetch()}
-              disabled={listQuery.isFetching}
-              icon={
-                <RefreshCw
-                  className={`size-3.5 ${listQuery.isFetching ? 'animate-spin' : ''}`}
-                  aria-hidden="true"
-                />
-              }
+              reading={listQuery.isFetching}
+              icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
             >
               Làm mới
             </Button>
@@ -370,11 +404,12 @@ export function DatasetsView() {
       {/* Danh sách bộ dữ liệu */}
       <Card title="Danh sách bộ dữ liệu Bronze" bodyClassName="p-0">
         {listQuery.isPending ? (
-          <LoadingState label="Đang tải danh sách bộ dữ liệu…" />
+          <TableSkeleton columns={7} label="Đang tải danh sách bộ dữ liệu…" />
         ) : listQuery.isError ? (
           <div className="p-4">
             <ErrorState
               message={getApiErrorMessage(listQuery.error, 'Không tải được danh sách bộ dữ liệu.')}
+              retrying={listQuery.isFetching}
               onRetry={() => void listQuery.refetch()}
             />
           </div>
@@ -499,6 +534,7 @@ export function DatasetsView() {
           ) : detailQuery.isError ? (
             <ErrorState
               message={getApiErrorMessage(detailQuery.error, 'Không tải được chi tiết bộ dữ liệu.')}
+              retrying={detailQuery.isFetching}
               onRetry={() => void detailQuery.refetch()}
             />
           ) : (
@@ -518,6 +554,17 @@ export function DatasetsView() {
               <div>
                 <dt className="text-slate-500">Lĩnh vực</dt>
                 <dd className="mt-0.5">{domainLabel(detailQuery.data.domain)}</dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Phòng ban sở hữu</dt>
+                <dd className="mt-0.5">
+                  {detailQuery.data.owner_department_id == null
+                    ? 'Chưa gán'
+                    : (departmentsQuery.data?.find(
+                        (department) =>
+                          department.department_id === detailQuery.data.owner_department_id
+                      )?.department_name ?? `#${detailQuery.data.owner_department_id}`)}
+                </dd>
               </div>
               <div>
                 <dt className="text-slate-500">Định dạng lưu trữ / Phiên bản</dt>

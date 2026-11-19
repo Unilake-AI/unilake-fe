@@ -33,6 +33,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { TableSkeleton } from '@/components/ui/table-skeleton'
 
 import { formatCellValue } from './data-helpers'
 
@@ -171,17 +172,13 @@ export function SilverView() {
         description="Theo dõi lịch sử các phiên bản Silver đã xuất bản theo Silver Profile, xem trước dữ liệu bảng và chuyển đổi phiên bản đang hoạt động."
         actions={
           <Button
+            reading={listQuery.isFetching || activeQuery.isFetching}
             onClick={() => {
               void activeQuery.refetch()
               void listQuery.refetch()
             }}
-            disabled={!selectedProfileId || listQuery.isFetching}
-            icon={
-              <RefreshCw
-                className={`size-3.5 ${listQuery.isFetching ? 'animate-spin' : ''}`}
-                aria-hidden="true"
-              />
-            }
+            disabled={!selectedProfileId}
+            icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
           >
             Làm mới
           </Button>
@@ -262,7 +259,7 @@ export function SilverView() {
             bodyClassName="p-0"
           >
             {listQuery.isPending ? (
-              <LoadingState />
+              <TableSkeleton columns={6} />
             ) : listQuery.isError ? (
               <div className="p-4">
                 <ErrorState
@@ -270,6 +267,7 @@ export function SilverView() {
                     listQuery.error,
                     'Không tải được danh sách snapshot.'
                   )}
+                  retrying={listQuery.isFetching}
                   onRetry={() => void listQuery.refetch()}
                 />
               </div>
@@ -375,6 +373,7 @@ export function SilverView() {
                     detailQuery.error,
                     'Không tải được manifest snapshot.'
                   )}
+                  retrying={detailQuery.isFetching}
                   onRetry={() => void detailQuery.refetch()}
                 />
               ) : (
@@ -435,13 +434,14 @@ export function SilverView() {
                   </div>
 
                   {dataQuery.isPending ? (
-                    <LoadingState label="Đang tải dữ liệu bảng Silver…" />
+                    <TableSkeleton columns={5} label="Đang tải dữ liệu bảng Silver…" />
                   ) : dataQuery.isError ? (
                     <ErrorState
                       message={getApiErrorMessage(
                         dataQuery.error,
                         'Không tải được dữ liệu bảng trong snapshot này.'
                       )}
+                      retrying={dataQuery.isFetching}
                       onRetry={() => void dataQuery.refetch()}
                     />
                   ) : previewRows.length === 0 ? (
@@ -532,8 +532,8 @@ export function SilverView() {
               Hủy
             </Button>
             <Button
+              loading={activateMutation.isPending}
               variant="primary"
-              disabled={activateMutation.isPending}
               onClick={() => {
                 if (confirmActivateId) activateMutation.mutate(confirmActivateId)
               }}

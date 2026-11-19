@@ -21,9 +21,9 @@ export function normalizeApiUrl(
   }
 
   const localDevelopment =
-    (environment === 'development' || environment === 'test') &&
     url.protocol === 'http:' &&
-    (['localhost', '127.0.0.1'].includes(url.hostname) || PRIVATE_IPV4.test(url.hostname))
+    (['localhost', '127.0.0.1', 'host.docker.internal'].includes(url.hostname) ||
+      PRIVATE_IPV4.test(url.hostname))
   if (url.protocol !== 'https:' && !localDevelopment) {
     throw new Error(
       'NEXT_PUBLIC_API_BASE_URL hoặc NEXT_PUBLIC_API_URL phải dùng HTTPS. HTTP chỉ được dùng với localhost hoặc IP nội bộ khi phát triển.'

@@ -304,6 +304,7 @@ export function CreateIssuePanel({
                   returnPreview.error,
                   'Không xác định được người nạp file.'
                 )}
+                retrying={returnPreview.isFetching}
                 onRetry={() => void returnPreview.refetch()}
               />
             ) : (
@@ -430,12 +431,14 @@ export function CreateIssuePanel({
               departmentsQuery.error,
               'Không tải được danh sách phòng ban.'
             )}
+            retrying={departmentsQuery.isFetching}
             onRetry={() => void departmentsQuery.refetch()}
           />
         )}
         {!returnToUploader && assigneesQuery.isError && (
           <ErrorState
             message={getApiErrorMessage(assigneesQuery.error, 'Không tải được người phụ trách.')}
+            retrying={assigneesQuery.isFetching}
             onRetry={() => void assigneesQuery.refetch()}
           />
         )}
@@ -469,6 +472,7 @@ export function CreateIssuePanel({
             Hủy
           </Button>
           <Button
+            loading={createMutation.isPending}
             type="submit"
             variant="primary"
             disabled={

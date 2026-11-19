@@ -12,7 +12,6 @@ import {
   CircleAlert,
   Clock,
   FileWarning,
-  LoaderCircle,
   Send,
   Upload,
 } from 'lucide-react'
@@ -45,6 +44,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { IngestionJob } from '@/types/ingestion'
 import type { QualityIssueDetail } from '@/types/quality-issues'
 import type { StaffContext } from '@/types/staff-context'
@@ -147,7 +147,7 @@ function ReplacementJobStatus({
 
       {status === 'RUNNING' && (
         <p className="flex items-center gap-1.5 text-amber-800" role="status">
-          <LoaderCircle className="size-3.5 shrink-0 animate-spin" aria-hidden="true" />
+          <Skeleton className="mt-1 size-3 shrink-0 bg-amber-200" aria-hidden="true" />
           Đang kiểm tra và lưu tệp sửa vào Bronze…
         </p>
       )}
@@ -189,6 +189,7 @@ function ReplacementJobStatus({
       {query.isError && (
         <ErrorState
           message={getApiErrorMessage(query.error, 'Không cập nhật được trạng thái lần nạp.')}
+          retrying={query.isFetching}
           onRetry={() => void query.refetch()}
         />
       )}
@@ -702,16 +703,10 @@ function ResolutionWorkflow({
 
           <div className="flex justify-end">
             <Button
+              loading={uploadMutation.isPending}
               type="submit"
               variant="outline"
-              disabled={uploadMutation.isPending}
-              icon={
-                uploadMutation.isPending ? (
-                  <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
-                ) : (
-                  <Upload className="size-3.5" aria-hidden="true" />
-                )
-              }
+              icon={<Upload className="size-3.5" aria-hidden="true" />}
             >
               {uploadMutation.isPending ? 'Đang tải tệp sửa…' : 'Tải lên tệp đã sửa'}
             </Button>
@@ -811,8 +806,8 @@ function ResolutionWorkflow({
               Hủy
             </Button>
             <Button
+              loading={resolutionMutation.isPending}
               variant="primary"
-              disabled={resolutionMutation.isPending}
               onClick={() => {
                 if (!uploadedJob) return
                 resolutionMutation.mutate({
@@ -827,6 +822,148 @@ function ResolutionWorkflow({
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+function IssueRecords({ records }: { records: QualityIssueDetail['quarantine_records'] }) {
+  const [search, setSearch] = useState('')
+  const [requestedPage, setPage] = useState(0)
+  const size = 20
+  const needle = search.trim().toLocaleLowerCase('vi')
+  const matching = records.filter((record) =>
+    [record.record_position, record.locator, record.source_table, ...record.error_codes].some(
+      (field) =>
+        String(field ?? '')
+          .toLocaleLowerCase('vi')
+          .includes(needle)
+    )
+  )
+  const page = Math.min(requestedPage, Math.max(0, Math.ceil(matching.length / size) - 1))
+  return (
+    <Card
+      title="Hồ sơ dữ liệu lỗi liên quan (Quarantine)"
+      subtitle={`${formatNumber(records.length)} bản ghi được gắn vào yêu cầu`}
+      bodyClassName="p-0"
+    >
+      {records.length > 0 && (
+        <div className="border-b p-3">
+          <label className="grid max-w-md gap-1 text-xs font-medium">
+            Tìm bản ghi lỗi
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value)
+                setPage(0)
+              }}
+              placeholder="Dòng, tệp, vị trí hoặc mã lỗi"
+              className="h-9 rounded-md border bg-card px-3 text-sm"
+            />
+          </label>
+        </div>
+      )}
+      {records.length === 0 ? (
+        <EmptyState title="Không có hồ sơ lỗi đính kèm" />
+      ) : matching.length === 0 ? (
+        <EmptyState title="Không tìm thấy bản ghi phù hợp" />
+      ) : (
+        <>
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Bảng bản ghi lỗi">
+            <table className="w-full min-w-[720px] text-left text-xs">
+              <thead className="bg-slate-50 font-mono text-[10px] uppercase tracking-wider text-slate-500">
+                <tr>
+                  {[
+                    'Vị trí dòng nguồn',
+                    'Locator',
+                    'Tệp nguồn',
+                    'Mã lỗi',
+                    'Chi tiết kiểm tra',
+                    'Phiên bản Bronze',
+                  ].map((heading) => (
+                    <th key={heading} scope="col" className="px-3 py-2 font-medium">
+                      {heading}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {matching.slice(page * size, (page + 1) * size).map((rec) => (
+                  <tr key={rec.record_id}>
+                    <td className="px-3 py-2.5 font-mono font-semibold text-slate-900">
+                      Dòng {formatNumber(rec.record_position)}
+                    </td>
+                    <td className="max-w-[160px] break-all px-3 py-2.5 font-mono text-slate-700">
+                      {rec.locator}
+                    </td>
+                    <td className="px-3 py-2.5 font-mono text-slate-700">
+                      {rec.source_table ?? '—'}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <div className="flex flex-wrap gap-1">
+                        {rec.error_codes.map((code) => (
+                          <Tag key={code} tone="rose">
+                            {code}
+                          </Tag>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2.5 text-slate-700">
+                      {rec.issues.length > 0 ? (
+                        <ul className="space-y-0.5">
+                          {rec.issues.map((detail, idx) => (
+                            <li key={idx} className="flex items-start gap-1">
+                              <FileWarning
+                                className="mt-0.5 size-3 shrink-0 text-amber-600"
+                                aria-hidden="true"
+                              />
+                              <span>
+                                {typeof detail.message === 'string'
+                                  ? detail.message
+                                  : typeof detail.field === 'string'
+                                    ? `${detail.field}: ${
+                                        typeof detail.rule === 'string'
+                                          ? detail.rule
+                                          : typeof detail.code === 'string'
+                                            ? detail.code
+                                            : 'Chưa hợp lệ'
+                                      }`
+                                    : JSON.stringify(detail)}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5 font-mono text-slate-500">{rec.bronze_version}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {matching.length > size && (
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t p-3 text-xs text-muted-foreground">
+              <span role="status">
+                {page * size + 1}–{Math.min((page + 1) * size, matching.length)} / {matching.length}{' '}
+                bản ghi
+              </span>
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={() => setPage(page - 1)} disabled={page === 0}>
+                  Trang trước
+                </Button>
+                <Button
+                  onClick={() => setPage(page + 1)}
+                  disabled={(page + 1) * size >= matching.length}
+                >
+                  Trang sau
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </Card>
   )
 }
 
@@ -864,6 +1001,7 @@ function IssueDetailContent({ context, issueId }: { context: StaffContext; issue
             issueQuery.error,
             'Không thể tải chi tiết yêu cầu xử lý dữ liệu lỗi.'
           )}
+          retrying={issueQuery.isFetching}
           onRetry={() => void issueQuery.refetch()}
         />
       </div>
@@ -949,91 +1087,7 @@ function IssueDetailContent({ context, issueId }: { context: StaffContext; issue
       {/* Quy trình tải tệp đã sửa & nộp */}
       <ResolutionWorkflow context={context} issue={issue} />
 
-      {/* Danh sách hồ sơ lỗi liên quan */}
-      <Card
-        title="Hồ sơ dữ liệu lỗi liên quan (Quarantine)"
-        subtitle={`${formatNumber(issue.quarantine_records.length)} bản ghi được gắn vào yêu cầu`}
-        bodyClassName="p-0"
-      >
-        {issue.quarantine_records.length === 0 ? (
-          <EmptyState title="Không có hồ sơ lỗi đính kèm" />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-xs">
-              <thead className="bg-slate-50 font-mono text-[10px] uppercase tracking-wider text-slate-500">
-                <tr>
-                  {[
-                    'Vị trí dòng nguồn',
-                    'Locator',
-                    'Tệp nguồn',
-                    'Mã lỗi',
-                    'Chi tiết kiểm tra',
-                    'Phiên bản Bronze',
-                  ].map((heading) => (
-                    <th key={heading} scope="col" className="px-3 py-2 font-medium">
-                      {heading}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {issue.quarantine_records.map((rec) => (
-                  <tr key={rec.record_id}>
-                    <td className="px-3 py-2.5 font-mono font-semibold text-slate-900">
-                      Dòng {formatNumber(rec.record_position)}
-                    </td>
-                    <td className="max-w-[160px] truncate px-3 py-2.5 font-mono text-slate-700">
-                      {rec.locator}
-                    </td>
-                    <td className="px-3 py-2.5 font-mono text-slate-700">
-                      {rec.source_table ?? '—'}
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <div className="flex flex-wrap gap-1">
-                        {rec.error_codes.map((code) => (
-                          <Tag key={code} tone="rose">
-                            {code}
-                          </Tag>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2.5 text-slate-700">
-                      {rec.issues.length > 0 ? (
-                        <ul className="space-y-0.5">
-                          {rec.issues.map((detail, idx) => (
-                            <li key={idx} className="flex items-start gap-1">
-                              <FileWarning
-                                className="mt-0.5 size-3 shrink-0 text-amber-600"
-                                aria-hidden="true"
-                              />
-                              <span>
-                                {typeof detail.message === 'string'
-                                  ? detail.message
-                                  : typeof detail.field === 'string'
-                                    ? `${detail.field}: ${
-                                        typeof detail.rule === 'string'
-                                          ? detail.rule
-                                          : typeof detail.code === 'string'
-                                            ? detail.code
-                                            : 'Chưa hợp lệ'
-                                      }`
-                                    : JSON.stringify(detail)}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                    <td className="px-3 py-2.5 font-mono text-slate-500">{rec.bronze_version}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card>
+      <IssueRecords key={issue.issue_id} records={issue.quarantine_records} />
 
       {/* Lịch sử xử lý (Audit History) */}
       <Card title="Lịch sử xử lý và xác minh">

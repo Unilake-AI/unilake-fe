@@ -18,9 +18,10 @@ afterEach(() => {
 })
 const id = '11111111-1111-4111-8111-111111111111'
 const silver = '22222222-2222-4222-8222-222222222222'
-function environment(options: { failed?: boolean; unavailable?: boolean } = {}) {
+function environment(options: { failed?: boolean; unavailable?: boolean; blocked?: boolean } = {}) {
   const calls: { method: string; url: string; params: unknown; body: unknown }[] = []
-  let ready = false
+  let ready = options.blocked ?? false
+  let blocked = options.blocked ?? false
   let failed = options.failed ?? false
   http.defaults.adapter = async (config) => {
     await Promise.resolve()
@@ -43,6 +44,9 @@ function environment(options: { failed?: boolean; unavailable?: boolean } = {}) 
     if (config.method === 'post' && url === '/pipeline/gold/refresh') {
       ready = true
       data = { job_id: id, status: 'SUCCEEDED' }
+    } else if (config.method === 'post' && url.endsWith('/database-sync/retry')) {
+      blocked = false
+      data = { gold_job_id: id, status: 'QUEUED' }
     } else if (config.method === 'post' && url.endsWith('/retry')) {
       failed = false
       data = { job_id: id, status: 'QUEUED' }
@@ -62,6 +66,11 @@ function environment(options: { failed?: boolean; unavailable?: boolean } = {}) 
           status: ready ? 'SUCCEEDED' : failed ? 'FAILED' : null,
           sync_status: ready ? 'CURRENT' : failed ? 'FAILED' : 'NOT_STARTED',
           error_code: failed ? 'GOLD_NETWORK' : null,
+          database_sync_status: ready ? (blocked ? 'BLOCKED' : 'SYNCED') : null,
+          database_sync_error: blocked ? 'GOLD_SYNC_REFERENCE_MISSING' : null,
+          database_sync_report: blocked
+            ? { code: 'GOLD_SYNC_REFERENCE_MISSING', entity: 'assignment', field: 'position_id' }
+            : null,
         },
       ]
     const job = {
@@ -75,6 +84,11 @@ function environment(options: { failed?: boolean; unavailable?: boolean } = {}) 
       status: failed ? 'FAILED' : ready ? 'SUCCEEDED' : 'QUEUED',
       attempt_number: 1,
       error_code: failed ? 'GOLD_NETWORK' : null,
+      database_sync_status: ready ? (blocked ? 'BLOCKED' : 'SYNCED') : null,
+      database_sync_error: blocked ? 'GOLD_SYNC_REFERENCE_MISSING' : null,
+      database_sync_report: blocked
+        ? { code: 'GOLD_SYNC_REFERENCE_MISSING', entity: 'assignment', field: 'position_id' }
+        : null,
       created_at: '2026-11-16T10:00:00Z',
       finished_at: null,
       result: ready ? { records_read: 20, aggregate_rows: 1 } : null,
@@ -132,7 +146,7 @@ describe('Giao diện Gold dùng API thật qua client chung', () => {
     expect(await screen.findByText('Nhân sự kiểm thử')).toBeInTheDocument()
     expect(screen.getByText('Chưa có số liệu Gold hiện hành')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Tạo Gold' }))
-    expect(await screen.findByText('Đã đồng bộ')).toBeInTheDocument()
+    expect(await screen.findByText('Gold hiện hành')).toBeInTheDocument()
     expect(await screen.findByText('Tổng số bản ghi')).toBeInTheDocument()
     expect(calls).toContainEqual(
       expect.objectContaining({
@@ -167,6 +181,29 @@ describe('Giao diện Gold dùng API thật qua client chung', () => {
       )
     )
     expect(await screen.findByText('Đã yêu cầu thử lại.')).toBeInTheDocument()
+  })
+
+  it('phân biệt Gold đã công bố và DB bị chặn, chỉ thử lại DB sau xác nhận', async () => {
+    const calls = environment({ blocked: true })
+    const user = show()
+    expect(await screen.findByText('Gold hiện hành')).toBeInTheDocument()
+    expect((await screen.findAllByText('Cần bổ sung dữ liệu')).length).toBeGreaterThan(0)
+    await user.click(screen.getByRole('button', { name: 'Chi tiết' }))
+    expect(await screen.findByText(/assignment.position_id/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Đồng bộ lại vào DB' }))
+    expect(calls.some((call) => call.url.endsWith('/database-sync/retry'))).toBe(false)
+    await user.click(screen.getByRole('button', { name: 'Xác nhận đồng bộ' }))
+    await waitFor(() =>
+      expect(calls).toContainEqual(
+        expect.objectContaining({
+          method: 'post',
+          url: `/pipeline/gold/jobs/${id}/database-sync/retry`,
+        })
+      )
+    )
+    expect(
+      await screen.findByText('Đã yêu cầu đồng bộ lại dữ liệu Gold vào DB.')
+    ).toBeInTheDocument()
   })
 
   it('đổi lĩnh vực gửi bộ lọc tới cả nguồn, lịch sử và số liệu', async () => {

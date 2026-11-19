@@ -1,4 +1,5 @@
 import { http } from '@/api/http'
+import type { components } from '@/api/schema'
 import type {
   UploadReturnPreview,
   ApproveUploadReturnPayload,
@@ -66,6 +67,14 @@ export async function API_ApproveUploadReturn(
   const res = await http.post<QualityIssueDetail>(
     '/data-quality-issues/return-to-uploader',
     payload
+  )
+  return res.data
+}
+
+export async function API_CompareQualityIssue(issueId: string, cleaningRunId: string) {
+  const res = await http.get<components['schemas']['IssueComparisonResponse']>(
+    `/data-quality-issues/${encodeURIComponent(issueId)}/comparison`,
+    { params: { cleaning_run_id: cleaningRunId } }
   )
   return res.data
 }

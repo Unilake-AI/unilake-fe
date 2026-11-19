@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 
-import { Layers } from 'lucide-react'
+import Image from 'next/image'
+
+import logoText from '../../../public/logo_text.png'
 
 /** Khung toàn màn hình cho trang lỗi và trang 404 (không dùng app shell vì có thể chưa đăng nhập). */
 export function ErrorScreen({
@@ -14,12 +16,7 @@ export function ErrorScreen({
 }) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 py-12 text-center">
-      <div className="flex items-center gap-2.5">
-        <div className="flex size-9 items-center justify-center rounded-lg bg-indigo-600 text-white">
-          <Layers className="size-5" aria-hidden="true" />
-        </div>
-        <span className="text-lg font-bold text-slate-900">UniLake AI</span>
-      </div>
+      <Image src={logoText} alt="UniLake AI" width={192} height={64} className="h-auto w-48" />
       <h1 className="mt-8 text-xl font-bold text-slate-900">{title}</h1>
       <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">{description}</p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-2">{children}</div>

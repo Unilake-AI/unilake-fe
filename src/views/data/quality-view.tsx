@@ -20,6 +20,7 @@ import { toast } from 'sonner'
 import { API_ListCleaningRuns } from '@/api/admindata/cleaning'
 import {
   API_AssignQualityIssue,
+  API_CompareQualityIssue,
   API_ListIssueAssignees,
   API_ListIssueDepartments,
   API_VerifyQualityIssue,
@@ -53,6 +54,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { TableSkeleton } from '@/components/ui/table-skeleton'
 
 import { CreateIssuePanel } from './create-quality-issue-panel'
 import { domainLabel } from './data-helpers'
@@ -61,6 +63,91 @@ const PAGE_SIZE = 20
 
 const inputClass =
   'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]/30'
+
+const comparisonLabels = {
+  RESOLVED: 'Đã khắc phục',
+  STILL_INVALID: 'Còn lỗi',
+  UNMATCHED: 'Chưa tìm thấy dòng tương ứng',
+  MANUAL_REVIEW_REQUIRED: 'Cần kiểm tra thủ công',
+}
+
+function ComparisonPanel({ issueId, runId }: { issueId: string; runId: string }) {
+  const comparison = useMutation({
+    mutationFn: () => API_CompareQualityIssue(issueId, runId),
+  })
+  const result = comparison.data
+
+  return (
+    <div className="space-y-2 rounded border border-slate-200 bg-white p-3">
+      <Button type="button" loading={comparison.isPending} onClick={() => comparison.mutate()}>
+        Đối chiếu trước và sau khi sửa
+      </Button>
+      {comparison.isError && (
+        <p role="alert" className="text-rose-700">
+          {getApiErrorMessage(comparison.error, 'Không tải được kết quả đối chiếu.')}
+        </p>
+      )}
+      {result && (
+        <>
+          <p role="status" className="font-medium">
+            {result.summary.resolved}/{result.summary.total} đã khắc phục ·{' '}
+            {result.summary.still_invalid} còn lỗi · {result.summary.unmatched} chưa ghép dòng ·{' '}
+            {result.summary.manual_review_required} cần kiểm tra thủ công
+          </p>
+          <ul className="max-h-80 space-y-1 overflow-y-auto">
+            {result.records.map((record) => {
+              const fields = Array.from(
+                new Set([
+                  ...Object.keys(record.old_values ?? {}),
+                  ...Object.keys(record.new_values ?? {}),
+                ])
+              )
+              return (
+                <li key={record.record_id} className="rounded border p-2">
+                  <details>
+                    <summary className="cursor-pointer break-all font-medium">
+                      {record.old_locator} · {comparisonLabels[record.status]}
+                    </summary>
+                    {record.reason && <p className="mt-2">{record.reason}</p>}
+                    {record.new_locator && <p className="mt-1">Dòng mới: {record.new_locator}</p>}
+                    {fields.length > 0 && (
+                      <div className="mt-2 overflow-x-auto">
+                        <table className="w-full text-left">
+                          <thead>
+                            <tr>
+                              <th scope="col">Trường</th>
+                              <th scope="col">Trước</th>
+                              <th scope="col">Sau</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {fields.map((field) => (
+                              <tr key={field} className="border-t">
+                                <th scope="row" className="py-1 pr-3">
+                                  {field}
+                                </th>
+                                <td className="break-all py-1 pr-3">
+                                  {JSON.stringify(record.old_values?.[field]) ?? '—'}
+                                </td>
+                                <td className="break-all py-1">
+                                  {JSON.stringify(record.new_values?.[field]) ?? '—'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </details>
+                </li>
+              )
+            })}
+          </ul>
+        </>
+      )}
+    </div>
+  )
+}
 
 export function IssueDetailPanel({ issueId }: { issueId: string }) {
   const queryClient = useQueryClient()
@@ -157,6 +244,7 @@ export function IssueDetailPanel({ issueId }: { issueId: string }) {
     return (
       <ErrorState
         message={getApiErrorMessage(detailQuery.error, 'Không tải được chi tiết yêu cầu.')}
+        retrying={detailQuery.isFetching}
         onRetry={() => void detailQuery.refetch()}
       />
     )
@@ -237,6 +325,7 @@ export function IssueDetailPanel({ issueId }: { issueId: string }) {
               ))}
             </select>
             <Button
+              loading={assignMutation.isPending}
               variant="outline"
               disabled={!assigneeId || assignMutation.isPending}
               onClick={() => assignMutation.mutate(Number(assigneeId))}
@@ -289,7 +378,10 @@ export function IssueDetailPanel({ issueId }: { issueId: string }) {
                 id="verify-run-select"
                 className={inputClass}
                 value={selectedRunId}
-                onChange={(e) => setSelectedRunId(e.target.value)}
+                onChange={(e) => {
+                  setSelectedRunId(e.target.value)
+                  setConfirmedRecordIds([])
+                }}
               >
                 <option value="">
                   {cleaningRunsQuery.isPending
@@ -320,6 +412,10 @@ export function IssueDetailPanel({ issueId }: { issueId: string }) {
                   {formatNumber(selectedRun.records_quarantined)}
                 </span>
               </div>
+            )}
+
+            {selectedRun && (
+              <ComparisonPanel key={selectedRunId} issueId={issueId} runId={selectedRunId} />
             )}
 
             <div className="flex flex-wrap gap-4">
@@ -496,8 +592,8 @@ export function IssueDetailPanel({ issueId }: { issueId: string }) {
               Hủy
             </Button>
             <Button
+              loading={verifyMutation.isPending}
               variant="primary"
-              disabled={verifyMutation.isPending}
               onClick={() => verifyMutation.mutate()}
             >
               {verifyMutation.isPending ? 'Đang gửi…' : 'Xác nhận'}
@@ -572,13 +668,8 @@ export function QualityView() {
                 void listQuery.refetch()
                 void statsQuery.refetch()
               }}
-              disabled={listQuery.isFetching}
-              icon={
-                <RefreshCw
-                  className={`size-3.5 ${listQuery.isFetching ? 'animate-spin' : ''}`}
-                  aria-hidden="true"
-                />
-              }
+              reading={listQuery.isFetching}
+              icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
             >
               Làm mới
             </Button>
@@ -688,11 +779,12 @@ export function QualityView() {
       <div className="grid gap-4 xl:grid-cols-[1fr_460px]">
         <Card title="Danh sách yêu cầu xử lý" bodyClassName="p-0">
           {listQuery.isPending ? (
-            <LoadingState />
+            <TableSkeleton columns={6} />
           ) : listQuery.isError ? (
             <div className="p-4">
               <ErrorState
                 message={getApiErrorMessage(listQuery.error, 'Không tải được danh sách yêu cầu.')}
+                retrying={listQuery.isFetching}
                 onRetry={() => void listQuery.refetch()}
               />
             </div>

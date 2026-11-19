@@ -98,6 +98,7 @@ export function CleaningSetupPanel({
   const [nullText, setNullText] = useState('')
   const entity = analysis.entities.find((item) => item.entity === choices.entity)
   const preview = useMutation({
+    meta: { readOnly: true },
     mutationFn: (value: CleaningChoices) =>
       API_PreviewCleaningSetup(analysis.ingestion_job_id, value),
   })
@@ -565,10 +566,15 @@ export function CleaningSetupPanel({
         ) : null}
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button disabled={!complete || busy} onClick={() => preview.mutate(choices)}>
+        <Button
+          reading={preview.isPending}
+          disabled={!complete || busy}
+          onClick={() => preview.mutate(choices)}
+        >
           {preview.isPending ? 'Đang kiểm tra…' : 'Xem trước cách xử lý'}
         </Button>
         <Button
+          loading={confirm.isPending}
           variant="primary"
           disabled={!preview.data?.confirmation_token || busy || confirm.isSuccess}
           onClick={() => {

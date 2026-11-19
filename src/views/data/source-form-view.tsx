@@ -7,20 +7,26 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CircleAlert, LoaderCircle } from 'lucide-react'
+import { CircleAlert } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { API_CreateDataSource, API_UpdateDataSource } from '@/api/admindata/data-sources'
+import {
+  API_CreateDataSource,
+  API_TestSourceConnection,
+  API_UpdateDataSource,
+} from '@/api/admindata/data-sources'
 import { API_ListSourceSystems } from '@/api/admindata/datasets'
 import { getApiErrorMessage } from '@/api/http'
 import { API_GetDataSource } from '@/api/shared/data-sources'
-import { Card, ErrorState, LoadingState, PageHeader } from '@/components/page/page-parts'
 import {
-  SOURCE_SYSTEMS,
-  SOURCE_TYPE_CONFIG,
-  SOURCE_TYPES,
-  buildConfiguration,
-} from '@/config/data-sources'
+  Button,
+  DatabaseLoader,
+  Card,
+  ErrorState,
+  LoadingState,
+  PageHeader,
+} from '@/components/page/page-parts'
+import { SOURCE_TYPE_CONFIG, SOURCE_TYPES, buildConfiguration } from '@/config/data-sources'
 import { cn } from '@/lib/utils'
 import type {
   DataSourceCreatePayload,
@@ -67,9 +73,7 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
   const isEdit = initial !== undefined
   const initialType: SourceType =
     initial && isSourceType(initial.source_type) ? initial.source_type : 'CSV'
-  const [systemId, setSystemId] = useState<string>(
-    String(initial?.source_system_id ?? SOURCE_SYSTEMS[0].id)
-  )
+  const [systemId, setSystemId] = useState<string>(initial ? String(initial.source_system_id) : '')
   const [name, setName] = useState(initial?.source_name ?? '')
   const [sourceType, setSourceType] = useState<SourceType>(initialType)
   const [location, setLocation] = useState(initial?.location ?? '')
@@ -86,13 +90,10 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
     queryFn: API_ListSourceSystems,
     retry: false,
   })
-  const sourceSystemOptions =
-    sourceSystemsQuery.data && sourceSystemsQuery.data.length > 0
-      ? sourceSystemsQuery.data.map((sys) => ({
-          id: sys.source_system_id,
-          name: sys.source_name,
-        }))
-      : SOURCE_SYSTEMS.map((sys) => ({ id: sys.id, name: sys.name }))
+  const sourceSystemOptions = (sourceSystemsQuery.data ?? []).map((sys) => ({
+    id: sys.source_system_id,
+    name: sys.source_name,
+  }))
 
   const typeConfig = SOURCE_TYPE_CONFIG[sourceType]
   const systemMissing =
@@ -120,7 +121,24 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
     },
   })
 
+  const connectionCheck = useMutation({
+    mutationFn: (configuration: Record<string, unknown>) => API_TestSourceConnection(configuration),
+  })
+
+  function checkConnection() {
+    const built = buildConfiguration(sourceType, config)
+    const configErrors = Object.fromEntries(
+      Object.entries(built.errors).map(([key, message]) => [`config.${key}`, message])
+    )
+    setErrors(configErrors)
+    connectionCheck.reset()
+    if (Object.keys(configErrors).length === 0) {
+      connectionCheck.mutate(built.configuration)
+    }
+  }
+
   function changeType(type: SourceType) {
+    connectionCheck.reset()
     setSourceType(type)
     setConfig(defaultConfig(type))
     setErrors({})
@@ -135,7 +153,8 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
     } else if (trimmedName.length > 200) {
       nextErrors.name = 'Tên nguồn tối đa 200 ký tự.'
     }
-    if (!location.trim()) {
+    if (!systemId) nextErrors.system = 'Vui lòng chọn hệ thống nguồn.'
+    if (sourceType !== 'POSTGRESQL' && !location.trim()) {
       nextErrors.location = 'Vui lòng nhập vị trí của nguồn.'
     }
     const built = replaceConfig
@@ -153,7 +172,7 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
       source_name: trimmedName,
       source_type: sourceType,
       connection_type: typeConfig.connectionType,
-      location: location.trim(),
+      location: location.trim() || null,
       configuration: built.configuration,
       description: description.trim() || null,
       is_active: isActive,
@@ -183,11 +202,10 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
             <button
               type="submit"
               disabled={save.isPending}
+              aria-busy={save.isPending}
               className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#b91830] px-3 text-xs font-semibold text-white hover:bg-[#9e1429] disabled:opacity-70"
             >
-              {save.isPending && (
-                <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
-              )}
+              {save.isPending && <DatabaseLoader compact />}
               {save.isPending ? 'Đang lưu…' : isEdit ? 'Lưu thay đổi' : 'Lưu nguồn dữ liệu'}
             </button>
           </>
@@ -214,13 +232,14 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
         <div className="space-y-4">
           <Card title="Thông tin nguồn" subtitle="Các trường có dấu * là bắt buộc">
             <div className="grid gap-4 md:grid-cols-2">
-              <Field id="source-system" label="Hệ thống nguồn *">
+              <Field id="source-system" label="Hệ thống nguồn *" error={errors.system}>
                 <select
                   id="source-system"
                   className={cn(inputClass, okClass)}
                   value={systemId}
                   onChange={(event) => setSystemId(event.target.value)}
                 >
+                  {!initial && <option value="">Chọn hệ thống nguồn</option>}
                   {systemMissing && (
                     <option value={initial.source_system_id}>
                       {initial.source_system_name ?? `#${initial.source_system_id}`}
@@ -232,6 +251,19 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
                     </option>
                   ))}
                 </select>
+                {sourceSystemsQuery.isError && (
+                  <p role="alert" className="text-xs text-rose-700">
+                    Không tải được hệ thống nguồn.
+                  </p>
+                )}
+                {sourceSystemsQuery.isSuccess && sourceSystemOptions.length === 0 && (
+                  <Link
+                    href="/data/sources"
+                    className="text-xs font-semibold text-primary underline"
+                  >
+                    Đăng ký hệ thống nguồn
+                  </Link>
+                )}
               </Field>
               <Field id="source-name" label="Tên nguồn dữ liệu *" error={errors.name}>
                 <input
@@ -268,7 +300,15 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
                 />
               </Field>
               <div className="md:col-span-2">
-                <Field id="location" label="Địa chỉ nguồn dữ liệu *" error={errors.location}>
+                <Field
+                  id="location"
+                  label={
+                    sourceType === 'POSTGRESQL'
+                      ? 'Địa chỉ tham chiếu (tùy chọn)'
+                      : 'Địa chỉ nguồn dữ liệu *'
+                  }
+                  error={errors.location}
+                >
                   <input
                     id="location"
                     className={cn(inputClass, 'font-mono', errors.location ? badClass : okClass)}
@@ -314,7 +354,10 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
                   type="checkbox"
                   className="size-4 rounded border-slate-300 accent-[#b91830]"
                   checked={replaceConfig}
-                  onChange={(event) => setReplaceConfig(event.target.checked)}
+                  onChange={(event) => {
+                    connectionCheck.reset()
+                    setReplaceConfig(event.target.checked)
+                  }}
                 />
                 Nhập lại cấu hình (cấu hình hiện tại không hiển thị vì lý do bảo mật)
               </label>
@@ -333,7 +376,10 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
                       event: React.ChangeEvent<
                         HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
                       >
-                    ) => setConfig((prev) => ({ ...prev, [field.key]: event.target.value })),
+                    ) => {
+                      connectionCheck.reset()
+                      setConfig((prev) => ({ ...prev, [field.key]: event.target.value }))
+                    },
                   }
                   const className = cn(inputClass, 'font-mono', error ? badClass : okClass)
                   return (
@@ -382,6 +428,23 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
                 })}
               </div>
             )}
+            {replaceConfig && sourceType === 'POSTGRESQL' && (
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <Button type="button" loading={connectionCheck.isPending} onClick={checkConnection}>
+                  Kiểm tra kết nối
+                </Button>
+                {connectionCheck.isSuccess && (
+                  <p role="status" className="text-xs text-emerald-700">
+                    {connectionCheck.data.message}
+                  </p>
+                )}
+                {connectionCheck.isError && (
+                  <p role="alert" className="text-xs text-rose-700">
+                    {getApiErrorMessage(connectionCheck.error, 'Không kiểm tra được kết nối.')}
+                  </p>
+                )}
+              </div>
+            )}
           </Card>
         </div>
 
@@ -423,6 +486,7 @@ export function SourceEditView({ id }: { id: number }) {
     return (
       <ErrorState
         message={getApiErrorMessage(detail.error, 'Không tải được nguồn dữ liệu.')}
+        retrying={detail.isFetching}
         onRetry={() => void detail.refetch()}
       />
     )

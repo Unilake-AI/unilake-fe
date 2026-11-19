@@ -23,7 +23,7 @@ const context = (domain = 'hr', code = 'PNS') => ({
   ],
   departments: [{ department_id: 7, department_code: code, department_name: 'Phòng phụ trách' }],
   default_domain: domain,
-  needs_department_assignment: false,
+  needs_department_configuration: false,
   data_layer: 'GOLD',
   note: '',
 })
@@ -52,24 +52,6 @@ const overview = {
   kpis: page([metric]),
   issues: { total: 3, assigned: 1, pending_verification: 1, verified: 1 },
 }
-const dataset = {
-  dataset_id: 31,
-  dataset_code: 'HR_31',
-  dataset_name: 'Báo cáo nhân sự',
-  domain: 'hr',
-  owner_department_id: 7,
-  description: 'Nguồn được cấp quyền',
-  sources: [
-    {
-      scope: 'nguon-nhan-su',
-      silver_snapshot_id: 'silver-1',
-      job_id: 'gold-1',
-      sync_status: 'CURRENT',
-      finished_at: '2026-11-16T01:00:00Z',
-      error_code: null,
-    },
-  ],
-}
 const issue = {
   issue_id: 'issue-1',
   dataset_id: 31,
@@ -90,7 +72,7 @@ const issue = {
 }
 
 function setup(
-  mode: 'overview' | 'analytics' | 'datasets' | 'issues' = 'overview',
+  mode: 'overview' | 'issues' = 'overview',
   handler?: (config: InternalAxiosRequestConfig) => unknown
 ) {
   const calls: InternalAxiosRequestConfig[] = []
@@ -98,14 +80,24 @@ function setup(
     '/manager/context': context(),
     '/manager/overview': overview,
     '/manager/analytics': page([metric]),
-    '/manager/datasets': page([dataset]),
-    '/manager/datasets/31': dataset,
     '/manager/issues': [issue],
     '/manager/issues/stats': { total: 1, assigned: 1, pending_verification: 0, verified: 0 },
     '/manager/issues/issue-1': {
       ...issue,
-      quarantine_records: [],
-      quarantine_record_ids: [],
+      quarantine_records: [
+        {
+          record_id: 'qr-1',
+          cleaning_run_id: 'run-1',
+          ingestion_job_id: 105,
+          locator: 'hr_employees_q4.csv:row:18',
+          record_position: 17,
+          bronze_version: 'v1',
+          error_codes: ['REQUIRED_VALUE_MISSING'],
+          entity: 'employee',
+          source_table: 'hr_employees_q4.csv',
+        },
+      ],
+      quarantine_record_ids: ['qr-1'],
       history: [
         {
           event_id: 1,
@@ -118,7 +110,6 @@ function setup(
         },
       ],
     },
-    '/pipeline/gold/recipes': { dimensions: { hr: { employee: ['employee_status'] } } },
   }
   http.defaults.adapter = (config) => {
     calls.push(config)
@@ -146,7 +137,11 @@ describe('ManagerReportsView', () => {
     ['admissions', 'PTS'],
   ])('dùng phạm vi %s do backend trả, hiển thị số liệu thật', async (domain, code) => {
     const { calls, client } = setup('overview', (config) =>
-      config.url === '/manager/context' ? context(domain, code) : overview
+      config.url === '/manager/context'
+        ? context(domain, code)
+        : config.url === '/manager/analytics'
+          ? page([])
+          : overview
     )
     expect(await screen.findByText('1.234')).toBeInTheDocument()
     expect(calls.find((call) => call.url === '/manager/overview')?.params).toMatchObject({ domain })
@@ -154,13 +149,27 @@ describe('ManagerReportsView', () => {
     client.clear()
   })
 
-  it('không gọi API dữ liệu khi chưa có phân công', async () => {
+  it('role xác định phòng và không yêu cầu phân công nhân sự', async () => {
+    const { client } = setup('overview', (config) =>
+      config.url === '/manager/context'
+        ? { ...context(), needs_department_assignment: true, needs_department_configuration: false }
+        : config.url === '/manager/analytics'
+          ? page([])
+          : overview
+    )
+    expect(await screen.findByText('1.234')).toBeInTheDocument()
+    expect(screen.queryByText('Cần cấu hình phòng theo vai trò')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Một số lĩnh vực chưa có phân công/)).not.toBeInTheDocument()
+    client.clear()
+  })
+
+  it('không gọi API dữ liệu khi phòng theo vai trò chưa được cấu hình', async () => {
     const { calls, client } = setup('overview', () => ({
       ...context(),
       departments: [],
-      needs_department_assignment: true,
+      needs_department_configuration: true,
     }))
-    expect(await screen.findByText('Cần phân công đang hiệu lực')).toBeInTheDocument()
+    expect(await screen.findByText('Cần cấu hình phòng theo vai trò')).toBeInTheDocument()
     expect(calls.map((call) => call.url)).toEqual(['/manager/context'])
     client.clear()
   })
@@ -169,13 +178,15 @@ describe('ManagerReportsView', () => {
     const { client } = setup('overview', (config) =>
       config.url === '/manager/context'
         ? context()
-        : {
-            ...overview,
-            status: 'PENDING',
-            last_updated_at: null,
-            kpis: page([]),
-            sources: { total: 1, current: 0, failed: 0 },
-          }
+        : config.url === '/manager/analytics'
+          ? page([])
+          : {
+              ...overview,
+              status: 'PENDING',
+              last_updated_at: null,
+              kpis: page([]),
+              sources: { total: 1, current: 0, failed: 0 },
+            }
     )
     expect(await screen.findByText('Chưa có báo cáo hiện hành')).toBeInTheDocument()
     expect(screen.getByText('Chưa có chỉ số phù hợp')).toBeInTheDocument()
@@ -185,10 +196,14 @@ describe('ManagerReportsView', () => {
 
   it('phân trang theo total từ API', async () => {
     const { calls, client } = setup('overview', (config) =>
-      config.url === '/manager/context' ? context() : { ...overview, kpis: page([metric], 21) }
+      config.url === '/manager/context'
+        ? context()
+        : config.url === '/manager/analytics'
+          ? page([])
+          : { ...overview, kpis: page([metric], 21) }
     )
     await screen.findByText('1.234')
-    fireEvent.click(screen.getByRole('button', { name: 'Trang sau' }))
+    fireEvent.click(screen.getAllByRole('button', { name: 'Trang sau' })[0]!)
     await waitFor(() =>
       expect(
         calls.some(
@@ -200,45 +215,55 @@ describe('ManagerReportsView', () => {
     client.clear()
   })
 
-  it('đổi phép nhóm gọi đúng entity và metric, giữ nguyên nhóm thiếu thông tin', async () => {
-    const { calls, client } = setup('analytics', (config) => {
-      if (config.url === '/manager/context') return context()
-      if (config.url === '/pipeline/gold/recipes')
-        return { dimensions: { hr: { employee: ['employee_status'] } } }
-      return page([{ ...metric, dimensions: { employee_status: null }, value: 7 }])
-    })
-    const entity = await screen.findByLabelText('Loại dữ liệu')
-    await within(entity).findByRole('option', { name: 'Nhân sự' })
-    fireEvent.change(entity, { target: { value: 'employee' } })
-    fireEvent.change(screen.getByLabelText('Thống kê'), {
-      target: { value: 'record_count_by_employee_status' },
-    })
-    expect(await screen.findByText('Chưa có thông tin')).toBeInTheDocument()
+  it('gộp biểu đồ cố định vào tổng quan và không gọi API quản trị hoặc hồ sơ chi tiết', async () => {
+    const { calls, client } = setup('overview')
+    expect(await screen.findByText('Nhân sự theo trạng thái')).toBeInTheDocument()
+    await waitFor(() =>
+      expect(
+        calls.some(
+          (call) =>
+            call.url === '/manager/analytics' &&
+            call.params.metric === 'record_count_by_employee_status'
+        )
+      ).toBe(true)
+    )
     expect(
-      calls.some(
+      calls.every(
         (call) =>
-          call.url === '/manager/analytics' &&
-          (call.params as { metric: string }).metric === 'record_count_by_employee_status'
+          !call.url?.includes('/datasets') &&
+          !call.url?.includes('/records') &&
+          !call.url?.includes('/recipes')
       )
     ).toBe(true)
-    client.clear()
-  })
-
-  it('tải chi tiết bộ dữ liệu khi được chọn', async () => {
-    const { calls, client } = setup('datasets')
-    fireEvent.click(await screen.findByRole('button', { name: 'Xem Báo cáo nhân sự' }))
-    expect(await screen.findByText('Đã đồng bộ')).toBeInTheDocument()
-    expect(calls.some((call) => call.url === '/manager/datasets/31')).toBe(true)
-    client.clear()
-  })
-
-  it('tải yêu cầu sửa và mở đúng trang chi tiết', async () => {
-    const { calls, client } = setup('issues')
-    expect(await screen.findByRole('link', { name: 'Xem yêu cầu' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Hỏi UniLake AI để phân tích thêm' })).toHaveAttribute(
       'href',
-      '/manager/quality-issues/issue-1'
+      '/manager/ask'
     )
+    client.clear()
+  })
+
+  it('tải yêu cầu sửa, thống kê, hồ sơ cách ly và lọc theo assignee_user_id từ manager API', async () => {
+    const { calls, client } = setup('issues')
+    fireEvent.click(await screen.findByRole('button', { name: 'Xem yêu cầu' }))
+    expect(await screen.findByText('Thiếu trạng thái nhân sự')).toBeInTheDocument()
+    expect(screen.getByText('hr_employees_q4.csv')).toBeInTheDocument()
+    expect(screen.getByText('hr_employees_q4.csv:row:18')).toBeInTheDocument()
+    expect(screen.getByText('Lịch sử xử lý')).toBeInTheDocument()
     expect(calls.some((call) => call.url === '/manager/issues/stats')).toBe(true)
+    expect(calls.some((call) => call.url === '/manager/issues/issue-1')).toBe(true)
+
+    fireEvent.change(screen.getByLabelText('Lọc theo ID nhân viên phụ trách'), {
+      target: { value: '12' },
+    })
+    await waitFor(() =>
+      expect(
+        calls.some(
+          (call) =>
+            call.url === '/manager/issues' &&
+            (call.params as { assignee_user_id?: number }).assignee_user_id === 12
+        )
+      ).toBe(true)
+    )
     client.clear()
   })
 
@@ -255,7 +280,9 @@ describe('ManagerReportsView', () => {
           })
     )
     const alert = await screen.findByRole('alert')
-    expect(within(alert).getByText(/Cần phân công đang hiệu lực/)).toBeInTheDocument()
+    expect(
+      within(alert).getByText(/Vai trò quản lý hoặc cấu hình phòng phụ trách chưa phù hợp/)
+    ).toBeInTheDocument()
     expect(screen.queryByText('1.234')).not.toBeInTheDocument()
     client.clear()
   })

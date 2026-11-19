@@ -78,8 +78,8 @@ export function SessionsPanel() {
                       Hủy
                     </Button>
                     <Button
+                      loading={revoke.isPending}
                       variant="primary"
-                      disabled={revoke.isPending}
                       onClick={() => revoke.mutate(session.login_session_id)}
                     >
                       {revoke.isPending ? 'Đang thu hồi…' : 'Xác nhận thu hồi'}

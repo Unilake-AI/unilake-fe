@@ -1,7 +1,12 @@
-import { AskAiView } from '@/views/shared/ask-ai-view'
+import { Suspense } from 'react'
 
-export const metadata = { title: 'Hỏi AI | UniLake AI' }
+import { LoadingState } from '@/components/page/page-parts'
+import { ManagerAiView } from '@/views/manager/ai-view'
 
-export default function AskAiPage() {
-  return <AskAiView historyHref="/manager/history" />
+export default function ManagerAskPage() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <ManagerAiView />
+    </Suspense>
+  )
 }

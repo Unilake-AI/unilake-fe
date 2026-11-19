@@ -109,6 +109,33 @@ describe('DATA_ADMIN QualityView', () => {
           config,
         })
       }
+      if (key === `get /data-quality-issues/${issuePending.issue_id}/comparison`) {
+        expect(config.params).toEqual({ cleaning_run_id: 'clean-run-88' })
+        return Promise.resolve({
+          data: {
+            summary: {
+              total: 1,
+              resolved: 1,
+              still_invalid: 0,
+              unmatched: 0,
+              manual_review_required: 0,
+            },
+            records: [
+              {
+                record_id: 'rec-1111',
+                status: 'RESOLVED',
+                old_locator: 'Dòng 14',
+                old_values: { employee_code: '' },
+                new_values: { employee_code: 'NV0045' },
+              },
+            ],
+          },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config,
+        })
+      }
       if (key === `get /data-quality-issues/${issuePending.issue_id}`) {
         return Promise.resolve({
           data: issuePending,
@@ -251,6 +278,9 @@ describe('DATA_ADMIN QualityView', () => {
         await screen.findByLabelText('Chọn Cleaning Run của Job sửa *'),
         'clean-run-88'
       )
+      await user.click(screen.getByRole('button', { name: 'Đối chiếu trước và sau khi sửa' }))
+      await user.click(await screen.findByText(/Dòng 14 · Đã khắc phục/))
+      expect(screen.getByText('"NV0045"')).toBeInTheDocument()
       await user.click(screen.getByRole('button', { name: 'Chọn tất cả' }))
       await user.type(screen.getByLabelText('Ghi chú xác minh *'), 'Đạt chuẩn Silver')
       await user.click(screen.getByRole('button', { name: 'Xác nhận VERIFIED' }))

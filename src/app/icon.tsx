@@ -23,8 +23,8 @@ export default async function Icon() {
     >
       <img
         src={`data:image/png;base64,${logo}`}
-        width={112}
-        height={112}
+        width={size.width}
+        height={size.height}
         alt=""
         style={{ flexShrink: 0 }}
       />

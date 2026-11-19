@@ -19,7 +19,7 @@ export const ROLE_DEFINITIONS: Record<RoleCode, RoleDefinition> = {
     code: 'ADMIN',
     name: 'Quản trị Hệ thống',
     homePath: '/admin',
-    description: 'Toàn quyền cấu hình, phân quyền và quản trị hệ thống',
+    description: 'Quản lý tài khoản, phân công, phân quyền và nhật ký hệ thống',
     badgeVariant: 'destructive',
   },
   DATA_ADMIN: {
@@ -94,9 +94,17 @@ export const ROLE_PRIORITY: RoleCode[] = [
 
 const ROLE_SET = new Set<RoleCode>(ROLE_PRIORITY)
 
-export const ROLE_ROUTE_PREFIXES: Record<RoleCode, string> = Object.fromEntries(
-  ROLE_PRIORITY.map((role) => [role, ROLE_DEFINITIONS[role].homePath])
-) as Record<RoleCode, string>
+export const ROLE_ROUTE_PREFIXES = {
+  ADMIN: '/admin',
+  DATA_ADMIN: '/data',
+  VIEWER: '/viewer',
+  ADMISSIONS_MANAGER: '/manager',
+  ADMISSIONS_STAFF: '/staff',
+  ACADEMIC_MANAGER: '/manager',
+  ACADEMIC_STAFF: '/staff',
+  HR_MANAGER: '/manager',
+  HR_STAFF: '/staff',
+} as const satisfies Record<RoleCode, string>
 
 const DEPARTMENT_DOMAINS: Partial<Record<RoleCode, Exclude<DomainCode, 'all'>>> = {
   ADMISSIONS_MANAGER: 'admissions',
@@ -156,12 +164,11 @@ export function getWorkspaceFromPrefix(pathname: string): RoleWorkspace | null {
 export function getRoleForWorkspace(roles: RoleCode[], workspace: RoleWorkspace): RoleCode | null {
   return (
     ROLE_PRIORITY.find((role) => roles.includes(role) && getWorkspaceForRole(role) === workspace) ??
-    (roles.includes('ADMIN') ? 'ADMIN' : null)
+    null
   )
 }
 
 export function hasAccessToRoute(pathname: string, userRoles: RoleCode[]): boolean {
-  if (userRoles.includes('ADMIN')) return true
   const workspace = getWorkspaceFromPrefix(pathname)
   if (!workspace) return true
   return userRoles.some((role) => getWorkspaceForRole(role) === workspace)

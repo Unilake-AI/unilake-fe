@@ -1,0 +1,66 @@
+.sidebar {
+  --sidebar-label-display: none;
+  --sidebar-label-opacity: 0;
+  --sidebar-section-rows: 0fr;
+  width: var(--workspace-rail-width);
+}
+
+.sidebar[data-expanded='true'] {
+  --sidebar-label-display: flex;
+  --sidebar-label-opacity: 1;
+  --sidebar-section-rows: 1fr;
+  width: 260px;
+}
+
+.sidebar[data-mobile='true'] {
+  width: 100%;
+}
+
+.details {
+  min-width: 0;
+  flex: 1;
+  opacity: var(--sidebar-label-opacity);
+}
+
+.sidebar[data-mobile='false'] .details {
+  flex: 1 0 168px;
+}
+
+.section {
+  display: grid;
+  grid-template-rows: var(--sidebar-section-rows);
+  opacity: var(--sidebar-label-opacity);
+}
+
+.section > div {
+  min-width: 0;
+  min-height: 0;
+}
+
+.sidebar[data-mobile='false'] .section > div {
+  width: 216px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sidebar {
+    transition: width 200ms ease-in-out;
+  }
+
+  .details,
+  .section {
+    transition: opacity 100ms ease-out;
+  }
+
+  .section {
+    transition-property: grid-template-rows, opacity;
+    transition-duration: 200ms, 100ms;
+  }
+
+  .sidebar[data-expanded='true'] :is(.details, .section) {
+    transition-delay: 70ms;
+  }
+
+  .sidebar[data-expanded='true'] .section {
+    transition-delay: 0ms, 70ms;
+  }
+}

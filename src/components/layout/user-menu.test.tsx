@@ -38,30 +38,42 @@ describe('UserMenu', () => {
     logout.mockReset()
   })
 
-  it('shows the user name and current role on the trigger', () => {
+  it('expands account actions directly under the user name and logs out', async () => {
+    const user = userEvent.setup()
     render(<UserMenu role="ACADEMIC_STAFF" />)
 
     const trigger = screen.getByRole('button', { name: 'Mở menu người dùng' })
-    expect(trigger).toHaveTextContent('academic_staff')
-    expect(trigger).toHaveTextContent('[ACADEMIC_STAFF]')
+    expect(trigger).toHaveTextContent('Trần Thị Mai Phương')
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('button', { name: 'Cài đặt' })).not.toBeInTheDocument()
+
+    await user.click(trigger)
+
+    const settings = screen.getByRole('button', { name: 'Cài đặt' })
+    const logoutButton = screen.getByRole('button', { name: 'Đăng xuất' })
+    expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    expect(document.getElementById(trigger.getAttribute('aria-controls')!)).toContainElement(
+      settings
+    )
+    expect(settings.parentElement).toContainElement(logoutButton)
+    await user.click(logoutButton)
+    expect(logout).toHaveBeenCalledTimes(1)
   })
 
-  it('lists the workspaces the user can switch to and logs out', async () => {
+  it('opens account settings with the staff profile and workspace links', async () => {
     const user = userEvent.setup()
     render(<UserMenu role="ACADEMIC_STAFF" />)
 
     await user.click(screen.getByRole('button', { name: 'Mở menu người dùng' }))
+    await user.click(screen.getByRole('button', { name: 'Cài đặt' }))
 
-    expect(await screen.findByRole('menuitem', { name: /Nhân viên Đào tạo/ })).toHaveAttribute(
-      'href',
-      '/staff'
+    expect(screen.getByRole('dialog', { name: 'Cài đặt tài khoản' })).toHaveTextContent(
+      'Nhân viên Đào tạo'
     )
-    expect(screen.getByRole('menuitem', { name: /Ban Giám hiệu/ })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Hồ sơ cá nhân và phiên đăng nhập' })).toHaveAttribute(
       'href',
-      '/viewer'
+      '/staff/profile'
     )
-
-    await user.click(screen.getByRole('menuitem', { name: 'Đăng xuất' }))
-    expect(logout).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('link', { name: /Ban Giám hiệu/ })).toHaveAttribute('href', '/viewer')
   })
 })

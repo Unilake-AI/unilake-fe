@@ -1,76 +1,114 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-import { X } from 'lucide-react'
+import Image from 'next/image'
 
+import * as DialogPrimitive from '@radix-ui/react-dialog'
+import { Menu, X } from 'lucide-react'
+
+import {
+  Dialog,
+  DialogClose,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { getWorkspaceForRole } from '@/config/roles'
 import { DomainProvider } from '@/hooks/use-domain'
 import type { AppShellProps } from '@/types/layout/app-shell'
 
+import { WorkspaceNotifications } from './notifications'
 import { Sidebar } from './sidebar'
-import { Topbar } from './topbar'
+import { UserMenu } from './user-menu'
+import logoText from '../../../public/logo_text.png'
+
+const DESKTOP_NAV = '(min-width: 768px) and (hover: hover) and (pointer: fine)'
 
 export function AppShell({ role, children }: AppShellProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  // 'auto' để CSS tự thu gọn sidebar ở tablet ngay từ lần vẽ đầu (không nhấp nháy).
-  // Người dùng bấm nút thì chuyển sang giá trị cố định; đổi khoảng màn hình thì quay về 'auto'.
-  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean | 'auto'>('auto')
+  const mobileNavigationTrigger = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    const tablet = window.matchMedia('(min-width: 768px) and (max-width: 1279px)')
-    const resetToAuto = () => setSidebarCollapsed('auto')
-    tablet.addEventListener('change', resetToAuto)
-    return () => tablet.removeEventListener('change', resetToAuto)
+    const desktop = window.matchMedia(DESKTOP_NAV)
+    const closeMobileMenu = () => {
+      if (desktop.matches) setMobileMenuOpen(false)
+    }
+    desktop.addEventListener('change', closeMobileMenu)
+    return () => desktop.removeEventListener('change', closeMobileMenu)
   }, [])
 
-  // Nút thu gọn chỉ hiện ở tablet, nơi 'auto' đang thu gọn: 'auto' → mở rộng, sau đó đảo qua lại.
-  const toggleSidebar = () => setSidebarCollapsed((value) => value === false)
-
-  useEffect(() => {
-    if (!mobileMenuOpen) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMobileMenuOpen(false)
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [mobileMenuOpen])
+  const workspace = getWorkspaceForRole(role)
 
   return (
     <DomainProvider role={role}>
-      <div className="flex min-h-dvh min-w-0 bg-[#f6f8fc] text-[#101a32] antialiased">
-        <div className="sticky top-0 hidden h-dvh shrink-0 md:block">
-          <Sidebar role={role} collapsed={sidebarCollapsed} onToggleCollapsed={toggleSidebar} />
-        </div>
-
-        {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 flex md:hidden">
-            <button
-              type="button"
-              className="absolute inset-0 bg-[#081126]/65"
-              onClick={() => setMobileMenuOpen(false)}
-              aria-label="Đóng menu nền"
-            />
-            <div className="relative h-full max-w-[86vw]">
-              <Sidebar role={role} onCloseMobile={() => setMobileMenuOpen(false)} />
+      <Dialog open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <a
+          href="#workspace-content"
+          className="sr-only z-[70] focus:not-sr-only focus:fixed focus:left-3 focus:top-2 focus:rounded-md focus:bg-white focus:p-3"
+        >
+          Chuyển đến nội dung
+        </a>
+        <header className="workspace-header fixed inset-x-0 top-0 z-40 flex items-center justify-between gap-3 border-b border-white/10 bg-sidebar px-3 text-white sm:px-5">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <DialogTrigger asChild>
               <button
+                ref={mobileNavigationTrigger}
                 type="button"
-                onClick={() => setMobileMenuOpen(false)}
-                className="absolute right-3 top-4 z-10 flex size-8 items-center justify-center rounded-lg bg-white/10 text-white"
-                aria-label="Đóng menu"
+                className="workspace-menu-button grid size-11 shrink-0 place-items-center rounded-md hover:bg-white/10"
+                aria-label="Mở menu điều hướng"
               >
-                <X className="size-5" />
+                <Menu className="size-5" aria-hidden="true" />
               </button>
-            </div>
+            </DialogTrigger>
+            <Image
+              src={logoText}
+              alt="UniLake AI"
+              priority
+              className="h-auto w-28 object-contain sm:w-36"
+            />
           </div>
-        )}
+          <div className="flex shrink-0 items-center gap-1">
+            {workspace !== 'VIEWER' && workspace !== 'ADMIN' && (
+              <WorkspaceNotifications
+                workspace={workspace}
+                fallbackFocus={mobileNavigationTrigger}
+              />
+            )}
+            <UserMenu role={role} />
+          </div>
+        </header>
 
-        <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
-          <Topbar role={role} onOpenMobile={() => setMobileMenuOpen(true)} />
-          <main className="dashboard-content min-w-0 flex-1 bg-[radial-gradient(circle_at_60%_10%,rgba(230,233,255,.55),transparent_55%)] p-4 md:p-6">
-            {children}
-          </main>
+        <div className="workspace-rail fixed left-0 z-30">
+          <Sidebar role={role} />
         </div>
-      </div>
+
+        <main
+          id="workspace-content"
+          tabIndex={-1}
+          className="dashboard-content workspace-main min-h-dvh min-w-0 bg-background px-3 pb-6 text-foreground antialiased sm:px-6"
+        >
+          {children}
+        </main>
+
+        <DialogPortal>
+          <DialogOverlay className="workspace-menu-overlay bg-slate-950/45 motion-reduce:animate-none" />
+          <DialogPrimitive.Content
+            aria-describedby={undefined}
+            className="workspace-mobile-menu fixed bottom-0 left-0 z-50 w-60 max-w-[86vw] bg-sidebar pt-12 outline-none motion-safe:data-[state=open]:animate-in motion-safe:data-[state=open]:slide-in-from-left-4"
+          >
+            <DialogTitle className="sr-only">Menu điều hướng</DialogTitle>
+            <DialogClose
+              className="absolute right-2 top-1 grid size-10 place-items-center rounded-md text-white hover:bg-white/10"
+              aria-label="Đóng menu"
+            >
+              <X className="size-5" aria-hidden="true" />
+            </DialogClose>
+            <Sidebar role={role} onCloseMobile={() => setMobileMenuOpen(false)} />
+          </DialogPrimitive.Content>
+        </DialogPortal>
+      </Dialog>
     </DomainProvider>
   )
 }

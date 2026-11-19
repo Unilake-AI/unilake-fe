@@ -5,7 +5,11 @@ import { AxiosError, AxiosHeaders } from 'axios'
 import { toast } from 'sonner'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { API_CreateDataSource, API_UpdateDataSource } from '@/api/admindata/data-sources'
+import {
+  API_CreateDataSource,
+  API_TestSourceConnection,
+  API_UpdateDataSource,
+} from '@/api/admindata/data-sources'
 import { API_GetDataSource } from '@/api/shared/data-sources'
 import type { DataSourceItem } from '@/types/data-sources'
 
@@ -17,7 +21,11 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn() } }))
 vi.mock('@/api/admindata/data-sources', () => ({
   API_CreateDataSource: vi.fn(),
+  API_TestSourceConnection: vi.fn(),
   API_UpdateDataSource: vi.fn(),
+}))
+vi.mock('@/api/admindata/datasets', () => ({
+  API_ListSourceSystems: () => Promise.resolve([{ source_system_id: 1, source_name: 'HR' }]),
 }))
 vi.mock('@/api/shared/data-sources', () => ({ API_GetDataSource: vi.fn() }))
 
@@ -67,7 +75,7 @@ describe('SourceFormView (thêm mới)', () => {
     expect(await screen.findByText('Vui lòng nhập tên nguồn dữ liệu.')).toBeInTheDocument()
     expect(screen.getByText('Vui lòng nhập vị trí của nguồn.')).toBeInTheDocument()
     expect(screen.getByText('Vui lòng điền mục này.')).toBeInTheDocument()
-    expect(screen.getByText('3 trường chưa hợp lệ')).toBeInTheDocument()
+    expect(screen.getByText('4 trường chưa hợp lệ')).toBeInTheDocument()
     expect(createSource).not.toHaveBeenCalled()
   })
 
@@ -76,6 +84,10 @@ describe('SourceFormView (thêm mới)', () => {
     createSource.mockResolvedValue({ ...existing, source_name: 'Applicants CSV' })
     renderWithClient(<SourceFormView />)
 
+    await user.selectOptions(
+      screen.getByLabelText('Hệ thống nguồn *'),
+      await screen.findByRole('option', { name: 'HR' })
+    )
     await user.type(screen.getByLabelText('Tên nguồn dữ liệu *'), ' Applicants CSV ')
     await user.type(screen.getByLabelText('Địa chỉ nguồn dữ liệu *'), 's3://unilake-raw/a.csv')
     await user.click(screen.getByRole('button', { name: 'Lưu nguồn dữ liệu' }))
@@ -92,6 +104,28 @@ describe('SourceFormView (thêm mới)', () => {
       is_active: true,
     })
     expect(toast.success).toHaveBeenCalledWith('Đã thêm nguồn “Applicants CSV”.')
+  })
+
+  it('kiểm tra kết nối PostgreSQL từ cấu hình đang nhập mà không lưu nguồn', async () => {
+    const user = userEvent.setup()
+    const check = vi.mocked(API_TestSourceConnection)
+    check.mockResolvedValue({ success: true, message: 'Kết nối PostgreSQL thành công.' })
+    renderWithClient(<SourceFormView />)
+
+    await user.selectOptions(screen.getByLabelText(/Loại nguồn/), 'POSTGRESQL')
+    await user.type(screen.getByLabelText('Tên cơ sở dữ liệu *'), 'unilake')
+    await user.type(screen.getByLabelText(/Tên đăng nhập/), 'reader')
+    await user.type(screen.getByLabelText(/Mật khẩu/), 'test-password')
+    await user.click(screen.getByRole('button', { name: 'Kiểm tra kết nối' }))
+    expect(await screen.findByText('Kết nối PostgreSQL thành công.')).toBeInTheDocument()
+    expect(check).toHaveBeenCalledWith({
+      host: 'localhost',
+      port: 5432,
+      database: 'unilake',
+      username: 'reader',
+      password: 'test-password',
+    })
+    expect(createSource).not.toHaveBeenCalled()
   })
 
   it('hiện hướng xử lý dễ hiểu khi thông tin kết nối chưa hợp lệ', async () => {
@@ -115,6 +149,10 @@ describe('SourceFormView (thêm mới)', () => {
     )
     renderWithClient(<SourceFormView />)
 
+    await user.selectOptions(
+      screen.getByLabelText('Hệ thống nguồn *'),
+      await screen.findByRole('option', { name: 'HR' })
+    )
     await user.type(screen.getByLabelText('Tên nguồn dữ liệu *'), 'A')
     await user.type(screen.getByLabelText('Địa chỉ nguồn dữ liệu *'), 's3://a')
     await user.click(screen.getByRole('button', { name: 'Lưu nguồn dữ liệu' }))

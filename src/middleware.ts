@@ -44,11 +44,10 @@ export function middleware(request: NextRequest) {
 
   // Kiểm tra quyền truy cập các tuyến theo tiền tố vai trò
   if (
-    (pathname === '/viewer/ask' ||
-      pathname.startsWith('/viewer/ask/') ||
-      pathname === '/viewer/history' ||
-      pathname.startsWith('/viewer/history/')) &&
-    !userRoles.includes('ADMIN')
+    pathname === '/viewer/ask' ||
+    pathname.startsWith('/viewer/ask/') ||
+    pathname === '/viewer/history' ||
+    pathname.startsWith('/viewer/history/')
   ) {
     return NextResponse.redirect(new URL('/viewer', request.url))
   }

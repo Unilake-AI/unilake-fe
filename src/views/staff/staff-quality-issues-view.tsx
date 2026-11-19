@@ -9,21 +9,19 @@ import { ArrowRight, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 
 import { getApiErrorMessage } from '@/api/http'
 import { API_ListDatasets } from '@/api/shared/datasets'
-import { API_GetQualityIssueStats, API_ListQualityIssues } from '@/api/shared/quality-issues'
+import { API_ListQualityIssues } from '@/api/shared/quality-issues'
 import {
   Button,
   Card,
   EmptyState,
   ErrorState,
-  KpiCard,
-  LoadingState,
   PageHeader,
   Tag,
   formatDateTime,
-  formatNumber,
   statusLabel,
   statusTone,
 } from '@/components/page/page-parts'
+import { TableSkeleton } from '@/components/ui/table-skeleton'
 import type { StaffQualityIssueStatusFilter } from '@/types/quality-issues'
 import type { StaffContext } from '@/types/staff-context'
 
@@ -40,7 +38,7 @@ const ISSUE_STATUS_OPTIONS = [
 ] as const
 
 function QualityIssuesContent({ context }: { context: StaffContext }) {
-  const [statusFilter, setStatusFilter] = useState<string>('')
+  const [statusFilter, setStatusFilter] = useState<string>('ASSIGNED')
   const [mineOnly, setMineOnly] = useState(true)
   const [offset, setOffset] = useState(0)
 
@@ -48,12 +46,6 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
     status: (statusFilter as StaffQualityIssueStatusFilter) || undefined,
     mine_only: mineOnly,
   }
-
-  const statsQuery = useQuery({
-    queryKey: ['quality-issues', 'stats', filterParams],
-    queryFn: () => API_GetQualityIssueStats(filterParams),
-    refetchInterval: 15_000,
-  })
 
   const issuesQuery = useQuery({
     queryKey: ['quality-issues', 'list', { ...filterParams, limit: PAGE_SIZE, offset }],
@@ -97,45 +89,14 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
         description="Xem danh sách các vấn đề chất lượng dữ liệu trong phạm vi đơn vị, tải tệp đã sửa và gửi báo cáo xác minh."
         actions={
           <Button
-            onClick={() => {
-              void issuesQuery.refetch()
-              void statsQuery.refetch()
-            }}
-            disabled={issuesQuery.isFetching || statsQuery.isFetching}
-            icon={
-              <RefreshCw
-                className={`size-3.5 ${issuesQuery.isFetching ? 'animate-spin' : ''}`}
-                aria-hidden="true"
-              />
-            }
+            onClick={() => void issuesQuery.refetch()}
+            reading={issuesQuery.isFetching}
+            icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
           >
             Làm mới
           </Button>
         }
       />
-
-      {/* Thống kê */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard
-          label="Tổng yêu cầu"
-          value={statsQuery.data ? formatNumber(statsQuery.data.total) : '—'}
-        />
-        <KpiCard
-          label="Cần xử lý"
-          value={statsQuery.data ? formatNumber(statsQuery.data.assigned) : '—'}
-          tone="amber"
-        />
-        <KpiCard
-          label="Chờ xác minh"
-          value={statsQuery.data ? formatNumber(statsQuery.data.pending_verification) : '—'}
-          tone="sky"
-        />
-        <KpiCard
-          label="Đã xác minh"
-          value={statsQuery.data ? formatNumber(statsQuery.data.verified) : '—'}
-          tone="emerald"
-        />
-      </div>
 
       {/* Bộ lọc */}
       <Card>
@@ -179,7 +140,7 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
       {/* Danh sách yêu cầu */}
       <Card title="Danh sách yêu cầu xử lý" bodyClassName="p-0">
         {issuesQuery.isPending ? (
-          <LoadingState label="Đang tải danh sách yêu cầu xử lý…" />
+          <TableSkeleton columns={7} label="Đang tải danh sách yêu cầu xử lý…" />
         ) : issuesQuery.isError ? (
           <div className="p-4">
             <ErrorState
@@ -187,6 +148,7 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
                 issuesQuery.error,
                 'Không tải được danh sách yêu cầu xử lý dữ liệu lỗi.'
               )}
+              retrying={issuesQuery.isFetching}
               onRetry={() => void issuesQuery.refetch()}
             />
           </div>

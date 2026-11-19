@@ -8,6 +8,7 @@ import { ArrowRight, RefreshCw, Search } from 'lucide-react'
 
 import { API_GetLineage } from '@/api/admindata/governance'
 import { getApiErrorMessage } from '@/api/http'
+import { DetailDrawer } from '@/components/page/detail-drawer'
 import {
   Button,
   Card,
@@ -61,8 +62,10 @@ export function LineageView() {
   const nodes = useMemo(() => lineageQuery.data?.nodes ?? [], [lineageQuery.data?.nodes])
   const edges = useMemo(() => lineageQuery.data?.edges ?? [], [lineageQuery.data?.edges])
 
-  const selectedNode: LineageNode | undefined =
-    nodes.find((n) => n.id === selectedNodeId) ?? nodes[0]
+  const nodeIndex = useMemo(() => new Map(nodes.map((node) => [node.id, node])), [nodes])
+  const selectedNode: LineageNode | undefined = selectedNodeId
+    ? nodeIndex.get(selectedNodeId)
+    : undefined
 
   const groupedByLayer = useMemo(() => {
     const groups = new Map<string, LineageNode[]>()
@@ -95,17 +98,12 @@ export function LineageView() {
       <PageHeader
         breadcrumb={['Quản trị dữ liệu', 'Data Lineage']}
         title="Data Lineage — Truy vết nguồn gốc dữ liệu"
-        description="Hiển thị các nút (nodes) và luồng chuyển dịch (edges) thực tế được ghi nhận từ backend."
+        description="Khám phá quan hệ nguồn và đích đã ghi nhận giữa các tầng dữ liệu."
         actions={
           <Button
             onClick={() => void lineageQuery.refetch()}
-            disabled={lineageQuery.isFetching}
-            icon={
-              <RefreshCw
-                className={`size-3.5 ${lineageQuery.isFetching ? 'animate-spin' : ''}`}
-                aria-hidden="true"
-              />
-            }
+            reading={lineageQuery.isFetching}
+            icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
           >
             Làm mới
           </Button>
@@ -152,7 +150,7 @@ export function LineageView() {
             </select>
           </div>
 
-          <div className="min-w-[200px] flex-1 space-y-1">
+          <div className="min-w-0 flex-1 basis-[200px] space-y-1">
             <label htmlFor="lineage-search" className="block font-semibold text-slate-700">
               Tìm kiếm node / bảng / tệp
             </label>
@@ -183,6 +181,7 @@ export function LineageView() {
       ) : lineageQuery.isError ? (
         <ErrorState
           message={getApiErrorMessage(lineageQuery.error, 'Không tải được dữ liệu Data Lineage.')}
+          retrying={lineageQuery.isFetching}
           onRetry={() => void lineageQuery.refetch()}
         />
       ) : nodes.length === 0 ? (
@@ -195,15 +194,10 @@ export function LineageView() {
       ) : (
         <>
           <Card
-            title="Đồ thị luồng dữ liệu theo tầng thực tế"
+            title="Điểm dữ liệu theo tầng"
             subtitle={`${nodes.length} điểm dữ liệu (nodes) · ${edges.length} liên kết (edges)`}
           >
-            <div
-              className="grid gap-4"
-              style={{
-                gridTemplateColumns: `repeat(${Math.max(1, groupedByLayer.length)}, minmax(220px, 1fr))`,
-              }}
-            >
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {groupedByLayer.map(([layerName, layerNodes]) => (
                 <div
                   key={layerName}
@@ -223,7 +217,7 @@ export function LineageView() {
                           <button
                             type="button"
                             onClick={() => setSelectedNodeId(node.id)}
-                            aria-pressed={isSelected}
+                            aria-haspopup="dialog"
                             className={cn(
                               'w-full rounded-md border p-2.5 text-left transition-colors',
                               isSelected
@@ -231,10 +225,10 @@ export function LineageView() {
                                 : 'border-slate-200 bg-white hover:bg-slate-50'
                             )}
                           >
-                            <p className="truncate text-xs font-semibold text-slate-900">
+                            <p className="break-words text-xs font-semibold text-slate-900">
                               {node.label || node.name}
                             </p>
-                            <p className="truncate font-mono text-[10px] text-slate-400">
+                            <p className="break-all font-mono text-[11px] text-slate-600">
                               {node.id}
                             </p>
                           </button>
@@ -247,108 +241,119 @@ export function LineageView() {
             </div>
           </Card>
 
-          <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
-            <Card
-              title={
-                selectedNode
-                  ? `Chi tiết node: ${selectedNode.label || selectedNode.name}`
-                  : 'Chi tiết node'
-              }
-              subtitle={selectedNode?.id}
-              right={
-                selectedNode && <Tag tone={layerTone(selectedNode.layer)}>{selectedNode.layer}</Tag>
-              }
-            >
-              {selectedNode ? (
-                <div className="space-y-3 text-xs">
-                  <dl className="space-y-2">
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-slate-500">Tên kỹ thuật</dt>
-                      <dd className="font-mono font-medium text-slate-900">{selectedNode.name}</dd>
-                    </div>
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-slate-500">Liên kết vào (Upstream)</dt>
-                      <dd className="font-mono font-medium text-slate-900">
-                        {incomingEdges.length}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-slate-500">Liên kết ra (Downstream)</dt>
-                      <dd className="font-mono font-medium text-slate-900">
-                        {outgoingEdges.length}
-                      </dd>
-                    </div>
-                  </dl>
-                  {selectedNode.data && Object.keys(selectedNode.data).length > 0 && (
-                    <div>
-                      <p className="mb-1 font-semibold text-slate-700">Metadata của node</p>
-                      <pre className="max-h-48 overflow-auto rounded bg-slate-50 p-2 font-mono text-[11px] text-slate-800">
-                        {JSON.stringify(selectedNode.data, null, 2)}
-                      </pre>
-                    </div>
-                  )}
+          <DetailDrawer
+            open={Boolean(selectedNode)}
+            onClose={() => setSelectedNodeId(null)}
+            title={selectedNode?.label || selectedNode?.name || 'Chi tiết node'}
+          >
+            {selectedNode ? (
+              <div className="space-y-3 text-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Tag tone={layerTone(selectedNode.layer)}>{selectedNode.layer}</Tag>
+                  <span className="break-all font-mono text-xs text-muted-foreground">
+                    {selectedNode.id}
+                  </span>
                 </div>
-              ) : (
-                <EmptyState title="Chọn một node để xem chi tiết" />
-              )}
-            </Card>
+                {edges
+                  .filter(
+                    ({ source, target }) => source === selectedNode.id || target === selectedNode.id
+                  )
+                  .map((edge) => (
+                    <div
+                      key={edge.id}
+                      className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 rounded-md border p-2 text-xs"
+                    >
+                      <span className="break-all">
+                        {nodeIndex.get(edge.source)?.label || edge.source}
+                      </span>
+                      <ArrowRight aria-label="đến" className="size-4 text-slate-600" />
+                      <span className="break-all">
+                        {nodeIndex.get(edge.target)?.label || edge.target}
+                      </span>
+                    </div>
+                  ))}
 
-            <Card
-              title="Danh sách liên kết (Edges)"
-              subtitle={`${edges.length} cạnh nối từ backend`}
-              bodyClassName="p-0"
-            >
-              {edges.length === 0 ? (
-                <EmptyState title="Chưa có cạnh liên kết nào" />
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[560px] text-left text-xs">
-                    <thead className="bg-slate-50 font-mono text-[10px] uppercase tracking-wider text-slate-500">
-                      <tr>
-                        {['Nguồn (Source)', '', 'Đích (Target)', 'Nhãn', 'Thời gian'].map(
-                          (h, i) => (
-                            <th key={i} scope="col" className="px-3 py-2 font-medium">
-                              {h}
-                            </th>
-                          )
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {edges.map((edge) => {
-                        const related =
-                          selectedNode &&
-                          (edge.source === selectedNode.id || edge.target === selectedNode.id)
-                        return (
-                          <tr key={edge.id} className={related ? 'bg-[#fff3f5]/40' : undefined}>
-                            <td className="px-3 py-2.5">
-                              <Tag tone={layerTone(edge.source_layer)}>{edge.source_layer}</Tag>
-                              <p className="mt-0.5 font-mono text-[11px] text-slate-800">
-                                {edge.source}
-                              </p>
-                            </td>
-                            <td className="px-1 py-2.5 text-slate-400">
-                              <ArrowRight className="size-4" aria-hidden="true" />
-                            </td>
-                            <td className="px-3 py-2.5">
-                              <Tag tone={layerTone(edge.target_layer)}>{edge.target_layer}</Tag>
-                              <p className="mt-0.5 font-mono text-[11px] text-slate-800">
-                                {edge.target}
-                              </p>
-                            </td>
-                            <td className="px-3 py-2.5 text-slate-700">{edge.label ?? '—'}</td>
-                            <td className="px-3 py-2.5 text-slate-500">
-                              {formatDateTime(edge.created_at)}
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </Card>
-          </div>
+                <dl className="space-y-2">
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-slate-500">Tên kỹ thuật</dt>
+                    <dd className="font-mono font-medium text-slate-900">{selectedNode.name}</dd>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-slate-500">Liên kết vào (Upstream)</dt>
+                    <dd className="font-mono font-medium text-slate-900">{incomingEdges.length}</dd>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-slate-500">Liên kết ra (Downstream)</dt>
+                    <dd className="font-mono font-medium text-slate-900">{outgoingEdges.length}</dd>
+                  </div>
+                </dl>
+                {selectedNode.data && Object.keys(selectedNode.data).length > 0 && (
+                  <div>
+                    <p className="mb-1 font-semibold text-slate-700">Metadata của node</p>
+                    <pre className="max-h-48 overflow-auto rounded bg-slate-50 p-2 font-mono text-[11px] text-slate-800">
+                      {JSON.stringify(selectedNode.data, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <EmptyState title="Chọn một node để xem chi tiết" />
+            )}
+          </DetailDrawer>
+
+          <Card
+            title="Liên kết nguồn và đích"
+            subtitle={`${edges.length} cạnh nối từ backend`}
+            bodyClassName="p-0"
+          >
+            {edges.length === 0 ? (
+              <EmptyState title="Chưa có cạnh liên kết nào" />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[560px] text-left text-xs">
+                  <thead className="bg-slate-50 font-mono text-[10px] uppercase tracking-wider text-slate-500">
+                    <tr>
+                      {['Nguồn (Source)', '', 'Đích (Target)', 'Nhãn', 'Thời gian'].map((h, i) => (
+                        <th key={i} scope="col" className="px-3 py-2 font-medium">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {edges.map((edge) => {
+                      const related =
+                        selectedNode &&
+                        (edge.source === selectedNode.id || edge.target === selectedNode.id)
+                      return (
+                        <tr key={edge.id} className={related ? 'bg-[#fff3f5]/40' : undefined}>
+                          <td className="px-3 py-2.5">
+                            <Tag tone={layerTone(edge.source_layer)}>{edge.source_layer}</Tag>
+                            <p className="mt-0.5 font-mono text-[11px] text-slate-800">
+                              {edge.source}
+                            </p>
+                          </td>
+                          <td className="px-1 py-2.5 text-slate-400">
+                            <ArrowRight className="size-4" aria-hidden="true" />
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <Tag tone={layerTone(edge.target_layer)}>{edge.target_layer}</Tag>
+                            <p className="mt-0.5 font-mono text-[11px] text-slate-800">
+                              {edge.target}
+                            </p>
+                          </td>
+                          <td className="px-3 py-2.5 text-slate-700">{edge.label ?? '—'}</td>
+                          <td className="px-3 py-2.5 text-slate-500">
+                            {formatDateTime(edge.created_at)}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
         </>
       )}
     </div>

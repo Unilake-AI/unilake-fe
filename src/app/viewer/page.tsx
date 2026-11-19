@@ -1,7 +1,7 @@
-import { ExecutiveView } from '@/views/dashboards/executive-view'
+import { ViewerOverviewView } from '@/views/viewer/viewer-overview-view'
 
 export const metadata = { title: 'Tổng quan điều hành | UniLake AI' }
 
-export default function ExecutivePage() {
-  return <ExecutiveView />
+export default function ViewerPage() {
+  return <ViewerOverviewView />
 }

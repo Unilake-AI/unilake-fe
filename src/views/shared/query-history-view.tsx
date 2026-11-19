@@ -4,21 +4,13 @@ import { Fragment, useEffect, useState } from 'react'
 
 import Link from 'next/link'
 
-import {
-  CheckCircle2,
-  CircleAlert,
-  Clock3,
-  MessageSquare,
-  RefreshCw,
-  Search,
-  Trash2,
-} from 'lucide-react'
+import { RefreshCw, Search, Trash2 } from 'lucide-react'
 
-import robotHistory from '@/assets/dashboard/ai-robot-history.webp'
 import {
   Button,
   Card,
   EmptyState,
+  KpiCard,
   PageHeader,
   Tag,
   statusLabel,
@@ -65,56 +57,31 @@ export function QueryHistoryView({ askHref }: { askHref: string }) {
         breadcrumb={[getDomain(domain.code).shortLabel, 'Lịch sử truy vấn']}
         title="Lịch sử truy vấn"
         description="Xem lại các câu hỏi đã gửi và kết quả truy vấn trước đó."
-        illustration={robotHistory}
       />
       <p className="rounded-md border border-dashed border-slate-300 bg-white px-3 py-2 text-[11px] text-slate-600">
         Lịch sử chỉ được lưu trên trình duyệt bạn đang dùng.
       </p>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          {
-            label: 'Tổng số truy vấn',
-            value: entries.length,
-            icon: MessageSquare,
-            color: 'text-[#5146e7] bg-[#eeeeff]',
-          },
-          {
-            label: 'Có kết quả',
-            value: entries.filter((entry) => entry.status === 'COMPLETED').length,
-            icon: CheckCircle2,
-            color: 'text-[#15913a] bg-[#e5f8ea]',
-          },
-          {
-            label: 'Không có kết quả',
-            value: entries.filter((entry) => entry.status === 'NO_DATA').length,
-            icon: Clock3,
-            color: 'text-[#df8500] bg-[#fff3df]',
-          },
-          {
-            label: 'Lỗi truy vấn',
-            value: entries.filter((entry) => entry.status === 'FAILED').length,
-            icon: CircleAlert,
-            color: 'text-[#c51c3d] bg-[#fce8ee]',
-          },
-        ].map(({ label, value, icon: Icon, color }) => (
-          <div
-            key={label}
-            className="flex items-center gap-4 rounded-2xl border border-[#dfe4f2] bg-white p-5 shadow-[0_8px_24px_rgba(31,43,83,.055)]"
-          >
-            <span className={`flex size-12 items-center justify-center rounded-full ${color}`}>
-              <Icon className="size-6" />
-            </span>
-            <div>
-              <strong className="text-2xl text-[#111a35]">{value}</strong>
-              <p className="text-xs text-[#596884]">{label}</p>
-            </div>
-          </div>
-        ))}
+        <KpiCard label="Tổng số truy vấn" value={entries.length} />
+        <KpiCard
+          label="Có kết quả"
+          value={entries.filter((entry) => entry.status === 'COMPLETED').length}
+          tone="emerald"
+        />
+        <KpiCard
+          label="Không có kết quả"
+          value={entries.filter((entry) => entry.status === 'NO_DATA').length}
+        />
+        <KpiCard
+          label="Lỗi truy vấn"
+          value={entries.filter((entry) => entry.status === 'FAILED').length}
+          tone="rose"
+        />
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#dfe4f2] bg-white p-4">
-        <label className="flex min-w-52 flex-1 items-center gap-2 rounded-lg border border-[#cbd4e3] px-3">
+      <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3">
+        <label className="flex min-w-0 flex-1 basis-52 items-center gap-2 rounded-lg border border-[#cbd4e3] px-3">
           <Search className="size-4 text-[#65718d]" />
           <span className="sr-only">Tìm kiếm câu hỏi</span>
           <input
@@ -180,16 +147,18 @@ export function QueryHistoryView({ askHref }: { askHref: string }) {
               }
             />
             <div className="text-center">
-              <Link
-                href={askHref}
-                className="text-xs font-semibold text-indigo-700 hover:underline"
-              >
+              <Link href={askHref} className="text-xs font-semibold text-primary hover:underline">
                 Đến trang Hỏi AI
               </Link>
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div
+            className="overflow-x-auto"
+            role="region"
+            tabIndex={0}
+            aria-label="Bảng lịch sử truy vấn"
+          >
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead className="bg-[#f0f2ff] text-xs font-semibold text-[#34415f]">
                 <tr>
@@ -221,7 +190,7 @@ export function QueryHistoryView({ askHref }: { askHref: string }) {
                         {(entry.sql ?? entry.error) && (
                           <button
                             type="button"
-                            className="text-xs font-semibold text-indigo-700 hover:underline"
+                            className="text-xs font-semibold text-primary hover:underline"
                             aria-expanded={expanded === entry.id}
                             onClick={() => setExpanded(expanded === entry.id ? null : entry.id)}
                           >

@@ -107,7 +107,7 @@ const API_ERROR_MESSAGES = new Map([
   ['NOTIFICATION_NOT_FOUND', 'Thông báo không còn nằm trong phạm vi được xem.'],
   [
     'MANAGER_SCOPE_REQUIRED',
-    'Cần phân công đang hiệu lực tại phòng phụ trách lĩnh vực này. Vui lòng liên hệ quản trị viên.',
+    'Vai trò quản lý hoặc cấu hình phòng phụ trách chưa phù hợp. Vui lòng liên hệ quản trị viên.',
   ],
   ['MANAGER_UNAVAILABLE', 'Không thể tải báo cáo phòng ban. Vui lòng thử lại sau.'],
   ['GOLD_RETRY_NOT_ALLOWED', 'Chỉ chạy lại lượt Gold bị lỗi của bản Silver còn đang sử dụng.'],
@@ -138,6 +138,12 @@ const API_ERROR_MESSAGES = new Map([
   ],
   ['SESSION_NOT_FOUND', 'Phiên đăng nhập này đã kết thúc hoặc không còn hoạt động.'],
   ['SOURCE_NAME_EXIST', 'Tên nguồn dữ liệu đã được sử dụng. Vui lòng chọn tên khác.'],
+  ['SOURCE_SYSTEM_CODE_CONFLICT', 'Mã hệ thống nguồn đã tồn tại.'],
+  [
+    'CONNECTION_FAILED',
+    'Không kết nối được PostgreSQL. Kiểm tra máy chủ, cổng và thông tin đăng nhập.',
+  ],
+  ['CONNECTION_TYPE_UNSUPPORTED', 'Kiểm tra kết nối hiện hỗ trợ PostgreSQL.'],
   ['SOURCE_SYSTEM_NOT_FOUND', 'Không tìm thấy hệ thống nguồn. Vui lòng chọn lại.'],
   ['CONFIGURATION_INVALID', 'Thông tin kết nối chưa hợp lệ. Vui lòng kiểm tra lại.'],
   ['DATA_SOURCE_NOT_FOUND', 'Không tìm thấy nguồn dữ liệu này.'],
@@ -164,13 +170,19 @@ const API_ERROR_MESSAGES = new Map([
   ['SUCCESSFUL_BRONZE_JOB_REQUIRED', 'Chỉ có thể làm sạch sau khi dữ liệu đã được nạp thành công.'],
   ['DEDICATED_DEMO_CATALOG_REQUIRED', 'Bộ dữ liệu này chưa được hỗ trợ làm sạch.'],
   ['UNSUPPORTED_BRONZE_FILE_TYPE', 'Loại tệp này chưa được hỗ trợ làm sạch.'],
+  [
+    'NLQ_QUESTION_UNSUPPORTED',
+    'Câu hỏi chưa được hỗ trợ trong lĩnh vực của bạn. Hãy chọn một câu hỏi gợi ý.',
+  ],
   ['INVALID_SQL', 'Chưa thể trả lời câu hỏi này. Bạn có thể thử hỏi theo cách khác.'],
   [
     'UPLOAD_DESTINATION_INVALID',
     'Vui lòng chọn bộ dữ liệu đã có hoặc nhập tên bộ dữ liệu mới, không gửi cả hai.',
   ],
   ['UPLOAD_DOMAIN_REQUIRED', 'Vui lòng chọn lĩnh vực hợp lệ cho bộ dữ liệu mới.'],
-  ['UPLOAD_DOMAIN_FORBIDDEN', 'Bạn chỉ được tạo bộ dữ liệu trong lĩnh vực được cấp quyền.'],
+  ['UPLOAD_DOMAIN_FORBIDDEN', 'Bạn chỉ được nạp vào bộ dữ liệu thuộc lĩnh vực được cấp quyền.'],
+  ['UPLOAD_DEPARTMENT_FORBIDDEN', 'Bạn chỉ được nạp vào bộ dữ liệu thuộc phòng ban của mình.'],
+  ['UPLOAD_DATASET_REQUIRED', 'Vui lòng chọn một bộ dữ liệu Bronze đã có.'],
   [
     'UPLOAD_DATASET_NAME_CONFLICT',
     'Tên bộ dữ liệu đã tồn tại trong lĩnh vực này. Hãy chọn bộ dữ liệu có sẵn để nạp tiếp hoặc đặt tên khác.',
@@ -239,7 +251,15 @@ const API_ERROR_MESSAGES = new Map([
   ['SILVER_SOURCE_PROFILE_NOT_FOUND', 'Không tìm thấy cấu hình nguồn Silver (Profile).'],
   [
     'SILVER_PROFILE_REVISION_CONFLICT',
-    'Cấu hình Silver đã được thay đổi bởi thao tác khác. Vui lòng tải lại trước khi lưu.',
+    'Phiên bản quy tắc đã thay đổi trước khi thao tác. Vui lòng tải lại hàng đợi để nhận bản mới nhất.',
+  ],
+  [
+    'SILVER_DOMAIN_OWNER_REQUIRED',
+    'Tài khoản chưa được cấp quyền Domain Owner để phê duyệt cấu hình cho lĩnh vực này.',
+  ],
+  [
+    'SILVER_SELF_APPROVAL_FORBIDDEN',
+    'Người tạo hoặc chỉnh sửa cấu hình không được tự phê duyệt cấu hình của chính mình.',
   ],
   ['SILVER_PROFILE_CONFLICT', 'Mã cấu hình Silver (profile_id) đã tồn tại.'],
   [
@@ -329,6 +349,12 @@ export function getApiErrorMessage(
     return 'Không thể kết nối. Vui lòng kiểm tra mạng và thử lại.'
   }
   const { status } = error.response
+  if (status === 503 && getApiErrorCode(error) === 'NLQ_UNAVAILABLE') {
+    return 'Hỏi UniLake AI chưa sẵn sàng. Bạn có thể xem báo cáo tại Tổng quan.'
+  }
+  if (status === 503 && getApiErrorCode(error) === 'MANAGER_UNAVAILABLE') {
+    return 'Không thể tải báo cáo phòng ban hoặc tầng Gold đang bảo trì. Vui lòng thử lại sau.'
+  }
   if (status >= 500) {
     return 'Hệ thống đang gặp sự cố. Vui lòng thử lại sau.'
   }

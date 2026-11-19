@@ -36,6 +36,7 @@ import { AutoSilverForIngestion } from '@/components/data/auto-silver-jobs'
 import {
   Button,
   Card,
+  DatabaseLoader,
   EmptyState,
   ErrorState,
   KpiCard,
@@ -55,6 +56,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { TableSkeleton } from '@/components/ui/table-skeleton'
 import type { IngestionJob, IngestionJobStatusFilter } from '@/types/ingestion'
 import type { UploadDomain } from '@/types/staff-upload'
 import {
@@ -151,6 +153,7 @@ function JobDetails({
     return (
       <ErrorState
         message={getApiErrorMessage(jobQuery.error, 'Không tải được thông tin lần nạp dữ liệu.')}
+        retrying={jobQuery.isFetching}
         onRetry={() => void jobQuery.refetch()}
       />
     )
@@ -212,6 +215,12 @@ function JobDetails({
         </div>
       </dl>
 
+      <Link
+        href={`/data/pipeline?jobId=${jobId}`}
+        className="inline-flex text-sm font-semibold text-[#a9162e] underline"
+      >
+        Xem tiến trình nạp & xử lý của lần nạp này
+      </Link>
       {status === 'SUCCESS' && (
         <div className="space-y-2 rounded-md border border-emerald-200 bg-emerald-50 p-3">
           <div className="flex flex-wrap items-center justify-between gap-2 text-emerald-900">
@@ -241,7 +250,8 @@ function JobDetails({
             <Button
               variant="primary"
               className="self-end"
-              disabled={isCleaning || !profileId.trim()}
+              loading={isCleaning}
+              disabled={!profileId.trim()}
               onClick={() => cleaning.mutate(profileId.trim())}
             >
               {isCleaning ? 'Đang làm sạch…' : 'Làm sạch dữ liệu'}
@@ -252,8 +262,7 @@ function JobDetails({
 
       {status === 'FAILED' && !retryEligible && (
         <p className="rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-600">
-          Chức năng chạy lại thủ công hiện chỉ hỗ trợ cho các job tải tệp lên (UPLOAD_V1) đã ghim
-          phiên bản.
+          Không thể chạy lại loại lần nạp này.
         </p>
       )}
 
@@ -369,8 +378,10 @@ function JobDetails({
           <DialogHeader>
             <DialogTitle>Xác nhận chạy lại lần nạp #{jobId}</DialogTitle>
             <DialogDescription>
-              Hệ thống sẽ tạo một lần chạy mới từ phiên bản tệp đã ghim của job #{jobId} và giữ
-              nguyên lịch sử lần thất bại trước đó.
+              {job.job_type === 'UPLOAD_V1'
+                ? 'Lần chạy mới dùng phiên bản tệp đã ghim.'
+                : 'Lần chạy mới đọc lại bảng hoặc tệp từ nguồn đã đăng ký.'}{' '}
+              Lịch sử lần nạp #{jobId} vẫn được lưu.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -382,8 +393,8 @@ function JobDetails({
               Hủy
             </Button>
             <Button
+              loading={retryMutation.isPending}
               variant="primary"
-              disabled={retryMutation.isPending}
               onClick={() => retryMutation.mutate()}
             >
               {retryMutation.isPending ? 'Đang gửi…' : 'Xác nhận chạy lại'}
@@ -395,7 +406,7 @@ function JobDetails({
   )
 }
 
-function RunJobPanel({
+export function RunJobPanel({
   onClose,
   onCreated,
 }: {
@@ -462,8 +473,8 @@ function RunJobPanel({
 
   return (
     <Card
-      title="Phương thức B: Chạy nạp từ nguồn dữ liệu đã đăng ký"
-      subtitle="Gọi POST /api/v1/ingestion/jobs để thu thập dữ liệu từ nguồn đã cấu hình vào Bronze."
+      title="Chạy nạp từ nguồn dữ liệu đã đăng ký"
+      subtitle="Chọn nguồn, bộ dữ liệu Bronze và bảng hoặc tệp cần nạp."
       right={
         <Button variant="ghost" onClick={onClose} aria-label="Đóng form chạy nạp dữ liệu">
           <X className="size-4" aria-hidden="true" />
@@ -484,11 +495,13 @@ function RunJobPanel({
             <option value="">
               {sources.isPending ? 'Đang tải…' : 'Chọn nguồn đang hoạt động'}
             </option>
-            {sources.data?.items.map((source) => (
-              <option key={source.data_source_id} value={source.data_source_id}>
-                #{source.data_source_id} · {source.source_name} ({source.source_type})
-              </option>
-            ))}
+            {sources.data?.items
+              .filter((source) => source.connection_type !== 'UPLOAD')
+              .map((source) => (
+                <option key={source.data_source_id} value={source.data_source_id}>
+                  #{source.data_source_id} · {source.source_name} ({source.source_type})
+                </option>
+              ))}
           </select>
         </div>
         <div className="space-y-1.5">
@@ -554,9 +567,14 @@ function RunJobPanel({
           <button
             type="submit"
             disabled={run.isPending}
+            aria-busy={run.isPending}
             className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#b91830] px-3 text-xs font-semibold text-white hover:bg-[#9e1429] disabled:opacity-70"
           >
-            <Play className="size-3.5" aria-hidden="true" />
+            {run.isPending ? (
+              <DatabaseLoader compact />
+            ) : (
+              <Play className="size-3.5" aria-hidden="true" />
+            )}
             {run.isPending ? 'Đang gửi…' : 'Chạy nạp dữ liệu'}
           </button>
         </div>
@@ -565,7 +583,7 @@ function RunJobPanel({
   )
 }
 
-function UploadFilePanel({
+export function UploadFilePanel({
   onClose,
   onCreated,
 }: {
@@ -921,9 +939,9 @@ function UploadFilePanel({
 
         <div className="flex justify-end">
           <Button
+            loading={uploadMutation.isPending}
             type="submit"
             variant="primary"
-            disabled={uploadMutation.isPending}
             icon={<Upload className="size-3.5" aria-hidden="true" />}
           >
             {uploadMutation.isPending ? 'Đang tải lên…' : 'Tải lên và tạo job'}
@@ -935,12 +953,12 @@ function UploadFilePanel({
 }
 
 export function IngestionView({ initialJobId }: { initialJobId?: number }) {
-  const [activePanel, setActivePanel] = useState<'none' | 'run' | 'upload'>('none')
   const [selectedJobId, setSelectedJobId] = useState<number | null>(initialJobId ?? null)
   const [statusFilter, setStatusFilter] = useState('')
   const [datasetFilter, setDatasetFilter] = useState('')
   const [sourceFilter, setSourceFilter] = useState('')
   const [mineOnly, setMineOnly] = useState(false)
+  const [runPanelOpen, setRunPanelOpen] = useState(false)
   const [offset, setOffset] = useState(0)
 
   const statsQuery = useQuery({
@@ -1008,53 +1026,36 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
       <PageHeader
         breadcrumb={['Quản trị dữ liệu', 'Nạp dữ liệu']}
         title="Giám sát nạp dữ liệu (Ingestion)"
-        description="Hỗ trợ tải tệp trực tiếp hoặc thu thập từ nguồn đăng ký vào tầng Bronze, theo dõi trạng thái và chạy lại job upload đủ điều kiện."
+        description="Chạy nạp từ nguồn đã đăng ký và theo dõi kết quả lưu vào Bronze."
         actions={
           <>
+            <Button variant="primary" onClick={() => setRunPanelOpen(true)}>
+              Chạy từ nguồn
+            </Button>
+            <Link
+              href="/data/pipeline"
+              className="inline-flex h-9 items-center rounded-lg border border-slate-300 px-3 text-xs font-semibold text-[#a9162e]"
+            >
+              Tiến trình nạp & xử lý dữ liệu
+            </Link>
             <Button
               onClick={() => {
                 void jobs.refetch()
                 void statsQuery.refetch()
                 void metricsQuery.refetch()
               }}
-              disabled={jobs.isFetching}
-              icon={
-                <RefreshCw
-                  className={`size-3.5 ${jobs.isFetching ? 'animate-spin' : ''}`}
-                  aria-hidden="true"
-                />
-              }
+              reading={jobs.isFetching || statsQuery.isFetching || metricsQuery.isFetching}
+              icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
             >
               Làm mới
-            </Button>
-            <Button
-              variant="soft"
-              onClick={() => setActivePanel(activePanel === 'upload' ? 'none' : 'upload')}
-              icon={<Upload className="size-3.5" aria-hidden="true" />}
-            >
-              Tải tệp lên
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => setActivePanel(activePanel === 'run' ? 'none' : 'run')}
-              icon={<Play className="size-3.5" aria-hidden="true" />}
-            >
-              Chạy từ nguồn
             </Button>
           </>
         }
       />
 
-      {activePanel === 'upload' && (
-        <UploadFilePanel
-          onClose={() => setActivePanel('none')}
-          onCreated={(job) => setSelectedJobId(job.ingestion_job_id)}
-        />
-      )}
-
-      {activePanel === 'run' && (
+      {runPanelOpen && (
         <RunJobPanel
-          onClose={() => setActivePanel('none')}
+          onClose={() => setRunPanelOpen(false)}
           onCreated={(job) => setSelectedJobId(job.ingestion_job_id)}
         />
       )}
@@ -1175,18 +1176,19 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
         bodyClassName="p-0"
       >
         {jobs.isPending ? (
-          <LoadingState />
+          <TableSkeleton columns={8} />
         ) : jobs.isError ? (
           <div className="p-4">
             <ErrorState
               message={getApiErrorMessage(jobs.error, 'Không tải được danh sách lần nạp dữ liệu.')}
+              retrying={jobs.isFetching}
               onRetry={() => void jobs.refetch()}
             />
           </div>
         ) : list.length === 0 ? (
           <EmptyState
             title="Chưa có lần nạp dữ liệu nào"
-            description="Hãy tải tệp lên hoặc chạy nạp từ nguồn dữ liệu đã đăng ký."
+            description="Dữ liệu do Staff các phòng ban nạp sẽ hiển thị tại đây để giám sát."
           />
         ) : (
           <>
