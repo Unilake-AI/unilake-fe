@@ -2499,6 +2499,17 @@ export interface components {
       /** Expected Owner Department Id */
       expected_owner_department_id: number | null
     }
+    /** DatasetPage */
+    DatasetPage: {
+      /** Items */
+      items: components['schemas']['ManagerDataset'][]
+      /** Total */
+      total: number
+      /** Limit */
+      limit: number
+      /** Offset */
+      offset: number
+    }
     /**
      * DatasetRead
      * @description Payload trả về metadata của dataset đã đăng ký.

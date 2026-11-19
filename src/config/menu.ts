@@ -11,6 +11,7 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
         { title: 'Người dùng & Phân quyền', href: '/admin', iconName: 'Users' },
         { title: 'Cấu hình hệ thống & AI', href: '/admin/settings', iconName: 'Settings' },
         { title: 'Nhật ký hệ thống', href: '/admin/system-logs', iconName: 'ScrollText' },
+        { title: 'Yêu cầu xử lý lỗi', href: '/admin/quality-issues', iconName: 'FileWarning' },
       ],
     },
   ],

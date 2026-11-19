@@ -103,6 +103,8 @@ const STATUS_MESSAGES: Record<number, string> = {
 }
 
 const API_ERROR_MESSAGES = new Map([
+  ['NOTIFICATIONS_UNAVAILABLE', 'Không thể tải thông báo. Vui lòng thử lại sau.'],
+  ['NOTIFICATION_NOT_FOUND', 'Thông báo không còn nằm trong phạm vi được xem.'],
   [
     'MANAGER_SCOPE_REQUIRED',
     'Vai trò quản lý hoặc cấu hình phòng phụ trách chưa phù hợp. Vui lòng liên hệ quản trị viên.',

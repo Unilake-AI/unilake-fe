@@ -21,12 +21,29 @@ export async function API_CreateSourceSystem(
   return (await http.post<SourceSystemRead>('/source-systems', payload)).data
 }
 
-export async function API_ListDatasetOwnerDepartments(): Promise<
-  { department_id: number; department_code: string; department_name: string }[]
-> {
+export interface OwnerDepartment {
+  department_id: number
+  department_code: string
+  department_name: string
+}
+
+export async function API_OwnerDepartments(): Promise<OwnerDepartment[]> {
+  return (await http.get<OwnerDepartment[]>('/dataset-owner-departments')).data
+}
+
+export async function API_ListDatasetOwnerDepartments(): Promise<OwnerDepartment[]> {
+  return API_OwnerDepartments()
+}
+
+export async function API_SetDatasetOwner(
+  id: number,
+  owner: number,
+  expected: number | null
+): Promise<DatasetItem> {
   return (
-    await http.get<{ department_id: number; department_code: string; department_name: string }[]>(
-      '/dataset-owner-departments'
-    )
+    await http.patch<DatasetItem>(`/datasets/${id}/ownership`, {
+      owner_department_id: owner,
+      expected_owner_department_id: expected,
+    })
   ).data
 }

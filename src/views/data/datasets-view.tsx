@@ -33,6 +33,7 @@ import {
 import { TableSkeleton } from '@/components/ui/table-skeleton'
 
 import { DATA_DOMAINS, domainLabel } from './data-helpers'
+import { DatasetOwner } from './dataset-owner'
 
 const PAGE_SIZE = 20
 
@@ -429,6 +430,7 @@ export function DatasetsView() {
                       'Tên bộ dữ liệu',
                       'Lĩnh vực',
                       'Hệ thống nguồn',
+                      'Phòng sở hữu',
                       'Trạng thái',
                       'Ngày tạo',
                     ].map((heading) => (
@@ -473,6 +475,11 @@ export function DatasetsView() {
                         </td>
                         <td className="px-3 py-2.5 text-slate-600">
                           {sysName ?? (ds.source_system_id ? `#${ds.source_system_id}` : '—')}
+                        </td>
+                        <td className="px-3 py-2.5 text-slate-600">
+                          {ds.owner_department_id
+                            ? `Phòng #${ds.owner_department_id}`
+                            : 'Chưa cấu hình'}
                         </td>
                         <td className="px-3 py-2.5">
                           <Tag tone={statusTone(ds.status)}>{statusLabel(ds.status)}</Tag>
@@ -590,6 +597,12 @@ export function DatasetsView() {
                 </div>
               )}
             </dl>
+          )}
+          {detailQuery.data && (
+            <DatasetOwner
+              key={`${detailQuery.data.dataset_id}-${detailQuery.data.owner_department_id}`}
+              dataset={detailQuery.data}
+            />
           )}
         </Card>
       )}

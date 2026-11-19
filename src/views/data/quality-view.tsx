@@ -149,7 +149,7 @@ function ComparisonPanel({ issueId, runId }: { issueId: string; runId: string })
   )
 }
 
-function IssueDetailPanel({ issueId }: { issueId: string }) {
+export function IssueDetailPanel({ issueId }: { issueId: string }) {
   const queryClient = useQueryClient()
   const [assigneeId, setAssigneeId] = useState('')
   const [selectedRunId, setSelectedRunId] = useState('')
