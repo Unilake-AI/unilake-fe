@@ -7,8 +7,8 @@ import Link from 'next/link'
 import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Filter, Sparkles } from 'lucide-react'
 import {
-  Area,
-  AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
@@ -24,7 +24,12 @@ import {
   API_ManagerIssueStats,
   API_ManagerIssue,
 } from '@/api/manager/reports'
-import type { ManagerContext, AnalyticsFilters, IssueFilters } from '@/api/manager/reports'
+import type {
+  ManagerContext,
+  AnalyticsFilters,
+  IssueFilters,
+  ManagerMetric,
+} from '@/api/manager/reports'
 import { DetailDrawer } from '@/components/page/detail-drawer'
 import {
   Button,
@@ -47,15 +52,63 @@ const departmentCodes: Record<string, string> = { hr: 'PNS', academic: 'PDT', ad
 const size = 20
 const polling = { refetchInterval: 15_000 } as const
 
-const ACADEMIC_TREND = [
-  { period: 'Kỳ 1 23-24', rate: 72 },
-  { period: 'Kỳ 2 23-24', rate: 76 },
-  { period: 'Hè 23-24', rate: 74 },
-  { period: 'Kỳ 1 24-25', rate: 82 },
-  { period: 'Kỳ 2 24-25', rate: 80 },
-  { period: 'Kỳ 1 25-26', rate: 89 },
-  { period: 'Kỳ 2 25-26', rate: 86.5 },
-]
+const roleToDomain: Record<string, Domain> = {
+  HR_MANAGER: 'hr',
+  ACADEMIC_MANAGER: 'academic',
+  ADMISSIONS_MANAGER: 'admissions',
+}
+
+interface DomainKpiConfig {
+  label: string
+  entity: string
+  unit: string
+  secondaryEntity?: string
+}
+
+const DOMAIN_KPIS: Record<Domain, DomainKpiConfig[]> = {
+  hr: [
+    { label: 'Nhân sự', entity: 'employee', unit: 'nhân sự' },
+    { label: 'Phòng ban', entity: 'department', unit: 'đơn vị' },
+    { label: 'Phân công', entity: 'assignment', unit: 'lượt' },
+    { label: 'Giảng viên', entity: 'lecturer', unit: 'giảng viên', secondaryEntity: 'position' },
+  ],
+  academic: [
+    { label: 'Sinh viên', entity: 'student', unit: 'sinh viên' },
+    { label: 'Lớp học', entity: 'class', unit: 'lớp' },
+    { label: 'Đăng ký học', entity: 'enrollment', unit: 'lượt', secondaryEntity: 'enrollment_grade' },
+    { label: 'Học phần', entity: 'course', unit: 'học phần' },
+  ],
+  admissions: [
+    { label: 'Hồ sơ tuyển sinh', entity: 'admission', unit: 'hồ sơ', secondaryEntity: 'applicant' },
+    { label: 'Phương thức', entity: 'admission_method', unit: 'phương thức' },
+    { label: 'Ngành xét tuyển', entity: 'major', unit: 'ngành' },
+    { label: 'Đợt tuyển sinh', entity: 'admission_year', unit: 'đợt' },
+  ],
+}
+
+function getKpiValue(
+  items: ManagerMetric[],
+  config: DomainKpiConfig,
+  isPending: boolean
+): string {
+  if (isPending) return '—'
+  const matching = items.filter(
+    (m) =>
+      m.entity === config.entity ||
+      (config.secondaryEntity && m.entity === config.secondaryEntity)
+  )
+  if (matching.length > 0) {
+    const total = matching.reduce((sum, m) => sum + (Number(m.value) || 0), 0)
+    return number(total)
+  }
+  return '—'
+}
+
+const aiQuestions: Record<Domain, string> = {
+  hr: 'Phân tích cơ cấu và biến động nhân sự hiện tại',
+  academic: 'Phân tích kết quả học tập và tiến độ sinh viên',
+  admissions: 'Phân tích tình hình hồ sơ tuyển sinh đợt này',
+}
 
 export function ManagerReportsView({ mode = 'overview' }: { mode?: Mode }) {
   return (
@@ -72,14 +125,20 @@ export function ManagerReportsView({ mode = 'overview' }: { mode?: Mode }) {
 }
 
 function ManagerWorkspace({ context, mode }: { context: ManagerContext; mode: Mode }) {
-  const available = context.domains.filter((domain) =>
-    context.departments.some(
-      (department) => department.department_code === departmentCodes[domain.domain]
-    )
+  const roleDomains = context.roles.map((r) => roleToDomain[r]).filter(Boolean) as Domain[]
+  const available = context.domains.filter(
+    (domain) =>
+      roleDomains.includes(domain.domain as Domain) ||
+      context.departments.some(
+        (department) => department.department_code === departmentCodes[domain.domain]
+      )
   )
   const initial =
-    available.find((domain) => domain.domain === context.default_domain) ?? available[0]
-  const [domain, setDomain] = useState<Domain>((initial?.domain ?? 'hr') as Domain)
+    available.find((d) => roleDomains.includes(d.domain as Domain)) ??
+    available.find((d) => d.domain === context.default_domain) ??
+    available[0] ??
+    context.domains[0]
+  const [domain, setDomain] = useState<Domain>((initial?.domain ?? roleDomains[0] ?? 'hr') as Domain)
   const client = useQueryClient()
   const refreshing = useIsFetching({ queryKey: ['manager'] }) > 0
 
@@ -92,7 +151,7 @@ function ManagerWorkspace({ context, mode }: { context: ManagerContext; mode: Mo
 
   const pageSubtitle =
     mode === 'overview'
-      ? 'Năm học 2026–2027 · Học kỳ 1'
+      ? `${label(domain)} · Báo cáo tổng hợp số liệu trong phạm vi phòng phụ trách.`
       : 'Màn hình này chủ yếu để Manager giám sát tiến độ xử lý.'
 
   return (
@@ -168,88 +227,47 @@ function Overview({ domain, userId }: { domain: Domain; userId: number }) {
 
   return (
     <div className="space-y-6">
-      {/* 4 KPI Cards in 2x2 Grid */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5 transition-shadow hover:shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            {domain === 'academic' ? 'Sinh viên' : domain === 'hr' ? 'Nhân sự' : 'Hồ sơ tuyển sinh'}
-          </p>
-          <p className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-slate-900 sm:text-3xl">
-            {isPending ? '—' : domain === 'academic' ? '2.450' : domain === 'hr' ? '200' : '3.250'}
-          </p>
-        </div>
+      {/* 4 KPI Cards đặc thù theo từng phòng ban / role */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {DOMAIN_KPIS[domain].map((kpi) => (
+          <div
+            key={kpi.label}
+            className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-shadow hover:shadow-sm"
+          >
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              {kpi.label}
+            </p>
+            <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl tabular-nums">
+              {(() => {
+                const val = getKpiValue(data.kpis.items, kpi, isPending)
+                return val === '—' ? '—' : `${val} ${kpi.unit}`
+              })()}
+            </p>
+          </div>
+        ))}
+      </div>
 
-        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5 transition-shadow hover:shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            {domain === 'academic' ? 'Lớp học' : domain === 'hr' ? 'Phòng ban' : 'Trúng tuyển'}
-          </p>
-          <p className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-slate-900 sm:text-3xl">
-            {isPending ? '—' : domain === 'academic' ? '320' : domain === 'hr' ? '4' : '1.820'}
-          </p>
+      {/* Thông tin vận hành dữ liệu phòng ban */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 rounded-xl border border-slate-200/80 bg-white p-4 text-xs shadow-xs">
+        <div>
+          <span className="text-slate-500">Bộ dữ liệu quản lý:</span>{' '}
+          <span className="font-semibold text-slate-800 tabular-nums">{isPending ? '—' : number(data.datasets)}</span>
         </div>
-
-        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5 transition-shadow hover:shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            {domain === 'academic' ? 'Tỷ lệ đạt' : domain === 'hr' ? 'Phân công' : 'Nhập học'}
-          </p>
-          <p className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-slate-900 sm:text-3xl">
-            {isPending ? '—' : domain === 'academic' ? '87,5%' : domain === 'hr' ? '200' : '1.650'}
-          </p>
+        <div>
+          <span className="text-slate-500">Yêu cầu cần xử lý:</span>{' '}
+          <span className="font-semibold text-amber-600 tabular-nums">{isPending ? '—' : number(data.issues.assigned)}</span>
         </div>
-
-        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5 transition-shadow hover:shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            {domain === 'academic' ? 'Môn học' : domain === 'hr' ? 'Giảng viên' : 'Tỷ lệ nhập học'}
-          </p>
-          <p className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-slate-900 sm:text-3xl">
-            {isPending ? '—' : domain === 'academic' ? '156' : domain === 'hr' ? '100' : '90,6%'}
-          </p>
+        <div>
+          <span className="text-slate-500">Chờ xác minh:</span>{' '}
+          <span className="font-semibold text-blue-600 tabular-nums">{isPending ? '—' : number(data.issues.pending_verification)}</span>
+        </div>
+        <div>
+          <span className="text-slate-500">Đã hoàn thành:</span>{' '}
+          <span className="font-semibold text-emerald-600 tabular-nums">{isPending ? '—' : number(data.issues.verified)}</span>
         </div>
       </div>
 
-      {/* Main Trend Chart Card */}
-      <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-slate-900">Xu hướng tỷ lệ đạt môn học</h3>
-          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
-            Học kỳ gần nhất: 86,5%
-          </span>
-        </div>
-        <div className="h-64 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={ACADEMIC_TREND} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="rateGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#0d9488" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-              <XAxis dataKey="period" stroke="#cbd5e1" tick={{ fill: '#64748b', fontSize: 11 }} />
-              <YAxis stroke="#cbd5e1" tick={{ fill: '#64748b', fontSize: 11 }} domain={[60, 100]} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#ffffff',
-                  borderColor: '#e2e8f0',
-                  color: '#0f172a',
-                  borderRadius: '0.5rem',
-                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                }}
-                formatter={(val) => [`${String(val ?? 0)}%`, 'Tỷ lệ đạt']}
-              />
-              <Area
-                type="monotone"
-                dataKey="rate"
-                stroke="#0d9488"
-                strokeWidth={3}
-                fillOpacity={1}
-                fill="url(#rateGradient)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-        <p className="mt-3 text-xs text-slate-400">Minh họa dữ liệu, không phải KPI thực tế</p>
-      </div>
+      <Analytics domain={domain} userId={userId} />
 
       {/* Deep-dive AI Callout */}
       <div className="shadow-xs flex flex-col items-start justify-between gap-3 rounded-xl border border-rose-100 bg-gradient-to-r from-rose-50/70 via-white to-white p-4 transition-colors hover:border-rose-200 sm:flex-row sm:items-center">
@@ -260,10 +278,10 @@ function Overview({ domain, userId }: { domain: Domain; userId: number }) {
           <span className="text-sm font-semibold text-slate-900">Phân tích sâu hơn với AI</span>
         </div>
         <Link
-          href={`/manager/ask?q=${encodeURIComponent('Tại sao tỷ lệ đạt học kỳ này giảm?')}`}
-          className="flex items-center gap-1.5 text-xs font-medium text-primary transition-colors hover:underline sm:text-sm"
+          href={`/manager/ask?q=${encodeURIComponent(aiQuestions[domain])}`}
+          className="text-xs sm:text-sm font-medium text-primary hover:underline transition-colors flex items-center gap-1.5"
         >
-          <span>Tại sao tỷ lệ đạt học kỳ này giảm?</span>
+          <span>{aiQuestions[domain]}</span>
           <span aria-hidden="true">→</span>
         </Link>
       </div>
@@ -301,8 +319,6 @@ function Overview({ domain, userId }: { domain: Domain; userId: number }) {
         <MetricList items={data.kpis.items} />
         <Paging page={page} setPage={setPage} total={data.kpis.total} />
       </Card>
-
-      <Analytics domain={domain} userId={userId} />
     </div>
   )
 }
@@ -360,8 +376,40 @@ function Analytics({ domain, userId }: { domain: Domain; userId: number }) {
           description="Báo cáo phân nhóm sẽ hiển thị khi pipeline tổng hợp xong dữ liệu tương ứng."
         />
       ) : (
-        <div className="space-y-4">
-          {query.data.items.map((item) => {
+        <div className="space-y-6">
+          {query.data.items.length > 1 && (
+            <div className="h-64 w-full pt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={query.data.items.map((item, idx) => {
+                    const dim = Object.entries(item.dimensions)[0]
+                    return {
+                      name: dim ? `${label(dim[0])}: ${label(String(dim[1]))}` : `Nhóm #${idx + 1}`,
+                      value: item.value,
+                    }
+                  })}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                  <XAxis dataKey="name" stroke="#cbd5e1" tick={{ fill: '#64748b', fontSize: 11 }} />
+                  <YAxis stroke="#cbd5e1" tick={{ fill: '#64748b', fontSize: 11 }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#ffffff',
+                      borderColor: '#e2e8f0',
+                      borderRadius: '0.5rem',
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                    }}
+                    formatter={(val) => [number(Number(val)), 'Số bản ghi']}
+                  />
+                  <Bar dataKey="value" fill="#ba1a3a" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {query.data.items.map((item) => {
             const max = Math.max(...query.data.items.map((m) => m.value), 1)
             const dim = Object.entries(item.dimensions)[0]
             const dimLabel = dim ? `${label(dim[0])}: ${label(String(dim[1]))}` : 'Khác'
@@ -388,6 +436,7 @@ function Analytics({ domain, userId }: { domain: Domain; userId: number }) {
               </div>
             )
           })}
+          </div>
           <p className="text-xs text-slate-500">
             Thanh biểu diễn tương đối giữa các nhóm cùng nguồn trong trang hiện tại; không cộng các
             nguồn thành số người duy nhất.
@@ -446,10 +495,10 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
 
   return (
     <div className="space-y-6">
-      {/* 4 Summary Stats theo GET /manager/issues/stats */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5">
-          <p className="text-2xl font-bold tabular-nums tracking-tight text-slate-900 sm:text-3xl">
+      {/* 4 Summary Stats */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs">
+          <p className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl tabular-nums">
             {number(totalCount)}
           </p>
           <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -482,8 +531,8 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
         </div>
       </div>
 
-      {/* Issues Card */}
-      <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5">
+      {/* Issues Card (Image 4) */}
+      <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div className="flex items-center gap-2">
             <h2 className="text-base font-semibold text-slate-900">Danh sách yêu cầu</h2>
@@ -541,11 +590,8 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
           />
         ) : (
           <>
-            {query.data.length === 0 ? (
-              <EmptyState
-                title="Không có yêu cầu xử lý dữ liệu lỗi"
-                description="Hiện chưa có yêu cầu nào khớp bộ lọc trong phạm vi phòng ban của bạn."
-              />
+            {query.data.length === 0 && status !== '' ? (
+              <EmptyState title="Không có yêu cầu phù hợp" />
             ) : (
               <div className="divide-y divide-slate-100">
                 {query.data.map((item) => (
@@ -556,10 +602,7 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
                     <div>
                       <p className="text-sm font-semibold text-slate-900">{item.title}</p>
                       <p className="mt-1 text-xs text-slate-500">
-                        {item.department_name ?? label(domain)}
-                        {item.assignee_user_id != null
-                          ? ` · Nhân viên phụ trách #${item.assignee_user_id}`
-                          : ' · Chưa phân công'}
+                        {item.department_name ?? 'Nhân viên đào tạo'}
                       </p>
                     </div>
 
@@ -574,11 +617,7 @@ function Issues({ domain, userId }: { domain: Domain; userId: number }) {
                               : 'border border-slate-200 bg-slate-100 text-slate-700'
                         )}
                       >
-                        {item.status === 'VERIFIED'
-                          ? 'Đã xác minh'
-                          : item.status === 'PENDING_VERIFICATION'
-                            ? 'Chờ xác minh'
-                            : 'Đang xử lý'}
+                        {label(item.status)}
                       </span>
                       <Button
                         onClick={() => setSelected(item.issue_id)}
