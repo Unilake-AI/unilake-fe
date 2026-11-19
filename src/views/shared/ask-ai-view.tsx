@@ -7,12 +7,20 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 import { useMutation } from '@tanstack/react-query'
-import { Check, CircleAlert, Copy, MessageSquare, SearchX, Send, Sparkles } from 'lucide-react'
+import {
+  ArrowUpRight,
+  Check,
+  CircleAlert,
+  Copy,
+  History,
+  SearchX,
+  Send,
+  SquarePen,
+} from 'lucide-react'
 
 import { getApiErrorMessage } from '@/api/http'
 import { API_AskNlq } from '@/api/shared/nlq'
-import { Card, EmptyState, LoadingState, PageHeader, Tag } from '@/components/page/page-parts'
-import { getDomain } from '@/config/domains'
+import { LoadingState } from '@/components/page/page-parts'
 import { useDomain } from '@/hooks/use-domain'
 import { addQueryHistory, readQueryHistory } from '@/lib/query-history'
 import type { DomainCode } from '@/types/domains'
@@ -40,9 +48,21 @@ const SUGGESTIONS: Record<DomainCode, string[]> = {
 }
 
 const STAFF_SUGGESTIONS = {
-  hr: ['Thống kê tổng số nhân sự đang công tác hiện tại'],
-  academic: ['Tổng số sinh viên theo từng bộ dữ liệu'],
-  admissions: ['Tổng số hồ sơ tuyển sinh theo từng bộ dữ liệu'],
+  hr: [
+    'Thống kê tổng số nhân sự đang công tác hiện tại',
+    'Số nhân sự theo từng phòng ban?',
+    'Cơ cấu nhân sự theo trạng thái làm việc?',
+  ],
+  academic: [
+    'Tổng số sinh viên theo từng bộ dữ liệu',
+    'Số sinh viên theo chương trình đào tạo?',
+    'Số sinh viên theo trạng thái học tập?',
+  ],
+  admissions: [
+    'Tổng số hồ sơ tuyển sinh theo từng bộ dữ liệu',
+    'Số hồ sơ theo phương thức xét tuyển?',
+    'Số hồ sơ theo trạng thái tuyển sinh?',
+  ],
 }
 
 function formatCell(value: unknown): string {
@@ -64,9 +84,9 @@ function formatCell(value: unknown): string {
 function ResultTable({ rows }: { rows: Record<string, unknown>[] }) {
   const columns = Object.keys(rows[0] ?? {})
   return (
-    <div className="overflow-x-auto rounded-md border border-slate-200">
+    <div className="max-h-96 overflow-auto rounded-lg border border-slate-200">
       <table className="w-full text-left text-xs">
-        <thead className="bg-slate-50 font-mono text-[10px] uppercase tracking-wider text-slate-500">
+        <thead className="sticky top-0 bg-slate-50 font-mono text-[10px] uppercase tracking-wider text-slate-500">
           <tr>
             {columns.map((column) => (
               <th key={column} scope="col" className="px-3 py-2 font-medium">
@@ -145,10 +165,19 @@ export function AskAiView({
   const [turns, setTurns] = useState<NlqConversationTurn[]>([])
   const [historyEntries, setHistoryEntries] = useState<QueryHistoryEntry[]>([])
   const nextId = useRef(1)
+  const composerRef = useRef<HTMLTextAreaElement>(null)
+  const latestTurnRef = useRef<HTMLElement>(null)
+  const latestTurnId = turns.at(-1)?.id
 
   useEffect(() => {
     setHistoryEntries(readQueryHistory())
   }, [])
+
+  useEffect(() => {
+    if (latestTurnId !== undefined) {
+      latestTurnRef.current?.scrollIntoView?.({ block: 'nearest' })
+    }
+  }, [latestTurnId])
 
   const ask = useMutation({
     meta: { readOnly: true },
@@ -202,6 +231,7 @@ export function AskAiView({
     const id = nextId.current++
     setTurns((prev) => [...prev, { id, question: trimmed, state: 'processing' }])
     setQuestion('')
+    composerRef.current?.focus({ preventScroll: true })
     ask.mutate({ id, text: trimmed })
   }
 
@@ -211,197 +241,249 @@ export function AskAiView({
   }
 
   return (
-    <div className="space-y-5">
-      <PageHeader
-        breadcrumb={[getDomain(domain.code).shortLabel, 'Hỏi AI']}
-        title="Hỏi UniLake AI"
-        description={
-          workspace === 'STAFF'
-            ? 'Tra cứu số liệu Gold đã công bố của phòng ban. Chọn câu hỏi gợi ý để xem các thống kê đang hỗ trợ.'
-            : 'Đặt câu hỏi bằng tiếng Việt trong phạm vi dữ liệu được cấp quyền.'
-        }
-      />
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_15rem] xl:grid-cols-[minmax(0,1fr)_17rem]">
+      <section className="relative isolate flex min-h-[calc(100dvh-var(--workspace-header-height)-2.75rem)] min-w-0 flex-col rounded-2xl border bg-card">
+        {turns.length === 0 && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-full rounded-[inherit] bg-[radial-gradient(ellipse_at_50%_35%,#fff2e5_0%,#fff6f7_30%,transparent_68%)]"
+          />
+        )}
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 px-4 py-3 sm:px-6">
+          <div>
+            <h1 className="font-semibold text-foreground">Hỏi UniLake AI</h1>
+            <p className="text-xs text-muted-foreground">{domain.shortLabel}</p>
+          </div>
+        </header>
 
-      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_310px]">
-        <div className="space-y-5">
-          <Card
-            title={
-              <span className="flex items-center gap-2">
-                <Sparkles className="size-5 text-primary" />
-                Gợi ý câu hỏi thường gặp
-              </span>
-            }
+        {turns.length === 0 && (
+          <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-end px-4 pb-5 pt-10 sm:px-8 sm:pb-7 sm:pt-14">
+            <Image
+              src={logo}
+              alt=""
+              width={104}
+              height={104}
+              className="size-20 object-contain sm:size-[104px]"
+            />
+            <h2 className="mt-3 text-center text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              {domain.code === 'all'
+                ? 'Bạn muốn hỏi gì về dữ liệu?'
+                : `Bạn muốn hỏi gì về ${domain.shortLabel}?`}
+            </h2>
+            <p className="mt-2 max-w-md text-center text-sm leading-relaxed text-muted-foreground">
+              {workspace === 'STAFF'
+                ? 'Tra cứu số liệu Gold đã công bố trong phạm vi phòng ban.'
+                : 'Đặt câu hỏi bằng tiếng Việt trong phạm vi dữ liệu được cấp quyền.'}
+            </p>
+            {suggestions.length > 0 && (
+              <ul aria-label="Câu hỏi gợi ý" className="mt-5 flex flex-wrap justify-center gap-2">
+                {suggestions.map((item) => (
+                  <li key={item} className="max-w-full">
+                    <button
+                      type="button"
+                      onClick={() => send(item)}
+                      className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-xl border border-rose-100 bg-white/90 px-3 py-2 text-left text-sm font-medium text-foreground shadow-sm transition-colors hover:border-primary/30 hover:bg-rose-50"
+                    >
+                      <span>{item}</span>
+                      <ArrowUpRight className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {turns.length > 0 && (
+          <div
+            role="log"
+            aria-label="Cuộc hội thoại"
+            className="mx-auto w-full max-w-4xl flex-1 space-y-7 px-4 py-6 sm:px-8"
           >
-            <div className="grid gap-3 sm:grid-cols-2">
-              {suggestions.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  disabled={ask.isPending}
-                  onClick={() => send(item)}
-                  className="min-h-10 rounded-md border bg-card px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-muted disabled:opacity-60"
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          </Card>
+            {turns.map((turn) => (
+              <article
+                key={turn.id}
+                ref={turn.id === latestTurnId ? latestTurnRef : null}
+                className="scroll-mt-20 space-y-4"
+              >
+                <div className="flex justify-end">
+                  <p className="max-w-[88%] whitespace-pre-wrap rounded-2xl rounded-br-sm bg-sidebar px-4 py-2.5 text-sm leading-relaxed text-white">
+                    {turn.question}
+                  </p>
+                </div>
 
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <Image
+                    src={logo}
+                    alt=""
+                    width={32}
+                    height={32}
+                    className="mt-0.5 size-8 shrink-0 object-contain"
+                  />
+                  <div className="min-w-0 flex-1 space-y-3 rounded-2xl rounded-tl-sm border bg-card p-3 sm:p-4">
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                      <h2 className="text-sm font-semibold text-foreground">UniLake AI</h2>
+                      {turn.durationMs != null && (
+                        <span className="text-xs text-muted-foreground">
+                          Trả lời trong {turn.durationMs.toLocaleString('vi-VN')} ms
+                        </span>
+                      )}
+                    </div>
+                    {turn.state === 'processing' && (
+                      <LoadingState label="Đang tìm dữ liệu để trả lời câu hỏi của bạn…" />
+                    )}
+                    {turn.state === 'error' && (
+                      <div className="space-y-2">
+                        <p className="flex items-start gap-2 text-sm font-medium text-rose-700">
+                          <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                          {turn.error}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => send(turn.question)}
+                          disabled={ask.isPending}
+                          className="text-sm font-semibold text-primary hover:underline disabled:opacity-60"
+                        >
+                          Thử lại
+                        </button>
+                      </div>
+                    )}
+                    {turn.state === 'done' && turn.result && (
+                      <>
+                        {turn.result.answer && (
+                          <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+                            {turn.result.answer}
+                          </p>
+                        )}
+                        {turn.result.rows.length ? (
+                          <>
+                            <p className="text-sm text-slate-700">
+                              Tìm thấy {turn.result.rows.length.toLocaleString('vi-VN')} dòng kết
+                              quả.
+                            </p>
+                            <ResultTable rows={turn.result.rows} />
+                          </>
+                        ) : (
+                          !turn.result.answer && (
+                            <p className="flex items-start gap-2 text-sm text-slate-600">
+                              <SearchX
+                                className="mt-0.5 size-4 shrink-0 text-slate-400"
+                                aria-hidden="true"
+                              />
+                              Không tìm thấy dữ liệu phù hợp. Hãy thử đổi khoảng thời gian hoặc nhóm
+                              dữ liệu.
+                            </p>
+                          )
+                        )}
+                        {turn.result.sql && (
+                          <details>
+                            <summary className="cursor-pointer text-sm text-muted-foreground">
+                              Chi tiết truy vấn
+                            </summary>
+                            <SqlBlock sql={turn.result.sql} />
+                          </details>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+
+        <div
+          className={
+            turns.length === 0
+              ? 'mx-auto w-full max-w-3xl flex-1 px-4 pb-8 sm:px-8 sm:pb-12'
+              : 'sticky bottom-0 z-10 rounded-b-2xl border-t bg-card px-4 py-3 sm:px-8'
+          }
+        >
           <form
             onSubmit={onSubmit}
-            className="flex flex-wrap gap-2 rounded-lg border bg-card p-2 focus-within:border-ring"
+            className="mx-auto flex w-full max-w-3xl items-end gap-2 rounded-2xl border bg-card p-2 shadow-sm focus-within:border-primary/50"
           >
             <label htmlFor="ask-input" className="sr-only">
               Câu hỏi về dữ liệu
             </label>
-            <Sparkles className="ml-2 mt-3 size-5 shrink-0 text-primary" />
-            <input
+            <textarea
+              ref={composerRef}
               id="ask-input"
-              className="h-10 min-w-0 flex-1 rounded-md px-2 text-sm focus-visible:outline-none"
-              placeholder={`Nhập câu hỏi về dữ liệu ${domain.code === 'all' ? 'Tuyển sinh, Đào tạo hoặc Nhân sự' : domain.shortLabel}…`}
+              rows={2}
+              className="min-w-0 flex-1 resize-none rounded-lg bg-transparent p-2 text-sm leading-5 text-foreground placeholder:text-muted-foreground focus-visible:outline-none"
+              placeholder="Nhập câu hỏi về dữ liệu…"
               value={question}
               maxLength={500}
               onChange={(event) => setQuestion(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+                  event.preventDefault()
+                  event.currentTarget.form?.requestSubmit()
+                }
+              }}
             />
             <button
               type="submit"
               disabled={ask.isPending || !question.trim()}
               aria-busy={ask.isPending}
-              className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+              className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl bg-primary px-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+              aria-label="Gửi câu hỏi"
             >
               <Send className="size-4" aria-hidden="true" />
-              Gửi câu hỏi
+              <span className="hidden sm:inline">Gửi</span>
             </button>
           </form>
-
-          {turns.length === 0 && (
-            <EmptyState
-              title="Hãy thử đặt câu hỏi đầu tiên"
-              description={`Bạn có thể hỏi về số liệu, thống kê hoặc so sánh trong phân hệ ${domain.shortLabel}.`}
-            />
-          )}
-
-          <div className="space-y-4" aria-live="polite">
-            {turns.map((turn) => (
-              <div key={turn.id} className="space-y-2">
-                <div className="flex justify-end">
-                  <p className="max-w-[80%] rounded-lg bg-sidebar px-3 py-2 text-sm text-white">
-                    {turn.question}
-                  </p>
-                </div>
-                <Card
-                  title={
-                    <span className="flex items-center gap-2">
-                      <Image src={logo} alt="" width={24} height={24} />
-                      UniLake AI
-                    </span>
-                  }
-                  subtitle={
-                    turn.durationMs != null
-                      ? `Trả lời trong ${turn.durationMs.toLocaleString('vi-VN')} ms`
-                      : undefined
-                  }
-                  right={
-                    turn.state === 'processing' ? (
-                      <Tag tone="amber">Đang tìm câu trả lời</Tag>
-                    ) : turn.state === 'error' ? (
-                      <Tag tone="rose">Chưa trả lời được</Tag>
-                    ) : turn.result?.rows.length ? (
-                      <Tag tone="emerald">Đã có kết quả</Tag>
-                    ) : (
-                      <Tag tone="slate">Không có kết quả</Tag>
-                    )
-                  }
-                  bodyClassName="space-y-3"
-                >
-                  {turn.state === 'processing' && (
-                    <LoadingState label="Đang tìm dữ liệu để trả lời câu hỏi của bạn…" />
-                  )}
-                  {turn.state === 'error' && (
-                    <div className="space-y-2">
-                      <p className="flex items-center gap-2 text-sm font-medium text-rose-700">
-                        <CircleAlert className="size-4" aria-hidden="true" />
-                        {turn.error}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => send(turn.question)}
-                        disabled={ask.isPending}
-                        className="text-xs font-semibold text-primary hover:underline disabled:opacity-60"
-                      >
-                        Thử lại
-                      </button>
-                    </div>
-                  )}
-                  {turn.state === 'done' && turn.result && (
-                    <>
-                      {turn.result.answer && (
-                        <p className="text-sm text-slate-700">{turn.result.answer}</p>
-                      )}
-                      {turn.result.rows.length ? (
-                        <>
-                          <p className="text-sm text-slate-700">
-                            Tìm thấy {turn.result.rows.length.toLocaleString('vi-VN')} dòng kết quả.
-                          </p>
-                          <ResultTable rows={turn.result.rows} />
-                        </>
-                      ) : !turn.result.answer ? (
-                        <p className="flex items-center gap-2 text-sm text-slate-600">
-                          <SearchX className="size-4 text-slate-400" aria-hidden="true" />
-                          Không tìm thấy dữ liệu phù hợp. Hãy thử hỏi về một khoảng thời gian hoặc
-                          nhóm ngành rộng hơn.
-                        </p>
-                      ) : null}
-                      {turn.result.sql && (
-                        <details>
-                          <summary className="cursor-pointer text-xs text-slate-500">
-                            Chi tiết truy vấn
-                          </summary>
-                          <SqlBlock sql={turn.result.sql} />
-                        </details>
-                      )}
-                    </>
-                  )}
-                </Card>
-              </div>
-            ))}
-          </div>
         </div>
-        <Card
-          title={
-            <span className="flex items-center gap-2">
-              <MessageSquare className="size-5 text-[#5146e7]" />
-              Lịch sử truy vấn gần đây
-            </span>
-          }
-          right={
-            historyHref ? (
-              <Link href={historyHref} className="text-xs font-semibold text-indigo-700">
-                Xem tất cả
-              </Link>
-            ) : undefined
-          }
+      </section>
+      <aside
+        aria-label="Điều khiển và lịch sử chat"
+        className="flex max-h-80 min-w-0 flex-col rounded-2xl border bg-card p-3 lg:sticky lg:top-[calc(var(--workspace-header-height)+1.25rem)] lg:max-h-[calc(100dvh-var(--workspace-header-height)-2.75rem)] lg:self-start"
+      >
+        <button
+          type="button"
+          disabled={ask.isPending}
+          onClick={() => {
+            setTurns([])
+            setQuestion('')
+            composerRef.current?.focus()
+          }}
+          className="flex min-h-10 shrink-0 items-center gap-2 rounded-xl bg-primary/10 px-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/20 disabled:opacity-60"
         >
-          {historyEntries.length === 0 ? (
-            <p className="py-8 text-center text-sm text-[#65718d]">
-              Chưa có câu hỏi nào được lưu trên trình duyệt này.
-            </p>
+          <SquarePen className="size-4" aria-hidden="true" />
+          Chat mới
+        </button>
+        <h2 className="mb-1 mt-4 flex shrink-0 items-center gap-2 px-3 text-xs font-semibold text-muted-foreground">
+          <History className="size-3.5" aria-hidden="true" />
+          {historyHref ? (
+            <Link href={historyHref} className="hover:text-primary hover:underline">
+              Lịch sử
+            </Link>
           ) : (
-            <ul className="divide-y divide-[#e5e9f3]">
-              {historyEntries.slice(0, 5).map((entry) => (
-                <li key={entry.id} className="py-3">
-                  <p className="line-clamp-2 text-sm font-medium text-[#17233d]">
-                    {entry.question}
-                  </p>
-                  <time className="mt-1 block text-xs text-[#65718d]">
-                    {new Date(entry.askedAt).toLocaleString('vi-VN')}
-                  </time>
-                </li>
-              ))}
-            </ul>
+            'Lịch sử'
           )}
-        </Card>
-      </div>
+        </h2>
+        {historyEntries.length === 0 ? (
+          <p className="px-3 pb-2 pt-1 text-sm text-muted-foreground">Chưa có câu hỏi nào.</p>
+        ) : (
+          <ul aria-label="Câu hỏi đã lưu" className="min-h-0 space-y-1 overflow-y-auto">
+            {historyEntries.map((entry) => (
+              <li key={entry.id}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuestion(entry.question)
+                    composerRef.current?.focus()
+                  }}
+                  title={entry.question}
+                  className="block w-full truncate rounded-lg px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted"
+                >
+                  {entry.question}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </aside>
     </div>
   )
 }

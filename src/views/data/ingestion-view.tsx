@@ -957,7 +957,6 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
   const [statusFilter, setStatusFilter] = useState('')
   const [datasetFilter, setDatasetFilter] = useState('')
   const [sourceFilter, setSourceFilter] = useState('')
-  const [mineOnly, setMineOnly] = useState(false)
   const [runPanelOpen, setRunPanelOpen] = useState(false)
   const [offset, setOffset] = useState(0)
 
@@ -994,7 +993,6 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
         status: statusFilter || undefined,
         dataset_id: datasetFilter ? Number(datasetFilter) : undefined,
         data_source_id: sourceFilter ? Number(sourceFilter) : undefined,
-        mine_only: mineOnly,
       },
     ],
     queryFn: () =>
@@ -1004,7 +1002,6 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
         status: (statusFilter as IngestionJobStatusFilter) || undefined,
         dataset_id: datasetFilter ? Number(datasetFilter) : undefined,
         data_source_id: sourceFilter ? Number(sourceFilter) : undefined,
-        mine_only: mineOnly || undefined,
       }),
     refetchInterval: (query) =>
       query.state.data?.some((job) => isJobActive(job.status)) ? POLL_INTERVAL_MS : false,
@@ -1155,18 +1152,7 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
               ))}
             </select>
           </div>
-          <label className="flex h-9 cursor-pointer items-center gap-2 rounded-md border border-slate-300 bg-white px-3 font-medium text-slate-700">
-            <input
-              type="checkbox"
-              checked={mineOnly}
-              onChange={(e) => {
-                setMineOnly(e.target.checked)
-                setOffset(0)
-              }}
-              className="size-4 accent-[#b91830]"
-            />
-            Chỉ lần nạp của tôi
-          </label>
+
         </div>
       </Card>
 

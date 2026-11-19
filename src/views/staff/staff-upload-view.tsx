@@ -3,42 +3,31 @@
 import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 
-import Image from 'next/image'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  CircleAlert,
-  Clock,
-  FileSpreadsheet,
-  History,
-  Search,
-  Upload,
-} from 'lucide-react'
+import { CheckCircle2, CircleAlert, Clock, FileUp, History, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { getApiErrorMessage, getErrorMessageForCode } from '@/api/http'
 import { API_ListDatasets } from '@/api/shared/datasets'
 import { API_GetIngestionJob } from '@/api/shared/ingestion'
 import { API_UploadIngestion } from '@/api/staff/upload'
-import emptySearch from '@/assets/dashboard/empty-search.webp'
 import {
   Button,
   Card,
   EmptyState,
   ErrorState,
-  LoadingState,
-  PageHeader,
   Tag,
   formatDateTime,
   formatNumber,
   statusLabel,
   statusTone,
 } from '@/components/page/page-parts'
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ASK_AI_PATHS } from '@/config/menu'
 import type { DatasetItem } from '@/types/datasets'
 import type { IngestionJob } from '@/types/ingestion'
 import type { StaffContext } from '@/types/staff-context'
@@ -61,7 +50,9 @@ import {
   isValidUploadFilename,
 } from './staff-helpers'
 
-const DATASET_PAGE_SIZE = 20
+const DATASET_PAGE_SIZE = 100
+const uploadDialogTiming =
+  'data-[state=open]:duration-300 data-[state=closed]:duration-75 motion-reduce:data-[state=open]:animate-none motion-reduce:data-[state=closed]:animate-none'
 
 const inputClass =
   'h-10 w-full rounded-lg border border-[#cbd4e3] bg-white px-3 text-sm text-[#17233d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6761ed]/30 disabled:bg-slate-50 disabled:text-slate-500'
@@ -211,14 +202,8 @@ function JobTrackerCard({ jobId, initialJob }: { jobId: number; initialJob: Inge
 function UploadContent({ context }: { context: StaffContext }) {
   const queryClient = useQueryClient()
   const hasMultipleDomains = context.domains.length > 1 || context.default_domain == null
-  const singleDomain = context.default_domain ?? context.domains[0]?.domain ?? null
-
-  // Existing dataset search & pagination
-  const [searchInput, setSearchInput] = useState('')
-  const [appliedSearch, setAppliedSearch] = useState('')
-  const [datasetDomainFilter, setDatasetDomainFilter] = useState<string>('')
-  const [datasetOffset, setDatasetOffset] = useState(0)
-  const [selectedDataset, setSelectedDataset] = useState<DatasetItem | null>(null)
+  const datasetDomain = hasMultipleDomains ? undefined : (context.default_domain as UploadDomain)
+  const [selectedDatasetId, setSelectedDatasetId] = useState('')
 
   // File & parser options
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -235,28 +220,21 @@ function UploadContent({ context }: { context: StaffContext }) {
   const [validationError, setValidationError] = useState<string | null>(null)
   const [submittedJob, setSubmittedJob] = useState<IngestionJob | null>(null)
 
-  const effectiveFilterDomain = hasMultipleDomains
-    ? (datasetDomainFilter as UploadDomain | '') || undefined
-    : (singleDomain as UploadDomain | null) || undefined
-
   const datasetsQuery = useQuery({
-    queryKey: [
-      'datasets',
-      {
-        search: appliedSearch || undefined,
-        domain: effectiveFilterDomain,
-        limit: DATASET_PAGE_SIZE,
-        offset: datasetOffset,
-      },
-    ],
+    queryKey: ['datasets', 'staff-upload', datasetDomain],
     enabled: context.can_upload,
-    queryFn: () =>
-      API_ListDatasets({
-        search: appliedSearch || undefined,
-        domain: effectiveFilterDomain,
-        limit: DATASET_PAGE_SIZE,
-        offset: datasetOffset,
-      }),
+    queryFn: async () => {
+      const datasets: DatasetItem[] = []
+      for (let offset = 0; ; offset += DATASET_PAGE_SIZE) {
+        const page = await API_ListDatasets({
+          domain: datasetDomain,
+          limit: DATASET_PAGE_SIZE,
+          offset,
+        })
+        datasets.push(...page)
+        if (page.length < DATASET_PAGE_SIZE) return datasets
+      }
+    },
   })
 
   const uploadMutation = useMutation({
@@ -360,11 +338,10 @@ function UploadContent({ context }: { context: StaffContext }) {
     return {}
   }
 
-  function handleSearchSubmit(event: FormEvent) {
-    event.preventDefault()
-    setDatasetOffset(0)
-    setAppliedSearch(searchInput.trim())
-  }
+  const datasets = datasetsQuery.data ?? []
+  const selectedDataset = datasets.find(
+    (dataset) => String(dataset.dataset_id) === selectedDatasetId
+  )
 
   function handleUploadSubmit(event: FormEvent) {
     event.preventDefault()
@@ -372,6 +349,11 @@ function UploadContent({ context }: { context: StaffContext }) {
 
     setValidationError(null)
     uploadMutation.reset()
+
+    if (!selectedDataset) {
+      setValidationError('Vui lòng chọn bộ dữ liệu tiếp nhận trước khi tải lên.')
+      return
+    }
 
     const fileErr = validateFile(selectedFile)
     if (fileErr) {
@@ -386,10 +368,6 @@ function UploadContent({ context }: { context: StaffContext }) {
       return
     }
 
-    if (!selectedDataset) {
-      setValidationError('Vui lòng chọn một bộ dữ liệu từ danh sách trước khi tải lên.')
-      return
-    }
     setUploadProgress(0)
     uploadMutation.mutate({
       mode: 'existing',
@@ -400,502 +378,346 @@ function UploadContent({ context }: { context: StaffContext }) {
     })
   }
 
-  const datasets = datasetsQuery.data ?? []
-  const selectedTargetName = selectedDataset?.dataset_name ?? 'Chưa chọn bộ dữ liệu'
-
   return (
-    <div className="space-y-5">
-      <PageHeader
-        breadcrumb={['Không gian nhân viên', 'Nạp dữ liệu']}
-        title="Nạp dữ liệu"
-        description={`Tải tệp ${context.accepted_extensions.join(', ')} (tối đa ${formatBytes(context.max_file_bytes)}, ${formatNumber(context.max_records)} dòng) vào bộ dữ liệu do Trưởng phòng (Manager) quy hoạch.`}
-        actions={
-          <Link
-            href="/staff/ingestion"
-            className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#cbd4e3] bg-white px-4 text-sm font-semibold text-[#3438b1] transition-colors hover:bg-[#f5f5ff]"
+    <div className="space-y-4">
+      <form
+        aria-label="Tải tệp dữ liệu"
+        className="grid grid-cols-1 gap-3"
+        onSubmit={handleUploadSubmit}
+        noValidate
+      >
+        <div className="min-w-0 space-y-1.5">
+          <label htmlFor="upload-dataset" className="block text-xs font-semibold text-slate-700">
+            Bộ dữ liệu tiếp nhận *
+          </label>
+          <select
+            id="upload-dataset"
+            className={inputClass}
+            disabled={datasets.length === 0 || uploadMutation.isPending}
+            required
+            value={selectedDataset ? selectedDatasetId : ''}
+            onChange={(event) => {
+              setSelectedDatasetId(event.target.value)
+              setValidationError(null)
+              uploadMutation.reset()
+            }}
           >
-            <History className="size-3.5" aria-hidden="true" />
-            Lịch sử nạp dữ liệu
-          </Link>
-        }
-      />
+            <option value="" disabled>
+              {datasetsQuery.isPending
+                ? 'Đang tải bộ dữ liệu…'
+                : datasetsQuery.isError && datasets.length === 0
+                  ? 'Không tải được bộ dữ liệu'
+                  : datasets.length === 0
+                    ? 'Chưa có bộ dữ liệu tiếp nhận'
+                    : 'Chọn bộ dữ liệu'}
+            </option>
+            {datasets.map((dataset) => (
+              <option key={dataset.dataset_id} value={dataset.dataset_id}>
+                {hasMultipleDomains
+                  ? `${dataset.dataset_name} · ${domainLabel(dataset.domain, context.domains)}`
+                  : dataset.dataset_name}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      {submittedJob && (
-        <JobTrackerCard jobId={submittedJob.ingestion_job_id} initialJob={submittedJob} />
-      )}
+        <div className="min-w-0 space-y-1.5">
+          <p id="upload-file-label" className="text-xs font-semibold text-slate-700">
+            Tệp dữ liệu *
+          </p>
+          <div className="flex h-10 items-center gap-2">
+            <Button
+              variant="outline"
+              disabled={uploadMutation.isPending}
+              onClick={() => fileInputRef.current?.click()}
+              aria-describedby="upload-file-label upload-file-hint"
+              className="h-10 shrink-0 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
+              icon={<FileUp className="size-3.5" aria-hidden="true" />}
+            >
+              Chọn tệp
+            </Button>
+            <span
+              aria-live="polite"
+              title={selectedFile?.name}
+              className="truncate text-xs text-slate-600"
+            >
+              {selectedFile?.name}
+            </span>
+            {selectedFile && !uploadMutation.isPending && (
+              <Button
+                variant="ghost"
+                aria-label="Bỏ chọn tệp"
+                title="Bỏ chọn tệp"
+                onClick={() => {
+                  setSelectedFile(null)
+                  setValidationError(null)
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = ''
+                  }
+                }}
+                className="size-9 shrink-0 p-0 hover:text-rose-600"
+                icon={<X className="size-4" aria-hidden="true" />}
+              />
+            )}
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            hidden
+            aria-labelledby="upload-file-label"
+            accept={context.accepted_extensions.join(',')}
+            disabled={uploadMutation.isPending}
+            onChange={(event) => {
+              const file = event.target.files?.[0] ?? null
+              setSelectedFile(file)
+              setValidationError(file ? validateFile(file) : null)
+              setUploadProgress(null)
+              uploadMutation.reset()
+            }}
+          />
+        </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1fr_340px]">
-        <div className="space-y-5">
-          {/* Chọn bộ dữ liệu có sẵn */}
-          <Card
-            title={
-              <span className="flex items-center gap-3">
-                <span className="flex size-9 items-center justify-center rounded-full bg-[#fce8ee] text-[#b91830]">
-                  1
-                </span>
-                Chọn bộ dữ liệu tiếp nhận
-              </span>
-            }
-          >
-            <div className="space-y-3">
-              <form className="flex flex-wrap gap-2" onSubmit={handleSearchSubmit}>
-                <div className="relative min-w-[200px] flex-1">
-                  <label htmlFor="dataset-search" className="sr-only">
-                    Tìm kiếm bộ dữ liệu theo tên
-                  </label>
-                  <Search
-                    className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-slate-400"
-                    aria-hidden="true"
-                  />
-                  <input
-                    id="dataset-search"
-                    type="search"
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    placeholder="Tìm bộ dữ liệu theo tên…"
-                    className={`${inputClass} pl-8`}
-                  />
-                </div>
-                {hasMultipleDomains && (
-                  <div>
-                    <label htmlFor="dataset-domain-filter" className="sr-only">
-                      Lọc theo lĩnh vực
+        <p id="upload-file-hint" className="text-xs text-slate-500">
+          Tệp {context.accepted_extensions.join(', ')} có dòng tiêu đề, tối đa{' '}
+          {formatBytes(context.max_file_bytes)} và {formatNumber(context.max_records)} dòng.
+        </p>
+
+        {datasetsQuery.isError && (
+          <ErrorState
+            message={getApiErrorMessage(
+              datasetsQuery.error,
+              'Không tải được danh sách bộ dữ liệu.'
+            )}
+            retrying={datasetsQuery.isFetching}
+            onRetry={() => void datasetsQuery.refetch()}
+          />
+        )}
+
+        {selectedFile && (
+          <details className="rounded-md border bg-slate-50 px-3">
+            <summary className="py-2.5 text-sm font-medium">
+              Nâng cao{customizeParser ? ' · Đang dùng cấu hình tùy chỉnh' : ''}
+            </summary>
+            <div className="space-y-3 pb-3">
+              <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-800">
+                <input
+                  type="checkbox"
+                  checked={customizeParser}
+                  onChange={(e) => setCustomizeParser(e.target.checked)}
+                  className="size-4 accent-primary"
+                />
+                Tùy chỉnh cấu hình đọc tệp (Parser options)
+              </label>
+
+              {customizeParser && isCsv && (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="csv-encoding"
+                      className="block text-xs font-medium text-slate-700"
+                    >
+                      Bảng mã (Encoding)
                     </label>
                     <select
-                      id="dataset-domain-filter"
-                      aria-label="Lọc bộ dữ liệu theo lĩnh vực"
+                      id="csv-encoding"
+                      value={csvEncoding}
+                      onChange={(e) => setCsvEncoding(e.target.value)}
                       className={inputClass}
-                      value={datasetDomainFilter}
-                      onChange={(e) => {
-                        setDatasetDomainFilter(e.target.value)
-                        setDatasetOffset(0)
-                      }}
                     >
-                      <option value="">Tất cả lĩnh vực được cấp</option>
-                      {context.domains.map((d) => (
-                        <option key={d.domain} value={d.domain}>
-                          {d.name}
+                      {CSV_ENCODING_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
                         </option>
                       ))}
                     </select>
                   </div>
-                )}
-                <Button type="submit" variant="outline" className="h-9">
-                  Tìm kiếm
-                </Button>
-              </form>
-
-              {datasetsQuery.isPending ? (
-                <LoadingState label="Đang tải danh sách bộ dữ liệu…" />
-              ) : datasetsQuery.isError ? (
-                <ErrorState
-                  message={getApiErrorMessage(
-                    datasetsQuery.error,
-                    'Không tải được danh sách bộ dữ liệu.'
-                  )}
-                  retrying={datasetsQuery.isFetching}
-                  onRetry={() => void datasetsQuery.refetch()}
-                />
-              ) : datasets.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-[#dfe4f2] bg-[#f7f8fd] px-4 py-6 text-center">
-                  <Image
-                    src={emptySearch}
-                    alt=""
-                    width={140}
-                    height={100}
-                    className="h-24 w-auto object-contain"
-                  />
-                  <h3 className="mt-2 text-sm font-bold text-[#111a35]">
-                    Không tìm thấy bộ dữ liệu phù hợp
-                  </h3>
-                  <p className="mt-1 text-xs text-[#65718d]">
-                    Bạn có thể thử từ khóa khác hoặc liên hệ Trưởng phòng (Manager) để quy hoạch bộ
-                    dữ liệu mới.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <div className="divide-y divide-slate-200 rounded-md border border-slate-200">
-                    {datasets.map((ds) => {
-                      const isSelected = selectedDataset?.dataset_id === ds.dataset_id
-                      return (
-                        <label
-                          key={ds.dataset_id}
-                          className={`flex cursor-pointer items-start gap-3 p-3 text-xs transition-colors ${
-                            isSelected ? 'bg-indigo-50/70' : 'hover:bg-slate-50'
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="selected-dataset"
-                            checked={isSelected}
-                            onChange={() => {
-                              setSelectedDataset(ds)
-                              setValidationError(null)
-                            }}
-                            className="mt-0.5 size-4 accent-primary"
-                          />
-                          <div className="min-w-0 flex-1 space-y-0.5">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="font-semibold text-slate-900">
-                                {ds.dataset_name}
-                              </span>
-                              <Tag tone="indigo">{domainLabel(ds.domain, context.domains)}</Tag>
-                              <Tag tone={statusTone(ds.status)}>{statusLabel(ds.status)}</Tag>
-                            </div>
-                            {ds.description && (
-                              <p className="line-clamp-2 text-slate-500">{ds.description}</p>
-                            )}
-                          </div>
-                        </label>
-                      )
-                    })}
-                  </div>
-
-                  <div className="flex items-center justify-between pt-1 text-xs text-slate-500">
-                    <span>
-                      Hiển thị {datasets.length} bộ dữ liệu (vị trí {datasetOffset + 1}–
-                      {datasetOffset + datasets.length})
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <Button
-                        disabled={datasetOffset === 0 || datasetsQuery.isFetching}
-                        onClick={() =>
-                          setDatasetOffset((prev) => Math.max(0, prev - DATASET_PAGE_SIZE))
-                        }
-                        icon={<ChevronLeft className="size-3.5" aria-hidden="true" />}
-                      >
-                        Trước
-                      </Button>
-                      <Button
-                        disabled={datasets.length < DATASET_PAGE_SIZE || datasetsQuery.isFetching}
-                        onClick={() => setDatasetOffset((prev) => prev + DATASET_PAGE_SIZE)}
-                        icon={<ChevronRight className="size-3.5" aria-hidden="true" />}
-                      >
-                        Sau
-                      </Button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </Card>
-
-          {/* Chọn tệp và tùy chọn đọc tệp */}
-          <Card
-            title={
-              <span className="flex items-center gap-3">
-                <span className="flex size-9 items-center justify-center rounded-full bg-[#fce8ee] text-[#b91830]">
-                  2
-                </span>
-                Chọn tệp và cấu hình đọc tệp
-              </span>
-            }
-          >
-            <form
-              id="staff-upload-form"
-              className="space-y-4"
-              onSubmit={handleUploadSubmit}
-              noValidate
-            >
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between gap-2">
-                  <label
-                    htmlFor="upload-file-input"
-                    className="block text-xs font-semibold text-slate-700"
-                  >
-                    Tệp dữ liệu ({context.accepted_extensions.join(', ')}) *
-                  </label>
-                  {selectedFile && !uploadMutation.isPending && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedFile(null)
-                        setValidationError(null)
-                        if (fileInputRef.current) {
-                          fileInputRef.current.value = ''
-                        }
-                      }}
-                      className="text-xs font-medium text-slate-500 hover:text-rose-600"
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="csv-delimiter"
+                      className="block text-xs font-medium text-slate-700"
                     >
-                      Bỏ chọn tệp
-                    </button>
-                  )}
-                </div>
-                <input
-                  ref={fileInputRef}
-                  id="upload-file-input"
-                  type="file"
-                  accept={context.accepted_extensions.join(',')}
-                  disabled={uploadMutation.isPending}
-                  onChange={(event) => {
-                    const file = event.target.files?.[0] ?? null
-                    setSelectedFile(file)
-                    setValidationError(file ? validateFile(file) : null)
-                    setUploadProgress(null)
-                    uploadMutation.reset()
-                  }}
-                  className="block w-full cursor-pointer rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 text-sm text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-primary/90"
-                />
-                <p className="text-[11px] text-slate-500">
-                  Tên tệp chỉ dùng chữ cái không dấu, số, dấu gạch ngang, gạch dưới và dấu chấm. Tệp
-                  phải có dòng tiêu đề.
-                </p>
-              </div>
-
-              {selectedFile && (
-                <details className="rounded-md border bg-slate-50 px-3">
-                  <summary className="py-2.5 text-sm font-medium">
-                    Nâng cao{customizeParser ? ' · Đang dùng cấu hình tùy chỉnh' : ''}
-                  </summary>
-                  <div className="space-y-3 pb-3">
-                    <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-800">
-                      <input
-                        type="checkbox"
-                        checked={customizeParser}
-                        onChange={(e) => setCustomizeParser(e.target.checked)}
-                        className="size-4 accent-primary"
-                      />
-                      Tùy chỉnh cấu hình đọc tệp (Parser options)
+                      Dấu phân cách (Delimiter)
                     </label>
-
-                    {customizeParser && isCsv && (
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <div className="space-y-1">
-                          <label
-                            htmlFor="csv-encoding"
-                            className="block text-xs font-medium text-slate-700"
-                          >
-                            Bảng mã (Encoding)
-                          </label>
-                          <select
-                            id="csv-encoding"
-                            value={csvEncoding}
-                            onChange={(e) => setCsvEncoding(e.target.value)}
-                            className={inputClass}
-                          >
-                            {CSV_ENCODING_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="space-y-1">
-                          <label
-                            htmlFor="csv-delimiter"
-                            className="block text-xs font-medium text-slate-700"
-                          >
-                            Dấu phân cách (Delimiter)
-                          </label>
-                          <select
-                            id="csv-delimiter"
-                            value={csvDelimiter}
-                            onChange={(e) => setCsvDelimiter(e.target.value)}
-                            className={inputClass}
-                          >
-                            {CSV_DELIMITER_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="space-y-1">
-                          <label
-                            htmlFor="csv-quote-char"
-                            className="block text-xs font-medium text-slate-700"
-                          >
-                            Ký tự trích dẫn (Quote char)
-                          </label>
-                          <select
-                            id="csv-quote-char"
-                            value={csvQuoteChar}
-                            onChange={(e) => setCsvQuoteChar(e.target.value)}
-                            className={inputClass}
-                          >
-                            {CSV_QUOTE_CHAR_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="space-y-1">
-                          <label
-                            htmlFor="csv-skip-rows"
-                            className="block text-xs font-medium text-slate-700"
-                          >
-                            Số dòng bỏ qua (Skip rows)
-                          </label>
-                          <input
-                            id="csv-skip-rows"
-                            type="number"
-                            min={0}
-                            value={skipRows}
-                            onChange={(e) => setSkipRows(e.target.value)}
-                            className={inputClass}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {customizeParser && isExcel && (
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <div className="space-y-1">
-                          <label
-                            htmlFor="excel-sheet-name"
-                            className="block text-xs font-medium text-slate-700"
-                          >
-                            Tên sheet (tùy chọn)
-                          </label>
-                          <input
-                            id="excel-sheet-name"
-                            type="text"
-                            maxLength={200}
-                            value={excelSheetName}
-                            onChange={(e) => setExcelSheetName(e.target.value)}
-                            placeholder="Mặc định sheet đầu tiên"
-                            className={inputClass}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label
-                            htmlFor="excel-header-row"
-                            className="block text-xs font-medium text-slate-700"
-                          >
-                            Dòng tiêu đề (Header row)
-                          </label>
-                          <input
-                            id="excel-header-row"
-                            type="number"
-                            min={1}
-                            value={excelHeaderRow}
-                            onChange={(e) => setExcelHeaderRow(e.target.value)}
-                            className={inputClass}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label
-                            htmlFor="excel-skip-rows"
-                            className="block text-xs font-medium text-slate-700"
-                          >
-                            Số dòng bỏ qua (Skip rows)
-                          </label>
-                          <input
-                            id="excel-skip-rows"
-                            type="number"
-                            min={0}
-                            value={skipRows}
-                            onChange={(e) => setSkipRows(e.target.value)}
-                            className={inputClass}
-                          />
-                        </div>
-                      </div>
-                    )}
+                    <select
+                      id="csv-delimiter"
+                      value={csvDelimiter}
+                      onChange={(e) => setCsvDelimiter(e.target.value)}
+                      className={inputClass}
+                    >
+                      {CSV_DELIMITER_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                </details>
-              )}
-
-              {(validationError || uploadMutation.isError) && (
-                <div
-                  role="alert"
-                  className="rounded-md border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700"
-                >
-                  {validationError ??
-                    getApiErrorMessage(
-                      uploadMutation.error,
-                      'Không thể tải tệp lên. Vui lòng kiểm tra lại thông tin và thử lại.'
-                    )}
-                </div>
-              )}
-
-              {uploadMutation.isPending && (
-                <div className="space-y-1.5" role="status" aria-label="Đang tải tệp lên">
-                  <div className="flex items-center justify-between text-xs font-medium text-slate-700">
-                    <span>Đang tải tệp lên máy chủ…</span>
-                    <span className="font-mono">{uploadProgress ?? 0}%</span>
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="csv-quote-char"
+                      className="block text-xs font-medium text-slate-700"
+                    >
+                      Ký tự trích dẫn (Quote char)
+                    </label>
+                    <select
+                      id="csv-quote-char"
+                      value={csvQuoteChar}
+                      onChange={(e) => setCsvQuoteChar(e.target.value)}
+                      className={inputClass}
+                    >
+                      {CSV_QUOTE_CHAR_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                    <div
-                      className="h-full bg-indigo-600 transition-all"
-                      style={{ width: `${uploadProgress ?? 0}%` }}
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="csv-skip-rows"
+                      className="block text-xs font-medium text-slate-700"
+                    >
+                      Số dòng bỏ qua (Skip rows)
+                    </label>
+                    <input
+                      id="csv-skip-rows"
+                      type="number"
+                      min={0}
+                      value={skipRows}
+                      onChange={(e) => setSkipRows(e.target.value)}
+                      className={inputClass}
                     />
                   </div>
                 </div>
               )}
 
-              <div className="flex justify-end">
-                <Button
-                  loading={uploadMutation.isPending}
-                  type="submit"
-                  variant="primary"
-                  icon={<Upload className="size-3.5" aria-hidden="true" />}
-                >
-                  {uploadMutation.isPending ? 'Đang tải lên…' : 'Tải lên và nạp dữ liệu'}
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </div>
+              {customizeParser && isExcel && (
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="excel-sheet-name"
+                      className="block text-xs font-medium text-slate-700"
+                    >
+                      Tên sheet (tùy chọn)
+                    </label>
+                    <input
+                      id="excel-sheet-name"
+                      type="text"
+                      maxLength={200}
+                      value={excelSheetName}
+                      onChange={(e) => setExcelSheetName(e.target.value)}
+                      placeholder="Mặc định sheet đầu tiên"
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="excel-header-row"
+                      className="block text-xs font-medium text-slate-700"
+                    >
+                      Dòng tiêu đề (Header row)
+                    </label>
+                    <input
+                      id="excel-header-row"
+                      type="number"
+                      min={1}
+                      value={excelHeaderRow}
+                      onChange={(e) => setExcelHeaderRow(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="excel-skip-rows"
+                      className="block text-xs font-medium text-slate-700"
+                    >
+                      Số dòng bỏ qua (Skip rows)
+                    </label>
+                    <input
+                      id="excel-skip-rows"
+                      type="number"
+                      min={0}
+                      value={skipRows}
+                      onChange={(e) => setSkipRows(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </details>
+        )}
 
-        {/* Tóm tắt thông tin tệp trước khi gửi */}
-        <div className="space-y-4">
-          <Card title="Tóm tắt yêu cầu tải lên">
-            <dl className="divide-y divide-[#e5e9f3] text-xs [&>div]:flex [&>div]:items-start [&>div]:justify-between [&>div]:gap-3 [&>div]:py-2 [&_dd]:max-w-[60%] [&_dd]:text-right">
-              <div>
-                <dt className="text-slate-500">Hình thức</dt>
-                <dd className="mt-0.5 font-medium text-slate-900">Nạp vào bộ dữ liệu đã có</dd>
-              </div>
-              <div>
-                <dt className="text-slate-500">Bộ dữ liệu đích</dt>
-                <dd className="mt-0.5 font-medium text-slate-900">{selectedTargetName}</dd>
-              </div>
-              <div>
-                <dt className="text-slate-500">Tên tệp</dt>
-                <dd className="mt-0.5 break-all font-mono text-slate-900">
-                  {selectedFile ? selectedFile.name : 'Chưa chọn tệp'}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-slate-500">Dung lượng</dt>
-                <dd className="mt-0.5 font-mono text-slate-900">
-                  {selectedFile ? formatBytes(selectedFile.size) : '—'}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-slate-500">Định dạng</dt>
-                <dd className="mt-0.5 flex items-center gap-1.5 font-mono text-slate-900">
-                  {selectedFile ? (
-                    <>
-                      <FileSpreadsheet className="size-3.5 text-indigo-600" aria-hidden="true" />
-                      {isCsv ? 'CSV' : isExcel ? 'EXCEL' : getFileExtension(selectedFile.name)}
-                    </>
-                  ) : (
-                    '—'
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-slate-500">Tùy chọn đọc tệp</dt>
-                <dd className="mt-0.5 text-slate-700">
-                  {!selectedFile
-                    ? '—'
-                    : !customizeParser
-                      ? 'Mặc định theo hệ thống'
-                      : isCsv
-                        ? `${csvEncoding}, dấu phân cách "${csvDelimiter === '\t' ? '\\t' : csvDelimiter}", bỏ qua ${skipRows} dòng`
-                        : `Sheet: ${excelSheetName.trim() || 'Đầu tiên'}, dòng tiêu đề ${excelHeaderRow}, bỏ qua ${skipRows} dòng`}
-                </dd>
-              </div>
-            </dl>
-          </Card>
-        </div>
-      </div>
+        {(validationError || uploadMutation.isError) && (
+          <div
+            role="alert"
+            className="rounded-md border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700"
+          >
+            {validationError ??
+              getApiErrorMessage(
+                uploadMutation.error,
+                'Không thể tải tệp lên. Vui lòng kiểm tra lại thông tin và thử lại.'
+              )}
+          </div>
+        )}
+
+        {uploadMutation.isPending && (
+          <div className="space-y-1.5" role="status" aria-label="Đang tải tệp lên">
+            <div className="flex items-center justify-between text-xs font-medium text-slate-700">
+              <span>Đang tải tệp lên máy chủ…</span>
+              <span className="font-mono">{uploadProgress ?? 0}%</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full bg-indigo-600 transition-all"
+                style={{ width: `${uploadProgress ?? 0}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        <Button
+          loading={uploadMutation.isPending}
+          type="submit"
+          variant="primary"
+          className="h-10 justify-self-end"
+          icon={<Upload className="size-3.5" aria-hidden="true" />}
+        >
+          {uploadMutation.isPending ? 'Đang tải lên…' : 'Tải lên'}
+        </Button>
+      </form>
+      {submittedJob && (
+        <JobTrackerCard jobId={submittedJob.ingestion_job_id} initialJob={submittedJob} />
+      )}
     </div>
   )
 }
 
-export function StaffUploadView() {
-  return <StaffContextGate>{(context) => <UploadContent context={context} />}</StaffContextGate>
+export function StaffUploadDialog() {
+  if (usePathname() === ASK_AI_PATHS.STAFF) return null
+
+  return (
+    <Dialog>
+      <div className="h-14">
+        <DialogTrigger asChild>
+          <Button
+            variant="primary"
+            className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-30 sm:right-6"
+            icon={<Upload className="size-3.5" aria-hidden="true" />}
+          >
+            Nạp dữ liệu
+          </Button>
+        </DialogTrigger>
+      </div>
+      <DialogContent
+        aria-describedby={undefined}
+        className={`max-w-sm ${uploadDialogTiming}`}
+        overlayClassName={uploadDialogTiming}
+      >
+        <DialogTitle className="pr-8">Nạp dữ liệu</DialogTitle>
+        <StaffContextGate showAssignmentBanner={false}>
+          {(context) => <UploadContent context={context} />}
+        </StaffContextGate>
+      </DialogContent>
+    </Dialog>
+  )
 }

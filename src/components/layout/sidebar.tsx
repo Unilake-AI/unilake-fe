@@ -44,8 +44,8 @@ import {
   Workflow,
 } from 'lucide-react'
 
-import { ROLE_MENUS } from '@/config/menu'
-import { getDepartmentDomain, getWorkspaceForRole } from '@/config/roles'
+import { getMenuItemsForRole } from '@/config/menu'
+import { getDepartmentDomain } from '@/config/roles'
 import type { SidebarProps } from '@/types/layout/sidebar'
 
 import { DomainSelector } from './domain-selector'
@@ -94,10 +94,10 @@ export function Sidebar({ role, onCloseMobile }: SidebarProps) {
   const toggleLabel = expanded ? 'Thu gọn thanh điều hướng' : 'Mở rộng thanh điều hướng'
   const ToggleIcon = expanded ? PanelLeftClose : PanelLeftOpen
   const pathname = usePathname()
-  const menuGroups = ROLE_MENUS[getWorkspaceForRole(role)]
+  const menuItems = getMenuItemsForRole(role)
   // Mục đang mở là mục có đường dẫn dài nhất khớp với URL (vd. /data/sources/new → Nguồn dữ liệu).
-  const activeHref = menuGroups
-    .flatMap((group) => group.items.map((item) => item.href))
+  const activeHref = menuItems
+    .map((item) => item.href)
     .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
     .sort((a, b) => b.length - a.length)[0]
 
@@ -114,7 +114,7 @@ export function Sidebar({ role, onCloseMobile }: SidebarProps) {
       }}
     >
       {!onCloseMobile && (
-        <div className="shrink-0 border-b border-white/10 p-2">
+        <div className="flex shrink-0 justify-end border-b border-white/10 px-3 py-2">
           <button
             ref={toggleRef}
             type="button"
@@ -123,7 +123,7 @@ export function Sidebar({ role, onCloseMobile }: SidebarProps) {
             aria-label={toggleLabel}
             title={toggleLabel}
             onClick={() => setExpanded((current) => !current)}
-            className="grid h-10 w-12 place-items-center rounded-md hover:bg-white/10 focus-visible:-outline-offset-2"
+            className="grid size-10 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 transition-colors hover:bg-white/10 hover:text-white focus-visible:-outline-offset-2 active:bg-white/20"
           >
             <ToggleIcon className="size-5 shrink-0" aria-hidden="true" />
           </button>
@@ -138,53 +138,37 @@ export function Sidebar({ role, onCloseMobile }: SidebarProps) {
 
       <nav
         id={navigationId}
-        className="min-h-0 flex-1 space-y-2 overflow-y-auto overflow-x-hidden p-2 [scrollbar-width:thin]"
+        className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-2 [scrollbar-width:thin]"
         aria-label="Điều hướng chính"
       >
-        {menuGroups.map((group, groupIdx) => (
-          <div key={group.groupTitle ?? groupIdx}>
-            {group.groupTitle &&
-              (menuGroups.length > 1 ? (
-                <div className={styles.section}>
-                  <div className="overflow-hidden">
-                    <h3 className="truncate px-4 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#8999b4]">
-                      {group.groupTitle}
-                    </h3>
-                  </div>
-                </div>
-              ) : (
-                <h3 className="sr-only">{group.groupTitle}</h3>
-              ))}
-            <ul className="space-y-1">
-              {group.items.map((item) => {
-                const IconComponent = ICON_MAP[item.iconName] ?? LayoutDashboard
-                const isActive = item.href === activeHref
+        <ul className="space-y-1">
+          {menuItems.map((item) => {
+            const IconComponent = ICON_MAP[item.iconName] ?? LayoutDashboard
+            const isActive = item.href === activeHref
 
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      onNavigate={onCloseMobile ?? (() => setExpanded(false))}
-                      aria-current={isActive ? 'page' : undefined}
-                      aria-label={item.title}
-                      title={!onCloseMobile ? item.title : undefined}
-                      className={`flex min-h-11 items-center gap-3 overflow-hidden rounded-lg px-3.5 py-2 text-sm transition-colors duration-150 focus-visible:-outline-offset-2 ${
-                        isActive
-                          ? 'bg-primary font-semibold text-white shadow-sm'
-                          : 'font-medium text-[#e2e7f0] hover:bg-white/10 hover:text-white'
-                      }`}
-                    >
-                      <IconComponent className="size-5 shrink-0" aria-hidden="true" />
-                      <span aria-hidden="true" className={`${styles.details} leading-snug`}>
-                        {item.title}
-                      </span>
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        ))}
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  onNavigate={onCloseMobile ?? (() => setExpanded(false))}
+                  aria-current={isActive ? 'page' : undefined}
+                  aria-label={item.title}
+                  title={!onCloseMobile ? item.title : undefined}
+                  className={`flex min-h-11 items-center gap-3 overflow-hidden rounded-lg px-3.5 py-2 text-sm transition-colors duration-150 focus-visible:-outline-offset-2 ${
+                    isActive
+                      ? 'bg-primary font-semibold text-white shadow-sm'
+                      : 'font-medium text-[#e2e7f0] hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <IconComponent className="size-5 shrink-0" aria-hidden="true" />
+                  <span aria-hidden="true" className={`${styles.details} leading-snug`}>
+                    {item.title}
+                  </span>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
       </nav>
     </aside>
   )

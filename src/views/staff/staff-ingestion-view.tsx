@@ -5,14 +5,7 @@ import { Fragment, useMemo, useState } from 'react'
 import Link from 'next/link'
 
 import { useQuery } from '@tanstack/react-query'
-import {
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  CircleAlert,
-  RefreshCw,
-  Upload,
-} from 'lucide-react'
+import { CheckCircle2, ChevronLeft, ChevronRight, CircleAlert, RefreshCw } from 'lucide-react'
 
 import { getApiErrorMessage, getErrorMessageForCode } from '@/api/http'
 import { API_ListDatasets } from '@/api/shared/datasets'
@@ -38,7 +31,6 @@ import {
 } from '@/components/page/page-parts'
 import { TableSkeleton } from '@/components/ui/table-skeleton'
 import type { IngestionJobStatusFilter } from '@/types/ingestion'
-import type { StaffContext } from '@/types/staff-context'
 
 import { StaffContextGate } from './staff-context-gate'
 import {
@@ -187,16 +179,9 @@ function JobDetailSection({
   )
 }
 
-function IngestionContent({
-  context,
-  initialJobId,
-}: {
-  context: StaffContext
-  initialJobId?: number
-}) {
+function IngestionContent({ initialJobId }: { initialJobId?: number }) {
   const [statusFilter, setStatusFilter] = useState<string>('')
   const [datasetIdFilter, setDatasetIdFilter] = useState<string>('')
-  const [mineOnly, setMineOnly] = useState(false)
   const [offset, setOffset] = useState(0)
   const [selectedJobId, setSelectedJobId] = useState<number | null>(initialJobId ?? null)
 
@@ -225,7 +210,6 @@ function IngestionContent({
         offset,
         status: statusFilter || undefined,
         dataset_id: parsedDatasetId,
-        mine_only: mineOnly,
       },
     ],
     queryFn: () =>
@@ -234,7 +218,6 @@ function IngestionContent({
         offset,
         status: (statusFilter as IngestionJobStatusFilter) || undefined,
         dataset_id: parsedDatasetId,
-        mine_only: mineOnly,
       }),
     refetchInterval: (query) =>
       query.state.data?.some((job) => isIngestionJobActive(job.status))
@@ -259,28 +242,17 @@ function IngestionContent({
         title="Lịch sử nạp dữ liệu"
         description="Theo dõi trạng thái nạp Bronze, số dòng đọc, ghi và bị từ chối."
         actions={
-          <>
-            <Button
-              onClick={() => {
-                void jobsQuery.refetch()
-                void statsQuery.refetch()
-                void metricsQuery.refetch()
-              }}
-              reading={jobsQuery.isFetching}
-              icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
-            >
-              Làm mới
-            </Button>
-            {context.can_upload && (
-              <Link
-                href="/staff/upload"
-                className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#b91830] px-3 text-xs font-semibold text-white transition-colors hover:bg-[#9e1429]"
-              >
-                <Upload className="size-3.5" aria-hidden="true" />
-                Nạp dữ liệu mới
-              </Link>
-            )}
-          </>
+          <Button
+            onClick={() => {
+              void jobsQuery.refetch()
+              void statsQuery.refetch()
+              void metricsQuery.refetch()
+            }}
+            reading={jobsQuery.isFetching}
+            icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
+          >
+            Làm mới
+          </Button>
         }
       />
 
@@ -388,18 +360,6 @@ function IngestionContent({
             </select>
           </div>
 
-          <label className="flex h-9 cursor-pointer items-center gap-2 rounded-md border border-slate-300 bg-white px-3 font-medium text-slate-700">
-            <input
-              type="checkbox"
-              checked={mineOnly}
-              onChange={(e) => {
-                setMineOnly(e.target.checked)
-                setOffset(0)
-              }}
-              className="size-4 accent-[#b91830]"
-            />
-            Chỉ lần nạp của tôi
-          </label>
         </div>
       </Card>
 
@@ -545,8 +505,6 @@ function IngestionContent({
 
 export function StaffIngestionView({ initialJobId }: { initialJobId?: number }) {
   return (
-    <StaffContextGate>
-      {(context) => <IngestionContent context={context} initialJobId={initialJobId} />}
-    </StaffContextGate>
+    <StaffContextGate>{() => <IngestionContent initialJobId={initialJobId} />}</StaffContextGate>
   )
 }
