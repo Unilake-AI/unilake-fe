@@ -1,7 +1,7 @@
-import { DomainOverviewView } from '@/views/dashboards/domain-overview-view'
+import { ViewerDomainsView } from '@/views/viewer/viewer-domains-view'
 
 export const metadata = { title: 'Dashboard phân hệ | UniLake AI' }
 
-export default function DomainOverviewPage() {
-  return <DomainOverviewView askHref="/viewer/ask" />
+export default function ViewerDomainDetailPage() {
+  return <ViewerDomainsView />
 }

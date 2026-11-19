@@ -1,7 +1,7 @@
-import { DomainsCompareView } from '@/views/dashboards/domains-compare-view'
+import { ViewerDomainsView } from '@/views/viewer/viewer-domains-view'
 
 export const metadata = { title: 'Dashboard theo phân hệ | UniLake AI' }
 
-export default function DomainsComparePage() {
-  return <DomainsCompareView detailHref="/viewer/dashboards/detail" />
+export default function ViewerDashboardsPage() {
+  return <ViewerDomainsView />
 }

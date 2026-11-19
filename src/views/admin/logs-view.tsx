@@ -2,152 +2,145 @@
 
 import { useState } from 'react'
 
-import { Card, KpiCard, MockNotice, PageHeader, Tag } from '@/components/page/page-parts'
-import type { LogLevel } from '@/types/audit-logs'
-import type { StatusTone } from '@/types/page/page-parts'
+import { useQuery } from '@tanstack/react-query'
 
-const LEVEL_LABEL: Record<LogLevel, string> = { INFO: 'Thông tin', WARN: 'Cảnh báo', ERROR: 'Lỗi' }
+import { listAuditEvents, listDomainOwnerAuditEvents } from '@/api/admin/client'
+import { getApiErrorMessage } from '@/api/http'
+import { Card, EmptyState, PageHeader } from '@/components/page/page-parts'
+import { Button } from '@/components/ui/button'
 
-const LEVEL_TONE: Record<LogLevel, StatusTone> = { INFO: 'sky', WARN: 'amber', ERROR: 'rose' }
-
-const LOGS: {
-  time: string
-  level: LogLevel
-  module: string
-  user: string
-  message: string
-  requestId: string
-}[] = [
-  {
-    time: '2026-10-06 07:05:12',
-    level: 'INFO',
-    module: 'Hỏi AI',
-    user: 'phuong.ttm',
-    message: 'Đã trả lời câu hỏi.',
-    requestId: 'req_01J8AI01',
-  },
-  {
-    time: '2026-10-06 07:04:58',
-    level: 'INFO',
-    module: 'Đăng nhập',
-    user: 'phuong.ttm',
-    message: 'Đăng nhập thành công.',
-    requestId: 'req_01J8AUTH01',
-  },
-  {
-    time: '2026-10-06 06:48:03',
-    level: 'WARN',
-    module: 'Hỏi AI',
-    user: 'hung.nv',
-    message: 'Yêu cầu bị chặn vì có thể thay đổi dữ liệu.',
-    requestId: 'req_01J8AI03',
-  },
-  {
-    time: '2026-10-06 02:01:10',
-    level: 'ERROR',
-    module: 'Nạp dữ liệu',
-    user: 'Hệ thống',
-    message: 'Không nạp được dữ liệu vì nguồn phản hồi quá chậm.',
-    requestId: 'req_01J8ING47',
-  },
-  {
-    time: '2026-10-06 01:00:00',
-    level: 'INFO',
-    module: 'Nạp dữ liệu',
-    user: 'Hệ thống',
-    message: 'Đã bắt đầu nạp dữ liệu tuyển sinh.',
-    requestId: 'req_01J8ING48',
-  },
-  {
-    time: '2026-10-05 22:15:41',
-    level: 'WARN',
-    module: 'Đăng nhập',
-    user: 'lien.vtm',
-    message: 'Không thể đăng nhập vì tài khoản đã bị khóa.',
-    requestId: 'req_01J8AUTH03',
-  },
-]
+const ACTIONS: Record<string, string> = {
+  LOGIN: 'Đăng nhập',
+  ACCOUNT_CREATED: 'Tạo tài khoản',
+  ACCOUNT_LOCKED: 'Khóa tài khoản',
+  ACCOUNT_UNLOCKED: 'Mở khóa tài khoản',
+  ROLES_UPDATED: 'Đổi vai trò',
+  ACCOUNT_ACCESS_UPDATED: 'Cập nhật quyền truy cập',
+  GRANTED: 'Cấp quyền Domain Owner',
+  REVOKED: 'Thu hồi quyền Domain Owner',
+  EMPLOYEE_LINKED: 'Liên kết hồ sơ nhân viên',
+  ASSIGNMENT_CREATED: 'Thêm phân công',
+}
 
 export function LogsView() {
-  const [level, setLevel] = useState<LogLevel | ''>('')
-  const rows = LOGS.filter((log) => !level || log.level === level)
+  const [offset, setOffset] = useState(0)
+  const [domainOwners, setDomainOwners] = useState(false)
+  const events = useQuery({
+    queryKey: ['admin', 'audit', domainOwners, offset],
+    queryFn: async () =>
+      domainOwners
+        ? (await listDomainOwnerAuditEvents(offset)).map((event) => ({
+            key: `${event.action}-${event.grant_id}`,
+            occurred_at: event.occurred_at,
+            username: `#${event.actor_id}`,
+            action: event.action,
+            target_id: event.user_id,
+            outcome: event.outcome,
+            changes: { domain: event.domain, grant_id: event.grant_id },
+            error_code: null,
+          }))
+        : (await listAuditEvents(offset)).map((event) => ({
+            ...event,
+            key: `${event.action}-${event.event_id}`,
+          })),
+  })
 
   return (
     <div className="space-y-5">
-      <PageHeader
-        breadcrumb={['Quản trị hệ thống', 'Nhật ký hệ thống']}
-        title="Nhật ký hệ thống & Kiểm toán"
-        description="Xem các hoạt động, cảnh báo và sự cố đã được ghi lại."
-      />
-      <MockNotice />
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Sự kiện 24 giờ" value="1.284" />
-        <KpiCard label="Lỗi" value="0,5%" tone="rose" hint="6 sự kiện" />
-        <KpiCard label="Cảnh báo" value="1,8%" tone="amber" hint="23 sự kiện" />
-        <KpiCard
-          label="Thời gian phản hồi TB"
-          value="412 ms"
-          hint="Mục tiêu < 5 giây"
-          tone="emerald"
-        />
-      </div>
-
-      <Card
-        title="Các sự kiện đã ghi"
-        subtitle="Mới nhất trước"
-        right={
-          <label className="flex items-center gap-1.5 text-xs text-slate-500">
-            Mức:
-            <select
-              className="h-8 rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-800"
-              value={level}
-              onChange={(event) => setLevel(event.target.value as LogLevel | '')}
-            >
-              <option value="">Tất cả</option>
-              <option value="INFO">{LEVEL_LABEL.INFO}</option>
-              <option value="WARN">{LEVEL_LABEL.WARN}</option>
-              <option value="ERROR">{LEVEL_LABEL.ERROR}</option>
-            </select>
-          </label>
-        }
-        bodyClassName="p-0"
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[880px] text-left text-xs">
-            <thead className="bg-slate-50 font-mono text-[10px] uppercase tracking-wider text-slate-500">
-              <tr>
-                {[
-                  'Thời gian',
-                  'Mức',
-                  'Khu vực',
-                  'Người dùng',
-                  'Hành động / Thông báo',
-                  'Mã sự kiện',
-                ].map((h) => (
-                  <th key={h} scope="col" className="px-3 py-2 font-medium">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {rows.map((log) => (
-                <tr key={log.requestId}>
-                  <td className="px-3 py-2.5 font-mono text-[11px] text-slate-600">{log.time}</td>
-                  <td className="px-3 py-2.5">
-                    <Tag tone={LEVEL_TONE[log.level]}>{LEVEL_LABEL[log.level]}</Tag>
-                  </td>
-                  <td className="px-3 py-2.5 font-mono text-slate-600">{log.module}</td>
-                  <td className="px-3 py-2.5 font-mono text-slate-600">{log.user}</td>
-                  <td className="px-3 py-2.5 text-slate-800">{log.message}</td>
-                  <td className="px-3 py-2.5 font-mono text-[11px] text-[#a9162e]">
-                    {log.requestId}
-                  </td>
+      <PageHeader title="Nhật ký hệ thống" breadcrumb={['Quản trị hệ thống', 'Nhật ký hệ thống']} />
+      <Card title="Sự kiện xác thực và phân quyền">
+        <label className="mb-3 flex items-center gap-2 text-sm">
+          Nhật ký
+          <select
+            className="h-9 rounded-md border bg-background px-2"
+            value={domainOwners ? 'owners' : 'accounts'}
+            onChange={(event) => {
+              setDomainOwners(event.target.value === 'owners')
+              setOffset(0)
+            }}
+          >
+            <option value="accounts">Tài khoản và tổ chức</option>
+            <option value="owners">Domain Owner</option>
+          </select>
+        </label>
+        {events.isPending && <p role="status">Đang tải nhật ký…</p>}
+        {events.isError && (
+          <p role="alert" className="text-sm text-rose-700">
+            {getApiErrorMessage(events.error, 'Không thể tải nhật ký.')}
+          </p>
+        )}
+        {events.data?.length === 0 && <EmptyState title="Chưa có sự kiện" />}
+        {events.data && events.data.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[520px] text-left text-sm">
+              <thead>
+                <tr>
+                  {[
+                    'Thời gian',
+                    'Người thực hiện',
+                    'Hoạt động',
+                    'Mã đối tượng',
+                    'Kết quả',
+                    'Thay đổi',
+                  ].map((heading) => (
+                    <th key={heading} scope="col" className="p-2">
+                      {heading}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y">
+                {events.data.map((event) => (
+                  <tr key={event.key}>
+                    <td className="p-2">
+                      <time dateTime={event.occurred_at}>
+                        {event.occurred_at.slice(0, 19).replace('T', ' ')}
+                      </time>
+                    </td>
+                    <td className="p-2">{event.username}</td>
+                    <td className="p-2">{ACTIONS[event.action] ?? event.action}</td>
+                    <td className="p-2">{event.target_id ?? '—'}</td>
+                    <td className="p-2">
+                      {event.outcome === 'REJECTED' ? 'Bị từ chối' : 'Thành công'}
+                      {event.error_code && (
+                        <code className="block text-xs">{event.error_code}</code>
+                      )}
+                    </td>
+                    <td className="p-2">
+                      {event.changes ? (
+                        <details>
+                          <summary className="cursor-pointer">Xem thay đổi</summary>
+                          <pre className="max-w-xs overflow-auto text-xs">
+                            {JSON.stringify(event.changes, null, 2)}
+                          </pre>
+                        </details>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <div className="mt-3 flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={offset === 0}
+            onClick={() => setOffset(offset - 20)}
+          >
+            Trang trước
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={events.data?.length !== 20}
+            onClick={() => setOffset(offset + 20)}
+          >
+            Trang sau
+          </Button>
         </div>
       </Card>
     </div>

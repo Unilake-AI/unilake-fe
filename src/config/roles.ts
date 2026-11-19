@@ -19,7 +19,7 @@ export const ROLE_DEFINITIONS: Record<RoleCode, RoleDefinition> = {
     code: 'ADMIN',
     name: 'Quản trị Hệ thống',
     homePath: '/admin',
-    description: 'Toàn quyền cấu hình, phân quyền và quản trị hệ thống',
+    description: 'Quản lý tài khoản, phân công, phân quyền và nhật ký hệ thống',
     badgeVariant: 'destructive',
   },
   DATA_ADMIN: {
@@ -164,12 +164,11 @@ export function getWorkspaceFromPrefix(pathname: string): RoleWorkspace | null {
 export function getRoleForWorkspace(roles: RoleCode[], workspace: RoleWorkspace): RoleCode | null {
   return (
     ROLE_PRIORITY.find((role) => roles.includes(role) && getWorkspaceForRole(role) === workspace) ??
-    (roles.includes('ADMIN') ? 'ADMIN' : null)
+    null
   )
 }
 
 export function hasAccessToRoute(pathname: string, userRoles: RoleCode[]): boolean {
-  if (userRoles.includes('ADMIN')) return true
   const workspace = getWorkspaceFromPrefix(pathname)
   if (!workspace) return true
   return userRoles.some((role) => getWorkspaceForRole(role) === workspace)

@@ -70,7 +70,7 @@ export function AppShell({ role, children }: AppShellProps) {
             />
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            {workspace !== 'VIEWER' && (
+            {workspace !== 'VIEWER' && workspace !== 'ADMIN' && (
               <WorkspaceNotifications
                 workspace={workspace}
                 fallbackFocus={mobileNavigationTrigger}

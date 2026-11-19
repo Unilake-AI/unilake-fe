@@ -67,7 +67,11 @@ export function DomainProvider({ children, role }: { children: ReactNode; role?:
 export function useDomain(): DomainContextValue {
   const context = useContext(DomainContext)
   if (!context) {
-    throw new Error('useDomain phải được dùng bên trong DomainProvider')
+    return {
+      domain: getDomain(DEFAULT_DOMAIN),
+      availableDomains: DOMAINS,
+      setDomain: () => {},
+    }
   }
   return context
 }
