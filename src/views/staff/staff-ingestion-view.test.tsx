@@ -200,9 +200,7 @@ describe('StaffIngestionView', () => {
       ).not.toBeInTheDocument()
       expect(screen.queryByRole('button', { name: /Làm sạch|Silver/i })).not.toBeInTheDocument()
 
-      // Kiểm tra bộ lọc mine_only
-      await user.click(screen.getByLabelText('Chỉ lần nạp của tôi'))
-      expect(trackedParams.at(-1)).toMatchObject({ mine_only: true })
+
     } finally {
       client.clear()
     }

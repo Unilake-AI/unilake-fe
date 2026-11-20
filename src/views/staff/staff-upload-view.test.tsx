@@ -1,14 +1,17 @@
+import { usePathname } from 'next/navigation'
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { AxiosError, AxiosHeaders } from 'axios'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { http } from '@/api/http'
 
-import { StaffUploadView } from './staff-upload-view'
+import { StaffUploadDialog } from './staff-upload-view'
 
-import type { InternalAxiosRequestConfig } from 'axios'
+vi.mock('next/navigation', () => ({
+  usePathname: vi.fn(() => '/staff'),
+}))
 
 vi.mock('sonner', () => ({
   toast: {
@@ -46,16 +49,6 @@ const multiDomainContext = {
   default_domain: null,
 }
 
-function makeError(status: number, code: string, config: InternalAxiosRequestConfig) {
-  return new AxiosError('fail', 'ERR_BAD_RESPONSE', config, undefined, {
-    status,
-    statusText: 'Error',
-    headers: new AxiosHeaders(),
-    config,
-    data: { error: { code } },
-  })
-}
-
 function renderUpload() {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -64,18 +57,25 @@ function renderUpload() {
     client,
     ...render(
       <QueryClientProvider client={client}>
-        <StaffUploadView />
+        <StaffUploadDialog />
       </QueryClientProvider>
     ),
   }
 }
 
-describe('StaffUploadView', () => {
+describe('StaffUploadDialog', () => {
   const originalAdapter = http.defaults.adapter
 
   afterEach(() => {
     http.defaults.adapter = originalAdapter
     vi.restoreAllMocks()
+  })
+
+  it('ẩn nút nạp dữ liệu trên trang Hỏi AI của Staff', () => {
+    vi.mocked(usePathname).mockReturnValueOnce('/staff/ask')
+    const { client } = renderUpload()
+    expect(screen.queryByRole('button', { name: 'Nạp dữ liệu' })).not.toBeInTheDocument()
+    client.clear()
   })
 
   it('tự động chọn lĩnh vực cho STAFF một miền và gửi đúng FormData khi nạp vào dataset đã có', async () => {
@@ -95,6 +95,7 @@ describe('StaffUploadView', () => {
         })
       }
       if (key === 'get /datasets') {
+        expect(config.params.domain).toBe('hr')
         return Promise.resolve({
           data: [
             {
@@ -173,21 +174,36 @@ describe('StaffUploadView', () => {
     const { client } = renderUpload()
     try {
       const user = userEvent.setup()
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      await user.click(screen.getByRole('button', { name: 'Nạp dữ liệu' }))
+      expect(screen.getByRole('dialog', { name: 'Nạp dữ liệu' })).toBeVisible()
 
-      // Chọn dataset theo tên từ danh sách backend trả về
-      const datasetRadio = await screen.findByRole('radio', { name: /Danh sách nhân viên/ })
-      await user.click(datasetRadio)
+      // Chọn bộ dữ liệu tiếp nhận từ dropdown
+      const option = await screen.findByRole('option', { name: 'Danh sách nhân viên' })
+      const datasetSelect = screen.getByRole('combobox', { name: /Bộ dữ liệu tiếp nhận/ })
+      expect(datasetSelect).toHaveValue('')
+      await user.selectOptions(datasetSelect, option)
 
       // Chọn file CSV
       const fileInput = screen.getByLabelText(/Tệp dữ liệu/)
+      const openPicker = vi.spyOn(fileInput, 'click')
+      await user.click(screen.getByText(/^Tệp dữ liệu/))
+      expect(openPicker).not.toHaveBeenCalled()
+      await user.click(screen.getByRole('button', { name: 'Chọn tệp' }))
+      expect(openPicker).toHaveBeenCalledOnce()
       await user.upload(fileInput, file)
+      expect(screen.getByText(file.name)).toBeVisible()
+      openPicker.mockClear()
+      await user.click(screen.getByText(file.name))
+      expect(openPicker).not.toHaveBeenCalled()
 
       // Tùy chỉnh CSV parser options (không hiển thị trường Excel)
+      await user.click(screen.getByText('Nâng cao'))
       await user.click(screen.getByLabelText(/Tùy chỉnh cấu hình đọc tệp/))
       expect(screen.getByLabelText(/Dấu phân cách/)).toBeInTheDocument()
       expect(screen.queryByLabelText(/Tên sheet/)).not.toBeInTheDocument()
 
-      await user.click(screen.getByRole('button', { name: 'Tải lên và nạp dữ liệu' }))
+      await user.click(screen.getByRole('button', { name: 'Tải lên' }))
 
       // Kiểm tra FormData
       await waitFor(() => expect(capturedForm).not.toBeNull())
@@ -246,6 +262,8 @@ describe('StaffUploadView', () => {
     const { client } = renderUpload()
     try {
       const user = userEvent.setup()
+      const trigger = screen.getByRole('button', { name: 'Nạp dữ liệu' })
+      await user.click(trigger)
 
       // Xác nhận không còn tab hay ô nhập tạo bộ dữ liệu mới
       expect(screen.queryByRole('tab', { name: /Tạo bộ dữ liệu mới/ })).not.toBeInTheDocument()
@@ -253,17 +271,21 @@ describe('StaffUploadView', () => {
 
       // Tải tệp lên nhưng chưa chọn dataset -> Báo lỗi
       await user.upload(await screen.findByLabelText(/Tệp dữ liệu/), file)
-      await user.click(screen.getByRole('button', { name: 'Tải lên và nạp dữ liệu' }))
+      await user.click(screen.getByRole('button', { name: 'Tải lên' }))
 
       expect(
-        await screen.findByText(/Vui lòng chọn một bộ dữ liệu từ danh sách trước khi tải lên/)
+        await screen.findByText(/Vui lòng chọn bộ dữ liệu tiếp nhận trước khi tải lên/)
       ).toBeInTheDocument()
+      await user.keyboard('{Escape}')
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      expect(trigger).toHaveFocus()
     } finally {
       client.clear()
     }
   })
 
-  it('người dùng nhiều lĩnh vực chỉ chọn được các lĩnh vực được cấp phép trong bộ lọc', async () => {
+  it('hiển thị lĩnh vực và đưa bộ dữ liệu từ các trang API tiếp theo vào dropdown', async () => {
+    const offsets: number[] = []
     http.defaults.adapter = (config) => {
       const key = `${config.method} ${config.url}`
       if (key === 'get /staff/context') {
@@ -276,17 +298,32 @@ describe('StaffUploadView', () => {
         })
       }
       if (key === 'get /datasets') {
-        return Promise.resolve({ data: [], status: 200, statusText: 'OK', headers: {}, config })
+        const { limit, offset } = config.params as { limit: number; offset: number }
+        offsets.push(offset)
+        const data =
+          offset === 0
+            ? Array.from({ length: limit }, (_, index) => ({
+                dataset_id: index + 1,
+                dataset_name: `Hồ sơ nhân viên ${index + 1}`,
+                domain: 'hr',
+              }))
+            : [{ dataset_id: limit + 1, dataset_name: 'Hồ sơ sinh viên', domain: 'academic' }]
+        return Promise.resolve({ data, status: 200, statusText: 'OK', headers: {}, config })
       }
       return Promise.resolve({ data: {}, status: 200, statusText: 'OK', headers: {}, config })
     }
 
     const { client } = renderUpload()
     try {
-      const domainFilter = await screen.findByLabelText(/Lọc bộ dữ liệu theo lĩnh vực/)
-      const options = Array.from((domainFilter as HTMLSelectElement).options).map((o) => o.value)
-      expect(options).toEqual(['', 'academic', 'hr'])
-      expect(options).not.toContain('admissions')
+      const user = userEvent.setup()
+      await user.click(screen.getByRole('button', { name: 'Nạp dữ liệu' }))
+      expect(
+        await screen.findByRole('option', { name: 'Hồ sơ sinh viên · Đào tạo' })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('option', { name: 'Hồ sơ nhân viên 1 · Nhân sự' })
+      ).toBeInTheDocument()
+      expect(offsets).toEqual([0, 100])
     } finally {
       client.clear()
     }

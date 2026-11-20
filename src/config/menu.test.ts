@@ -51,7 +51,6 @@ describe('ROLE_MENUS', () => {
     ])
     expect(ROLE_MENUS.STAFF[0]?.items.map((item) => item.href)).toEqual([
       '/staff',
-      '/staff/upload',
       '/staff/ingestion',
       '/staff/quality-issues',
     ])

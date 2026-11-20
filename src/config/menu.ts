@@ -56,7 +56,6 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
       groupTitle: 'Vận hành dữ liệu',
       items: [
         { title: 'Tổng quan', href: '/staff', iconName: 'LayoutDashboard' },
-        { title: 'Nạp dữ liệu', href: '/staff/upload', iconName: 'Upload' },
         { title: 'Lịch sử nạp dữ liệu', href: '/staff/ingestion', iconName: 'History' },
         {
           title: 'Yêu cầu xử lý dữ liệu lỗi',
