@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { getApiErrorMessage } from '@/api/http'
 import { API_ListDatasets } from '@/api/shared/datasets'
@@ -38,7 +38,7 @@ const ISSUE_STATUS_OPTIONS = [
 ] as const
 
 function QualityIssuesContent({ context }: { context: StaffContext }) {
-  const [statusFilter, setStatusFilter] = useState<string>('')
+  const [statusFilter, setStatusFilter] = useState<string>('ASSIGNED')
   const [mineOnly, setMineOnly] = useState(true)
   const [offset, setOffset] = useState(0)
 
@@ -87,55 +87,28 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
         breadcrumb={['Không gian nhân viên', 'Yêu cầu xử lý dữ liệu lỗi']}
         title="Yêu cầu xử lý dữ liệu lỗi"
         description="Xem danh sách các vấn đề chất lượng dữ liệu trong phạm vi đơn vị, tải tệp đã sửa và gửi báo cáo xác minh."
-        actions={
-          <Button
-            onClick={() => void issuesQuery.refetch()}
-            reading={issuesQuery.isFetching}
-            icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
-          >
-            Làm mới
-          </Button>
-        }
       />
 
-      {/* Bộ lọc */}
-      <Card>
-        <div className="flex flex-wrap items-end gap-3 text-xs">
-          <div className="space-y-1">
-            <label htmlFor="filter-issue-status" className="block font-semibold text-slate-700">
-              Trạng thái yêu cầu
-            </label>
-            <select
-              id="filter-issue-status"
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value)
-                setOffset(0)
-              }}
-              className="h-9 rounded-md border border-slate-300 bg-white px-3 text-xs text-slate-900"
-            >
-              {ISSUE_STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <label className="flex h-9 cursor-pointer items-center gap-2 rounded-md border border-slate-300 bg-white px-3 font-medium text-slate-700">
-            <input
-              type="checkbox"
-              checked={mineOnly}
-              onChange={(e) => {
-                setMineOnly(e.target.checked)
-                setOffset(0)
-              }}
-              className="size-4 accent-[#b91830]"
-            />
-            Chỉ hiển thị yêu cầu giao cho tôi
-          </label>
-        </div>
-      </Card>
+      <div className="space-y-1 text-xs">
+        <label htmlFor="filter-issue-status" className="block font-semibold text-slate-700">
+          Trạng thái yêu cầu
+        </label>
+        <select
+          id="filter-issue-status"
+          value={statusFilter}
+          onChange={(e) => {
+            setStatusFilter(e.target.value)
+            setOffset(0)
+          }}
+          className="h-9 rounded-md border border-slate-300 bg-white px-3 text-xs text-slate-900"
+        >
+          {ISSUE_STATUS_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {/* Danh sách yêu cầu */}
       <Card title="Danh sách yêu cầu xử lý" bodyClassName="p-0">

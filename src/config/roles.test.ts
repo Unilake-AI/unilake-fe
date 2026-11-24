@@ -45,6 +45,18 @@ describe('role theo backend seed', () => {
     expect(hasAccessToRoute(home === '/manager' ? '/staff' : '/manager', [role])).toBe(false)
   })
 
+  it('chỉ mở workspace theo các vai trò được gán', () => {
+    expect(hasAccessToRoute('/admin', ['ADMIN'])).toBe(true)
+    expect(hasAccessToRoute('/data/cleaning', ['ADMIN'])).toBe(false)
+    expect(hasAccessToRoute('/manager', ['ADMIN'])).toBe(false)
+    expect(hasAccessToRoute('/staff', ['ADMIN'])).toBe(false)
+    expect(hasAccessToRoute('/viewer', ['ADMIN'])).toBe(false)
+    expect(hasAccessToRoute('/admin', ['DATA_ADMIN'])).toBe(false)
+    expect(hasAccessToRoute('/data/cleaning', ['ADMIN', 'DATA_ADMIN'])).toBe(true)
+    expect(getRoleForWorkspace(['ADMIN'], 'DATA_ADMIN')).toBeNull()
+    expect(getRoleForWorkspace(['ADMIN', 'DATA_ADMIN'], 'DATA_ADMIN')).toBe('DATA_ADMIN')
+  })
+
   it('không cho role phòng ban vào trang quản trị hoặc Ban Giám hiệu', () => {
     expect(hasAccessToRoute('/admin', ['HR_STAFF'])).toBe(false)
     expect(hasAccessToRoute('/data', ['HR_MANAGER'])).toBe(false)

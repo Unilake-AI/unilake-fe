@@ -6,4 +6,6 @@ export type DatasetFilters = paths['/api/v1/datasets']['get']['parameters']['que
 
 export type SourceSystemRead = components['schemas']['SourceSystemRead']
 
-export type DatasetCreatePayload = components['schemas']['DatasetCreate']
+export type DatasetCreatePayload = components['schemas']['DatasetCreate'] & {
+  owner_department_id?: number
+}

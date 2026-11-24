@@ -262,8 +262,7 @@ function JobDetails({
 
       {status === 'FAILED' && !retryEligible && (
         <p className="rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-600">
-          Chức năng chạy lại thủ công hiện chỉ hỗ trợ cho các job tải tệp lên (UPLOAD_V1) đã ghim
-          phiên bản.
+          Không thể chạy lại loại lần nạp này.
         </p>
       )}
 
@@ -379,8 +378,10 @@ function JobDetails({
           <DialogHeader>
             <DialogTitle>Xác nhận chạy lại lần nạp #{jobId}</DialogTitle>
             <DialogDescription>
-              Hệ thống sẽ tạo một lần chạy mới từ phiên bản tệp đã ghim của job #{jobId} và giữ
-              nguyên lịch sử lần thất bại trước đó.
+              {job.job_type === 'UPLOAD_V1'
+                ? 'Lần chạy mới dùng phiên bản tệp đã ghim.'
+                : 'Lần chạy mới đọc lại bảng hoặc tệp từ nguồn đã đăng ký.'}{' '}
+              Lịch sử lần nạp #{jobId} vẫn được lưu.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -472,8 +473,8 @@ export function RunJobPanel({
 
   return (
     <Card
-      title="Phương thức B: Chạy nạp từ nguồn dữ liệu đã đăng ký"
-      subtitle="Gọi POST /api/v1/ingestion/jobs để thu thập dữ liệu từ nguồn đã cấu hình vào Bronze."
+      title="Chạy nạp từ nguồn dữ liệu đã đăng ký"
+      subtitle="Chọn nguồn, bộ dữ liệu Bronze và bảng hoặc tệp cần nạp."
       right={
         <Button variant="ghost" onClick={onClose} aria-label="Đóng form chạy nạp dữ liệu">
           <X className="size-4" aria-hidden="true" />
@@ -494,11 +495,13 @@ export function RunJobPanel({
             <option value="">
               {sources.isPending ? 'Đang tải…' : 'Chọn nguồn đang hoạt động'}
             </option>
-            {sources.data?.items.map((source) => (
-              <option key={source.data_source_id} value={source.data_source_id}>
-                #{source.data_source_id} · {source.source_name} ({source.source_type})
-              </option>
-            ))}
+            {sources.data?.items
+              .filter((source) => source.connection_type !== 'UPLOAD')
+              .map((source) => (
+                <option key={source.data_source_id} value={source.data_source_id}>
+                  #{source.data_source_id} · {source.source_name} ({source.source_type})
+                </option>
+              ))}
           </select>
         </div>
         <div className="space-y-1.5">
@@ -954,7 +957,7 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
   const [statusFilter, setStatusFilter] = useState('')
   const [datasetFilter, setDatasetFilter] = useState('')
   const [sourceFilter, setSourceFilter] = useState('')
-  const [mineOnly, setMineOnly] = useState(false)
+  const [runPanelOpen, setRunPanelOpen] = useState(false)
   const [offset, setOffset] = useState(0)
 
   const statsQuery = useQuery({
@@ -990,7 +993,6 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
         status: statusFilter || undefined,
         dataset_id: datasetFilter ? Number(datasetFilter) : undefined,
         data_source_id: sourceFilter ? Number(sourceFilter) : undefined,
-        mine_only: mineOnly,
       },
     ],
     queryFn: () =>
@@ -1000,7 +1002,6 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
         status: (statusFilter as IngestionJobStatusFilter) || undefined,
         dataset_id: datasetFilter ? Number(datasetFilter) : undefined,
         data_source_id: sourceFilter ? Number(sourceFilter) : undefined,
-        mine_only: mineOnly || undefined,
       }),
     refetchInterval: (query) =>
       query.state.data?.some((job) => isJobActive(job.status)) ? POLL_INTERVAL_MS : false,
@@ -1022,9 +1023,12 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
       <PageHeader
         breadcrumb={['Quản trị dữ liệu', 'Nạp dữ liệu']}
         title="Giám sát nạp dữ liệu (Ingestion)"
-        description="Theo dõi trạng thái và chạy lại job upload đủ điều kiện vào tầng Bronze."
+        description="Chạy nạp từ nguồn đã đăng ký và theo dõi kết quả lưu vào Bronze."
         actions={
           <>
+            <Button variant="primary" onClick={() => setRunPanelOpen(true)}>
+              Chạy từ nguồn
+            </Button>
             <Link
               href="/data/pipeline"
               className="inline-flex h-9 items-center rounded-lg border border-slate-300 px-3 text-xs font-semibold text-[#a9162e]"
@@ -1045,6 +1049,13 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
           </>
         }
       />
+
+      {runPanelOpen && (
+        <RunJobPanel
+          onClose={() => setRunPanelOpen(false)}
+          onCreated={(job) => setSelectedJobId(job.ingestion_job_id)}
+        />
+      )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
         <KpiCard
@@ -1141,18 +1152,7 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
               ))}
             </select>
           </div>
-          <label className="flex h-9 cursor-pointer items-center gap-2 rounded-md border border-slate-300 bg-white px-3 font-medium text-slate-700">
-            <input
-              type="checkbox"
-              checked={mineOnly}
-              onChange={(e) => {
-                setMineOnly(e.target.checked)
-                setOffset(0)
-              }}
-              className="size-4 accent-[#b91830]"
-            />
-            Chỉ lần nạp của tôi
-          </label>
+
         </div>
       </Card>
 

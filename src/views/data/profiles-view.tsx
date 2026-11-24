@@ -672,7 +672,10 @@ function ProfileFormPanel({
             className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-rose-700"
           >
             <span>
-              {formError ?? getApiErrorMessage(saveMutation.error, 'Không thể lưu Silver Profile.')}
+              {formError ??
+                (revisionConflict
+                  ? 'Cấu hình Silver đã được thay đổi bởi thao tác khác. Vui lòng tải lại bản mới nhất.'
+                  : getApiErrorMessage(saveMutation.error, 'Không thể lưu Silver Profile.'))}
             </span>
             {revisionConflict && isEdit && (
               <Button variant="outline" onClick={() => void handleReloadLatest()}>
@@ -798,9 +801,15 @@ export function ProfilesView() {
                             {profile.definition.dataset_id}
                           </p>
                         </div>
-                        <div className="flex shrink-0 items-center gap-1">
+                        <div className="flex flex-wrap items-center justify-end gap-1">
                           <Tag tone="slate">rev {profile.revision}</Tag>
-                          <Tag tone="indigo">{profile.storage}</Tag>
+                          {profile.approval_status && (
+                            <Tag
+                              tone={profile.approval_status === 'APPROVED' ? 'emerald' : 'amber'}
+                            >
+                              {profile.approval_status === 'APPROVED' ? 'Đã duyệt' : 'Cần duyệt'}
+                            </Tag>
+                          )}
                         </div>
                       </button>
                     </li>

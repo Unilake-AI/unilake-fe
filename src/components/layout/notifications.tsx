@@ -1,8 +1,20 @@
 'use client'
 
-import * as DialogPrimitive from '@radix-ui/react-dialog'
-import { Bell, CircleCheck, ClipboardList, FileCheck, X } from 'lucide-react'
+import { useRef, useState } from 'react'
+import type { RefObject } from 'react'
 
+import Link from 'next/link'
+
+import * as DialogPrimitive from '@radix-ui/react-dialog'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Bell, ClipboardList, X } from 'lucide-react'
+
+import { getApiErrorMessage } from '@/api/http'
+import {
+  API_ListNotifications,
+  API_MarkNotificationsRead,
+  API_MarkStaffNotificationRead,
+} from '@/api/shared/notifications'
 import {
   Dialog,
   DialogClose,
@@ -10,40 +22,10 @@ import {
   DialogPortal,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { useAuth } from '@/hooks/use-auth'
+import type { RoleWorkspace } from '@/types/roles'
 
-const notifications = [
-  {
-    id: 'upload-complete',
-    title: 'Nạp dữ liệu thành công',
-    description: 'Tệp bạn vừa gửi đã được lưu và sẵn sàng để xem.',
-    time: '5 phút trước',
-    icon: CircleCheck,
-    color: 'bg-emerald-50 text-emerald-700',
-  },
-  {
-    id: 'review-requested',
-    title: 'Có tệp cần kiểm tra',
-    description: 'Một số dòng trong tệp tháng này cần được xem lại.',
-    time: '30 phút trước',
-    icon: ClipboardList,
-    color: 'bg-amber-50 text-amber-700',
-  },
-  {
-    id: 'report-ready',
-    read: true,
-    title: 'Báo cáo tháng đã sẵn sàng',
-    description: 'Bạn có thể xem bản tổng hợp số liệu tháng này.',
-    time: 'Hôm qua',
-    icon: FileCheck,
-    color: 'bg-indigo-50 text-indigo-700',
-  },
-]
-
-export function getUnreadNotifications(readIds: ReadonlySet<string>) {
-  return notifications.filter(({ id, read }) => !read && !readIds.has(id))
-}
-
-export function NotificationButton({
+function NotificationButton({
   unreadCount,
   open,
   onOpen,
@@ -65,7 +47,7 @@ export function NotificationButton({
         <Bell className="size-5" />
         {unreadCount > 0 && (
           <span className="absolute -right-1.5 -top-1.5 grid size-4 place-items-center rounded-full bg-primary text-[9px] font-bold text-white ring-2 ring-sidebar">
-            {unreadCount}
+            {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </span>
@@ -74,96 +56,199 @@ export function NotificationButton({
   )
 }
 
-export function NotificationPanel({
-  open,
-  onOpenChange,
-  readIds,
-  onRead,
-  restoreFocus,
+export function WorkspaceNotifications({
+  workspace,
+  fallbackFocus,
 }: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  readIds: ReadonlySet<string>
-  onRead: (ids: string[]) => void
-  restoreFocus: () => void
+  workspace: Exclude<RoleWorkspace, 'VIEWER'>
+  fallbackFocus: RefObject<HTMLButtonElement | null>
 }) {
-  const unread = getUnreadNotifications(readIds)
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  const trigger = useRef<HTMLButtonElement>(null)
+  const [open, setOpen] = useState(false)
+  const [offset, setOffset] = useState(0)
+  const queryKey = ['notifications', user?.id ?? user?.username, workspace]
+  const summary = useQuery({
+    queryKey: [...queryKey, 0],
+    queryFn: () => API_ListNotifications(workspace, 0),
+    enabled: Boolean(user),
+    refetchInterval: 30_000,
+  })
+  const laterPage = useQuery({
+    queryKey: [...queryKey, offset],
+    queryFn: () => API_ListNotifications(workspace, offset),
+    enabled: Boolean(user) && open && offset > 0,
+    refetchInterval: 30_000,
+  })
+  const page = offset === 0 ? summary : laterPage
+  const markRead = useMutation({
+    mutationFn: (ids: number[]) =>
+      workspace === 'STAFF' && ids.length === 1
+        ? API_MarkStaffNotificationRead(ids[0]!)
+        : API_MarkNotificationsRead(ids),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  })
+  const items = page.data?.items ?? []
+  const unreadIds = items
+    .filter((item) => !(item.is_read ?? item.read_at))
+    .map((item) => item.event_id)
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogPortal>
-        <DialogOverlay className="z-[60] bg-slate-950/35 motion-reduce:animate-none" />
-        <DialogPrimitive.Content
-          aria-describedby={undefined}
-          onCloseAutoFocus={(event) => {
-            event.preventDefault()
-            restoreFocus()
-          }}
-          className="fixed bottom-0 right-0 top-[var(--workspace-header-height)] z-[61] flex w-full max-w-[390px] flex-col bg-white shadow-xl outline-none duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right-8 data-[state=open]:slide-in-from-right-8 motion-reduce:animate-none md:border-l md:border-slate-200"
-        >
-          <div className="flex shrink-0 items-start justify-between gap-2 border-b border-slate-200 px-5 py-4">
-            <div>
-              <DialogTitle className="text-xl font-bold tracking-tight text-slate-900">
-                Thông báo
-              </DialogTitle>
-              <p className="mt-1 text-xs text-slate-500">Thông báo mẫu</p>
+    <>
+      <NotificationButton
+        unreadCount={summary.data?.unread_count ?? 0}
+        open={open}
+        onOpen={(button) => {
+          trigger.current = button
+          markRead.reset()
+          setOffset(0)
+          setOpen(true)
+        }}
+      />
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogPortal>
+          <DialogOverlay className="z-[60] bg-slate-950/35 motion-reduce:animate-none" />
+          <DialogPrimitive.Content
+            aria-describedby={undefined}
+            onCloseAutoFocus={(event) => {
+              event.preventDefault()
+              if (trigger.current?.getClientRects().length) trigger.current.focus()
+              else fallbackFocus.current?.focus()
+            }}
+            className="fixed bottom-0 right-0 top-[var(--workspace-header-height)] z-[61] flex w-full max-w-[390px] flex-col bg-white shadow-xl outline-none duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right-8 data-[state=open]:slide-in-from-right-8 motion-reduce:animate-none md:border-l md:border-slate-200"
+          >
+            <div className="flex shrink-0 items-start justify-between gap-2 border-b border-slate-200 px-5 py-4">
+              <div>
+                <DialogTitle className="text-xl font-bold tracking-tight text-slate-900">
+                  Thông báo
+                </DialogTitle>
+              </div>
+              <DialogClose
+                aria-label="Đóng thông báo"
+                className="grid size-9 shrink-0 place-items-center rounded-full text-slate-600 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-500"
+              >
+                <X className="size-5" aria-hidden="true" />
+              </DialogClose>
             </div>
-            <DialogClose
-              aria-label="Đóng thông báo"
-              className="grid size-9 shrink-0 place-items-center rounded-full text-slate-600 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-500"
-            >
-              <X className="size-5" aria-hidden="true" />
-            </DialogClose>
-          </div>
 
-          <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
-            {notifications.map(({ id, title, description, time, icon: Icon, color, read }) => {
-              const isRead = read || readIds.has(id)
-
-              return (
-                <li key={id}>
+            <div className="min-h-0 flex-1 overflow-y-auto p-3">
+              {page.isPending && (
+                <p role="status" className="p-3 text-sm">
+                  Đang tải thông báo…
+                </p>
+              )}
+              {page.isError && (
+                <div className="space-y-2 p-3 text-sm">
+                  <p role="alert">{getApiErrorMessage(page.error, 'Không tải được thông báo.')}</p>
                   <button
                     type="button"
-                    disabled={isRead}
-                    onClick={() => onRead([id])}
-                    className={`flex w-full items-start gap-3 rounded-xl p-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-rose-500 ${isRead ? '' : 'bg-slate-50 hover:bg-slate-100'}`}
+                    className="font-semibold text-rose-700"
+                    onClick={() => void page.refetch()}
                   >
-                    <span
-                      className={`grid size-9 shrink-0 place-items-center rounded-full ${color}`}
-                      aria-hidden="true"
-                    >
-                      <Icon className="size-4" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-semibold text-slate-900">{title}</span>
-                      <span className="block text-xs leading-[18px] text-slate-600">
-                        {description}
-                      </span>
-                      <span className="mt-1 block text-[11px] text-slate-500">{time}</span>
-                    </span>
-                    {!isRead && (
-                      <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary">
-                        <span className="sr-only">Chưa đọc</span>
-                      </span>
-                    )}
+                    Thử lại
                   </button>
-                </li>
-              )
-            })}
-          </ul>
+                </div>
+              )}
+              {page.isSuccess && items.length === 0 && (
+                <p className="p-3 text-sm text-slate-600">Chưa có thông báo.</p>
+              )}
+              <ul className="space-y-1">
+                {items.map((item) => {
+                  const isRead = item.is_read ?? Boolean(item.read_at)
+                  return (
+                    <li
+                      key={item.event_id}
+                      className={`flex items-start gap-3 rounded-xl p-3 ${isRead ? '' : 'bg-slate-50'}`}
+                    >
+                      <ClipboardList
+                        className="mt-0.5 size-5 shrink-0 text-rose-700"
+                        aria-hidden="true"
+                      />
+                      <div className="min-w-0 flex-1">
+                        {workspace === 'STAFF' ? (
+                          <Link
+                            href={`/staff/quality-issues/${encodeURIComponent(item.issue_id)}`}
+                            onClick={() => setOpen(false)}
+                            className="block break-words text-sm font-semibold text-slate-900 hover:underline"
+                          >
+                            {item.title}
+                          </Link>
+                        ) : (
+                          <p className="break-words text-sm font-semibold text-slate-900">
+                            {item.title}
+                          </p>
+                        )}
+                        {item.message && (
+                          <p className="mt-1 text-xs text-slate-700">{item.message}</p>
+                        )}
+                        <p className="mt-1 text-xs text-slate-600">{item.department_name}</p>
+                        <time
+                          dateTime={item.created_at}
+                          className="mt-1 block text-xs text-slate-500"
+                        >
+                          {new Date(item.created_at).toLocaleString('vi-VN')}
+                        </time>
+                        {!isRead && (
+                          <button
+                            type="button"
+                            disabled={markRead.isPending}
+                            onClick={() => markRead.mutate([item.notification_id ?? item.event_id])}
+                            className="mt-2 text-xs font-semibold text-rose-700 hover:underline disabled:opacity-50"
+                          >
+                            Đánh dấu đã đọc
+                          </button>
+                        )}
+                      </div>
+                      {!isRead && (
+                        <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary">
+                          <span className="sr-only">Chưa đọc</span>
+                        </span>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
 
-          <div className="border-t border-slate-200 p-3">
-            <button
-              type="button"
-              disabled={unread.length === 0}
-              onClick={() => onRead(unread.map(({ id }) => id))}
-              className="w-full rounded-lg px-3 py-2 text-sm font-semibold text-rose-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-500 enabled:hover:bg-rose-50 disabled:text-slate-400"
-            >
-              Đánh dấu tất cả là đã đọc
-            </button>
-          </div>
-        </DialogPrimitive.Content>
-      </DialogPortal>
-    </Dialog>
+            <div className="space-y-2 border-t border-slate-200 p-3 text-sm">
+              {markRead.isError && (
+                <p role="alert" className="text-rose-700">
+                  {getApiErrorMessage(markRead.error, 'Không cập nhật được trạng thái đã đọc.')}
+                </p>
+              )}
+              {offset > 0 || (page.data && page.data.total > items.length) ? (
+                <nav aria-label="Phân trang thông báo" className="flex justify-between gap-3">
+                  <button
+                    type="button"
+                    disabled={offset === 0}
+                    onClick={() => setOffset(offset - 20)}
+                    className="disabled:text-slate-400"
+                  >
+                    Trang trước
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!page.data || offset + 20 >= page.data.total}
+                    onClick={() => setOffset(offset + 20)}
+                    className="disabled:text-slate-400"
+                  >
+                    Trang sau
+                  </button>
+                </nav>
+              ) : null}
+              <button
+                type="button"
+                disabled={unreadIds.length === 0 || markRead.isPending}
+                onClick={() => markRead.mutate(unreadIds)}
+                className="w-full rounded-lg px-3 py-2 font-semibold text-rose-700 enabled:hover:bg-rose-50 disabled:text-slate-400"
+              >
+                Đánh dấu đã đọc trên trang này
+              </button>
+            </div>
+          </DialogPrimitive.Content>
+        </DialogPortal>
+      </Dialog>
+    </>
   )
 }

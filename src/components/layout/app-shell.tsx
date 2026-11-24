@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 
 import * as DialogPrimitive from '@radix-ui/react-dialog'
-import { Layers, Menu, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 
 import {
   Dialog,
@@ -17,10 +17,9 @@ import {
 } from '@/components/ui/dialog'
 import { getWorkspaceForRole } from '@/config/roles'
 import { DomainProvider } from '@/hooks/use-domain'
-import { cn } from '@/lib/utils'
 import type { AppShellProps } from '@/types/layout/app-shell'
 
-import { NotificationButton, NotificationPanel, getUnreadNotifications } from './notifications'
+import { WorkspaceNotifications } from './notifications'
 import { Sidebar } from './sidebar'
 import { UserMenu } from './user-menu'
 import logoText from '../../../public/logo_text.png'
@@ -29,25 +28,7 @@ const DESKTOP_NAV = '(min-width: 768px) and (hover: hover) and (pointer: fine)'
 
 export function AppShell({ role, children }: AppShellProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const notificationTrigger = useRef<HTMLButtonElement>(null)
   const mobileNavigationTrigger = useRef<HTMLButtonElement>(null)
-  const [readIds, setReadIds] = useState(() => new Set<string>())
-
-  function markRead(ids: string[]) {
-    setReadIds((current) => new Set([...current, ...ids]))
-  }
-
-  const notificationButton = (
-    <NotificationButton
-      unreadCount={getUnreadNotifications(readIds).length}
-      open={notificationsOpen}
-      onOpen={(trigger) => {
-        notificationTrigger.current = trigger
-        setNotificationsOpen(true)
-      }}
-    />
-  )
 
   useEffect(() => {
     const desktop = window.matchMedia(DESKTOP_NAV)
@@ -58,7 +39,7 @@ export function AppShell({ role, children }: AppShellProps) {
     return () => desktop.removeEventListener('change', closeMobileMenu)
   }, [])
 
-  const isManager = getWorkspaceForRole(role) === 'MANAGER'
+  const workspace = getWorkspaceForRole(role)
 
   return (
     <DomainProvider role={role}>
@@ -89,7 +70,12 @@ export function AppShell({ role, children }: AppShellProps) {
             />
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            {notificationButton}
+            {workspace !== 'VIEWER' && workspace !== 'ADMIN' && (
+              <WorkspaceNotifications
+                workspace={workspace}
+                fallbackFocus={mobileNavigationTrigger}
+              />
+            )}
             <UserMenu role={role} />
           </div>
         </header>
@@ -123,20 +109,6 @@ export function AppShell({ role, children }: AppShellProps) {
           </DialogPrimitive.Content>
         </DialogPortal>
       </Dialog>
-      <NotificationPanel
-        open={notificationsOpen}
-        onOpenChange={setNotificationsOpen}
-        readIds={readIds}
-        onRead={markRead}
-        restoreFocus={() => {
-          const trigger = notificationTrigger.current
-          if (trigger?.getClientRects().length) {
-            trigger.focus()
-          } else {
-            mobileNavigationTrigger.current?.focus()
-          }
-        }}
-      />
     </DomainProvider>
   )
 }

@@ -35,10 +35,10 @@ describe('ROLE_MENUS', () => {
     }
   })
 
-  it('nút Ask AI trỏ tới trang có trong menu; VIEWER chỉ có dashboard và STAFF tập trung nạp/sửa dữ liệu', () => {
+  it('menu Staff và Manager có Hỏi AI, Viewer có các dashboard', () => {
     expect(ASK_AI_PATHS.ADMIN).toBeUndefined()
     expect(ASK_AI_PATHS.VIEWER).toBeUndefined()
-    expect(ASK_AI_PATHS.STAFF).toBeUndefined()
+    expect(ASK_AI_PATHS.STAFF).toBe('/staff/ask')
     for (const [workspace, href] of Object.entries(ASK_AI_PATHS)) {
       const hrefs = ROLE_MENUS[workspace as keyof typeof ROLE_MENUS].flatMap((g) =>
         g.items.map((i) => i.href)
@@ -51,7 +51,6 @@ describe('ROLE_MENUS', () => {
     ])
     expect(ROLE_MENUS.STAFF[0]?.items.map((item) => item.href)).toEqual([
       '/staff',
-      '/staff/upload',
       '/staff/ingestion',
       '/staff/quality-issues',
     ])

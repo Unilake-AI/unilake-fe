@@ -30,6 +30,10 @@ export interface AutoSilverResult {
 }
 
 export interface AutoSilverJob {
+  dataset_name?: string
+  source_table?: string
+  domain?: string
+  processing_mode?: string
   job_id: string
   ingestion_job_id: number
   dataset_id: number

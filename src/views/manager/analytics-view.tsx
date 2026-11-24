@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
 import { Filter } from 'lucide-react'
@@ -40,15 +40,16 @@ interface DomainEntityOption {
   metrics: { id: string; label: string }[]
 }
 
-const DOMAIN_OPTIONS: Record<Domain, DomainEntityOption[]> = {
+const FALLBACK_DOMAIN_OPTIONS: Record<Domain, DomainEntityOption[]> = {
   hr: [
     {
       entity: 'employee',
       label: 'Nhân sự',
       metrics: [
-        { id: 'record_count_by_employee_status', label: 'Theo trạng thái công tác' },
+        { id: 'record_count_by_employee_status', label: 'Phân bổ theo trạng thái làm việc' },
+        { id: 'record_count_by_title', label: 'Phân bổ theo chức danh' },
         { id: 'record_count_by_department_id', label: 'Theo phòng ban / đơn vị' },
-        { id: 'record_count_by_position_id', label: 'Theo chức danh / ngạch' },
+        { id: 'record_count', label: 'Tổng số lượng nhân viên' },
       ],
     },
     {
@@ -63,8 +64,8 @@ const DOMAIN_OPTIONS: Record<Domain, DomainEntityOption[]> = {
       label: 'Sinh viên',
       metrics: [
         { id: 'record_count_by_program_id', label: 'Theo chương trình đào tạo' },
-        { id: 'record_count_by_student_status', label: 'Theo tình trạng học tập' },
-        { id: 'record_count_by_academic_year', label: 'Theo khóa học / năm học' },
+        { id: 'record_count_by_academic_status', label: 'Theo trạng thái đào tạo' },
+        { id: 'record_count', label: 'Tổng số lượng sinh viên' },
       ],
     },
     {
@@ -78,9 +79,10 @@ const DOMAIN_OPTIONS: Record<Domain, DomainEntityOption[]> = {
       entity: 'admission',
       label: 'Hồ sơ tuyển sinh',
       metrics: [
-        { id: 'record_count_by_admission_status', label: 'Theo trạng thái hồ sơ' },
+        { id: 'record_count_by_admission_status', label: 'Theo trạng thái trúng tuyển / nhập học' },
         { id: 'record_count_by_admission_method_id', label: 'Theo phương thức xét tuyển' },
         { id: 'record_count_by_major_id', label: 'Theo ngành đăng ký' },
+        { id: 'record_count', label: 'Tổng số hồ sơ tuyển sinh' },
       ],
     },
   ],
@@ -134,6 +136,11 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
     currentEntityConfig.metrics[0] ?? { id: 'record_count', label: label('record_count') }
   const canFilterDimension = effectiveMetric.id.startsWith('record_count_by_')
 
+  const effectiveEntity = currentEntityConfig.entity
+  const effectiveMetric = currentEntityConfig.metrics.some((m) => m.id === selectedMetric)
+    ? selectedMetric
+    : (currentEntityConfig.metrics[0]?.id ?? 'record_count')
+
   const [page, setPage] = useState(0)
   const pageSize = 20
 
@@ -164,7 +171,7 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
 
   function handleDomainChange(newDomain: Domain) {
     setDomain(newDomain)
-    const nextEntityOpts = DOMAIN_OPTIONS[newDomain] ?? []
+    const nextEntityOpts = FALLBACK_DOMAIN_OPTIONS[newDomain] ?? []
     if (nextEntityOpts[0]) {
       setSelectedEntity(nextEntityOpts[0].entity)
       setSelectedMetric(nextEntityOpts[0].metrics[0]?.id ?? 'record_count')

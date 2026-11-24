@@ -20,6 +20,7 @@ import { toast } from 'sonner'
 import { API_ListCleaningRuns } from '@/api/admindata/cleaning'
 import {
   API_AssignQualityIssue,
+  API_CompareQualityIssue,
   API_ListIssueAssignees,
   API_ListIssueDepartments,
   API_VerifyQualityIssue,
@@ -63,7 +64,92 @@ const PAGE_SIZE = 20
 const inputClass =
   'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]/30'
 
-function IssueDetailPanel({ issueId }: { issueId: string }) {
+const comparisonLabels = {
+  RESOLVED: 'Đã khắc phục',
+  STILL_INVALID: 'Còn lỗi',
+  UNMATCHED: 'Chưa tìm thấy dòng tương ứng',
+  MANUAL_REVIEW_REQUIRED: 'Cần kiểm tra thủ công',
+}
+
+function ComparisonPanel({ issueId, runId }: { issueId: string; runId: string }) {
+  const comparison = useMutation({
+    mutationFn: () => API_CompareQualityIssue(issueId, runId),
+  })
+  const result = comparison.data
+
+  return (
+    <div className="space-y-2 rounded border border-slate-200 bg-white p-3">
+      <Button type="button" loading={comparison.isPending} onClick={() => comparison.mutate()}>
+        Đối chiếu trước và sau khi sửa
+      </Button>
+      {comparison.isError && (
+        <p role="alert" className="text-rose-700">
+          {getApiErrorMessage(comparison.error, 'Không tải được kết quả đối chiếu.')}
+        </p>
+      )}
+      {result && (
+        <>
+          <p role="status" className="font-medium">
+            {result.summary.resolved}/{result.summary.total} đã khắc phục ·{' '}
+            {result.summary.still_invalid} còn lỗi · {result.summary.unmatched} chưa ghép dòng ·{' '}
+            {result.summary.manual_review_required} cần kiểm tra thủ công
+          </p>
+          <ul className="max-h-80 space-y-1 overflow-y-auto">
+            {result.records.map((record) => {
+              const fields = Array.from(
+                new Set([
+                  ...Object.keys(record.old_values ?? {}),
+                  ...Object.keys(record.new_values ?? {}),
+                ])
+              )
+              return (
+                <li key={record.record_id} className="rounded border p-2">
+                  <details>
+                    <summary className="cursor-pointer break-all font-medium">
+                      {record.old_locator} · {comparisonLabels[record.status]}
+                    </summary>
+                    {record.reason && <p className="mt-2">{record.reason}</p>}
+                    {record.new_locator && <p className="mt-1">Dòng mới: {record.new_locator}</p>}
+                    {fields.length > 0 && (
+                      <div className="mt-2 overflow-x-auto">
+                        <table className="w-full text-left">
+                          <thead>
+                            <tr>
+                              <th scope="col">Trường</th>
+                              <th scope="col">Trước</th>
+                              <th scope="col">Sau</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {fields.map((field) => (
+                              <tr key={field} className="border-t">
+                                <th scope="row" className="py-1 pr-3">
+                                  {field}
+                                </th>
+                                <td className="break-all py-1 pr-3">
+                                  {JSON.stringify(record.old_values?.[field]) ?? '—'}
+                                </td>
+                                <td className="break-all py-1">
+                                  {JSON.stringify(record.new_values?.[field]) ?? '—'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </details>
+                </li>
+              )
+            })}
+          </ul>
+        </>
+      )}
+    </div>
+  )
+}
+
+export function IssueDetailPanel({ issueId }: { issueId: string }) {
   const queryClient = useQueryClient()
   const [assigneeId, setAssigneeId] = useState('')
   const [selectedRunId, setSelectedRunId] = useState('')
@@ -292,7 +378,10 @@ function IssueDetailPanel({ issueId }: { issueId: string }) {
                 id="verify-run-select"
                 className={inputClass}
                 value={selectedRunId}
-                onChange={(e) => setSelectedRunId(e.target.value)}
+                onChange={(e) => {
+                  setSelectedRunId(e.target.value)
+                  setConfirmedRecordIds([])
+                }}
               >
                 <option value="">
                   {cleaningRunsQuery.isPending
@@ -323,6 +412,10 @@ function IssueDetailPanel({ issueId }: { issueId: string }) {
                   {formatNumber(selectedRun.records_quarantined)}
                 </span>
               </div>
+            )}
+
+            {selectedRun && (
+              <ComparisonPanel key={selectedRunId} issueId={issueId} runId={selectedRunId} />
             )}
 
             <div className="flex flex-wrap gap-4">

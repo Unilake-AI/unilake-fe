@@ -1,5 +1,8 @@
 export interface NlqResponse {
   sql: string
+  answer?: string
+  truncated?: boolean
+  note?: string
   rows: Record<string, unknown>[]
 }
 

@@ -54,7 +54,6 @@ export interface AutoSilverOverview {
 }
 export const API_AutoSilverOverview = async () =>
   (await http.get<AutoSilverOverview>('/pipeline/auto/overview')).data
-
 export type IngestionFlow = components['schemas']['IngestionFlow']
 export type FlowStep = components['schemas']['FlowStep']
 export async function API_ListIngestionFlows(params: {

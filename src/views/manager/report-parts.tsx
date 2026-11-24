@@ -49,7 +49,9 @@ export const names: Record<string, string> = {
   assignment_status: 'Trạng thái phân công',
   academic_degree: 'Học vị',
   academic_title: 'Học hàm',
+  title: 'Chức danh',
   student_status: 'Trạng thái sinh viên',
+  academic_status: 'Trạng thái đào tạo',
   program_id: 'Chương trình',
   admission_year_id: 'Năm tuyển sinh',
   course_id: 'Học phần',
@@ -80,6 +82,12 @@ export const names: Record<string, string> = {
   ASSIGNED: 'Cần xử lý',
   PENDING_VERIFICATION: 'Chờ xác minh',
   VERIFIED: 'Đã xác minh',
+  APPROVED: 'Đã phê duyệt',
+  REVOKED: 'Đã thu hồi',
+  COMPLETED: 'Hoàn tất',
+  BRONZE: 'Tầng Bronze',
+  SILVER: 'Tầng Silver',
+  GOLD: 'Tầng Gold',
 }
 export const label = (key: string) => names[key] ?? key
 export const number = (value: number) => value.toLocaleString('vi-VN')

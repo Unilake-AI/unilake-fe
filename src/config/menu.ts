@@ -11,6 +11,7 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
         { title: 'Người dùng & Phân quyền', href: '/admin', iconName: 'Users' },
         { title: 'Cấu hình hệ thống & AI', href: '/admin/settings', iconName: 'Settings' },
         { title: 'Nhật ký hệ thống', href: '/admin/system-logs', iconName: 'ScrollText' },
+        { title: 'Yêu cầu xử lý lỗi', href: '/admin/quality-issues', iconName: 'FileWarning' },
       ],
     },
   ],
@@ -55,7 +56,6 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
       groupTitle: 'Vận hành dữ liệu',
       items: [
         { title: 'Tổng quan', href: '/staff', iconName: 'LayoutDashboard' },
-        { title: 'Nạp dữ liệu', href: '/staff/upload', iconName: 'Upload' },
         { title: 'Lịch sử nạp dữ liệu', href: '/staff/ingestion', iconName: 'History' },
         {
           title: 'Yêu cầu xử lý dữ liệu lỗi',
@@ -63,6 +63,10 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
           iconName: 'ShieldCheck',
         },
       ],
+    },
+    {
+      groupTitle: 'Hỗ trợ phân tích',
+      items: [{ title: 'Hỏi AI', href: '/staff/ask', iconName: 'Bot' }],
     },
   ],
 
@@ -143,9 +147,9 @@ export const ROLE_MENUS: Record<RoleWorkspace, MenuGroup[]> = {
   ],
 }
 
-/** Chỉ mở Ask AI cho MANAGER khi còn trong menu; DATA_ADMIN và STAFF tập trung vào vận hành dữ liệu. */
 export const ASK_AI_PATHS: Partial<Record<RoleWorkspace, string>> = {
   MANAGER: '/manager/ai',
+  STAFF: '/staff/ask',
 }
 
 export function getMenuItemsForRole(role: RoleCode): MenuItem[] {

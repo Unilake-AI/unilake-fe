@@ -95,7 +95,7 @@ gian công bố, không gán lỗi cụ thể cho KPI.
 403 ở API dữ liệu. `needs_department_assignment` giữ tương thích và luôn false.
 DB chưa sẵn sàng trả 503, không lộ thông tin kết nối.
 
-## Hỏi AI và lịch sử
+## Hỏi AI, thông báo và lịch sử
 
 Không sử dụng MockLLM/EmptyGoldQueryExecutor làm kết quả thật. API Hỏi AI yêu
 cầu role Manager và trả 503 cho tới khi có tích hợp truy vấn thật kiểm soát
@@ -106,6 +106,11 @@ Lịch sử hiện lưu cục bộ theo tài khoản trên trình duyệt, chưa
 bộ đa thiết bị. Không chuyển lịch sử dùng chung cũ sang tài khoản bất kỳ.
 Sidebar chỉ gồm Tổng quan, Hỏi UniLake AI, Chất lượng dữ liệu; Phê duyệt nguồn
 chỉ hiện khi có grant hợp lệ. Tài khoản/đăng xuất dùng menu tài khoản hiện có.
+
+Chuông thông báo dùng `/notifications?workspace=MANAGER`, lưu đã đọc qua
+`/notifications/read` và mở trực tiếp `/manager/quality-issues/{issue_id}`.
+Trạng thái đọc được lưu riêng cho tài khoản. Manager xem nội dung, vị trí/mã lỗi
+và lịch sử; quyền giao việc/xác minh vẫn thuộc quản trị dữ liệu.
 
 ## Kiểm thử
 

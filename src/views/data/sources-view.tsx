@@ -9,7 +9,7 @@ import { ChevronLeft, ChevronRight, Info, Plus, Search } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { API_UpdateDataSource } from '@/api/admindata/data-sources'
-import { API_ListSourceSystems } from '@/api/admindata/datasets'
+import { API_CreateSourceSystem, API_ListSourceSystems } from '@/api/admindata/datasets'
 import { getApiErrorMessage } from '@/api/http'
 import { API_GetDataSource, API_ListDataSources } from '@/api/shared/data-sources'
 import {
@@ -26,14 +26,107 @@ import {
   statusLabel,
   statusTone,
 } from '@/components/page/page-parts'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { TableSkeleton } from '@/components/ui/table-skeleton'
-import { SOURCE_SYSTEMS, SOURCE_TYPES } from '@/config/data-sources'
+import { SOURCE_TYPES } from '@/config/data-sources'
 import type { DataSourceFilter, DataSourceItem, DataSourceStatusFilter } from '@/types/data-sources'
 
 const PAGE_SIZE = 10
 
 const selectClass =
   'h-8 rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]'
+
+function CreateSourceSystemDialog() {
+  const [open, setOpen] = useState(false)
+  const queryClient = useQueryClient()
+  const create = useMutation({
+    mutationFn: API_CreateSourceSystem,
+    onSuccess: async (system) => {
+      await queryClient.invalidateQueries({ queryKey: ['source-systems'] })
+      toast.success(`Đã đăng ký hệ thống nguồn “${system.source_name}”.`)
+      setOpen(false)
+    },
+  })
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!create.isPending) {
+          create.reset()
+          setOpen(next)
+        }
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button variant="outline">Đăng ký hệ thống nguồn</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogTitle>Đăng ký hệ thống nguồn</DialogTitle>
+        <DialogDescription>
+          Hệ thống đã đăng ký sẽ xuất hiện khi thêm nguồn kết nối hoặc tạo bộ dữ liệu Bronze.
+        </DialogDescription>
+        <form
+          className="grid gap-3"
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (create.isPending) return
+            const data = new FormData(event.currentTarget)
+            const sourceCode = (data.get('code') as string).trim()
+            const sourceName = (data.get('name') as string).trim()
+            if (!sourceCode || !sourceName) return
+            create.mutate({
+              source_code: sourceCode,
+              source_name: sourceName,
+              source_type: data.get('type') as string,
+              description: (data.get('description') as string).trim() || undefined,
+            })
+          }}
+        >
+          <label className="grid gap-1 text-sm font-medium">
+            Mã hệ thống
+            <input name="code" className={selectClass} required maxLength={50} />
+          </label>
+          <label className="grid gap-1 text-sm font-medium">
+            Tên hệ thống
+            <input name="name" className={selectClass} required maxLength={200} />
+          </label>
+          <label className="grid gap-1 text-sm font-medium">
+            Loại hệ thống
+            <select name="type" className={selectClass}>
+              <option value="DATABASE">Cơ sở dữ liệu</option>
+              <option value="FILE">Tệp hoặc kho lưu trữ</option>
+              <option value="API">API</option>
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm font-medium">
+            Mô tả
+            <textarea
+              name="description"
+              rows={3}
+              maxLength={4000}
+              className="rounded-md border p-2 text-sm"
+            />
+          </label>
+          {create.isError && (
+            <p role="alert" className="text-xs text-rose-700">
+              {getApiErrorMessage(create.error, 'Không đăng ký được hệ thống nguồn.')}
+            </p>
+          )}
+          <Button type="submit" variant="primary" loading={create.isPending}>
+            Đăng ký
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 export function SourcesView() {
   const queryClient = useQueryClient()
@@ -58,15 +151,10 @@ export function SourcesView() {
     retry: false,
   })
 
-  const sourceSystemOptions = useMemo(() => {
-    if (sourceSystemsQuery.data && sourceSystemsQuery.data.length > 0) {
-      return sourceSystemsQuery.data.map((sys) => ({
-        id: sys.source_system_id,
-        name: sys.source_name,
-      }))
-    }
-    return SOURCE_SYSTEMS.map((sys) => ({ id: sys.id, name: sys.name }))
-  }, [sourceSystemsQuery.data])
+  const sourceSystemOptions = (sourceSystemsQuery.data ?? []).map((sys) => ({
+    id: sys.source_system_id,
+    name: sys.source_name,
+  }))
 
   const list = useQuery({
     queryKey: ['datasources', filter],
@@ -131,13 +219,16 @@ export function SourcesView() {
         title="Quản lý nguồn dữ liệu"
         description="Đăng ký, chỉnh sửa và bật/tắt các kết nối nguồn dữ liệu (CSV, Excel, JSON, REST API, PostgreSQL)."
         actions={
-          <Link
-            href="/data/sources/new"
-            className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#b91830] px-3 text-xs font-semibold text-white hover:bg-[#9e1429]"
-          >
-            <Plus className="size-3.5" aria-hidden="true" />
-            Thêm nguồn dữ liệu
-          </Link>
+          <>
+            <CreateSourceSystemDialog />
+            <Link
+              href="/data/sources/new"
+              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#b91830] px-3 text-xs font-semibold text-white hover:bg-[#9e1429]"
+            >
+              <Plus className="size-3.5" aria-hidden="true" />
+              Thêm nguồn dữ liệu
+            </Link>
+          </>
         }
       />
 

@@ -37,12 +37,34 @@ function setup(hasGrant = true) {
             domains: [{ domain: 'hr', name: 'Nhân sự' }],
             departments: [{ department_id: 7, department_code: 'PNS', department_name: 'Nhân sự' }],
           }
-        : config.method === 'post'
-          ? { status: 'APPROVED' }
-          : {
-              grants: hasGrant ? [{ grant_id: 'grant-1', domain: 'hr' }] : [],
-              items: hasGrant ? [profile] : [],
+        : config.url?.endsWith('/revisions')
+          ? {
+              revisions: [
+                {
+                  revision: 2,
+                  fingerprint: 'a'.repeat(64),
+                  created_by: '3',
+                  created_at: '2026-11-18T09:00:00Z',
+                },
+              ],
+              approvals: [
+                {
+                  revision: 2,
+                  approved_by: '4',
+                  approved_at: '2026-11-18T10:00:00Z',
+                  evidence: 'Đã duyệt bản cũ',
+                  revoked_by: '4',
+                  revoked_at: '2026-11-18T11:00:00Z',
+                  revocation_reason: 'Quy tắc đã thay đổi',
+                },
+              ],
             }
+          : config.method === 'post'
+            ? { status: 'APPROVED' }
+            : {
+                grants: hasGrant ? [{ grant_id: 'grant-1', domain: 'hr' }] : [],
+                items: hasGrant ? [profile] : [],
+              }
     return Promise.resolve({ data, status: 200, statusText: 'OK', headers: {}, config })
   }
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })
@@ -82,6 +104,19 @@ describe('ManagerApprovalsView', () => {
       evidence: 'Đã đối chiếu ý nghĩa các trường',
       allow_partial_publication: false,
     })
+    client.clear()
+  })
+  it('tải lịch sử phiên bản quy tắc khi bấm Xem lịch sử phiên bản', async () => {
+    const { calls, client } = setup()
+    const historyBtn = await screen.findByRole('button', { name: 'Xem lịch sử phiên bản' })
+    fireEvent.click(historyBtn)
+    expect(await screen.findByText('Đã duyệt bản cũ')).toBeInTheDocument()
+    expect(screen.getByText('Lý do thu hồi: Quy tắc đã thay đổi')).toBeInTheDocument()
+    expect(screen.getByText(/Người thu hồi: #4/)).toBeInTheDocument()
+    expect(screen.getByText(/Đã duyệt bởi #4/)).toBeInTheDocument()
+    expect(calls.some((call) => call.url === '/pipeline/profiles/hr-positions/revisions')).toBe(
+      true
+    )
     client.clear()
   })
 })
