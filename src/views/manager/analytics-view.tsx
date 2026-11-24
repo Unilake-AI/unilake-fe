@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
-import { Filter, Search } from 'lucide-react'
+import { Filter } from 'lucide-react'
 import {
   Bar,
   BarChart,
@@ -55,10 +55,7 @@ const FALLBACK_DOMAIN_OPTIONS: Record<Domain, DomainEntityOption[]> = {
     {
       entity: 'assignment',
       label: 'Phân công',
-      metrics: [
-        { id: 'record_count_by_assignment_status', label: 'Theo trạng thái phân công' },
-        { id: 'record_count', label: 'Tổng số bản ghi phân công' },
-      ],
+      metrics: [{ id: 'record_count_by_assignment_status', label: 'Theo trạng thái phân công' }],
     },
   ],
   academic: [
@@ -74,10 +71,7 @@ const FALLBACK_DOMAIN_OPTIONS: Record<Domain, DomainEntityOption[]> = {
     {
       entity: 'course',
       label: 'Học phần',
-      metrics: [
-        { id: 'record_count_by_status', label: 'Theo trạng thái học phần' },
-        { id: 'record_count', label: 'Tổng số học phần' },
-      ],
+      metrics: [{ id: 'record_count_by_status', label: 'Theo trạng thái học phần' }],
     },
   ],
   admissions: [
@@ -106,43 +100,41 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
   const [dimensionValueInput, setDimensionValueInput] = useState('')
   const [appliedDimensionValue, setAppliedDimensionValue] = useState('')
 
+  const defaultOptions = DOMAIN_OPTIONS[domain] ?? DOMAIN_OPTIONS.hr
   const optionsQuery = useQuery({
     queryKey: ['manager', 'analysis-options', context.user_id, domain],
     queryFn: () => API_ManagerAnalysisOptions(domain),
     retry: false,
     staleTime: 60_000,
   })
-
-  const entityOptions = useMemo<DomainEntityOption[]>(() => {
-    const remote = optionsQuery.data?.filter((item) => !item.domain || item.domain === domain)
-    if (remote && remote.length > 0) {
-      return remote.map((item) => ({
-        entity: item.entity,
-        label: label(item.entity),
-        metrics: item.metrics.map((m) => ({
-          id: m.metric,
+  const remoteOptions = optionsQuery.data?.filter((item) => !item.domain || item.domain === domain)
+  const entityOptions = remoteOptions?.length
+    ? remoteOptions.map(({ entity, metrics }) => ({
+        entity,
+        label: label(entity),
+        metrics: metrics.map(({ metric, name }) => ({
+          id: metric,
           label:
-            m.name && m.name !== m.metric
-              ? m.name
-              : m.metric.startsWith('record_count_by_')
-                ? `Số bản ghi theo ${label(m.metric.slice('record_count_by_'.length)).toLowerCase()}`
-                : label(m.metric),
+            name && name !== metric
+              ? name
+              : metric.startsWith('record_count_by_')
+                ? `Số bản ghi theo ${label(metric.slice('record_count_by_'.length)).toLowerCase()}`
+                : label(metric),
         })),
       }))
-    }
-    return FALLBACK_DOMAIN_OPTIONS[domain] ?? FALLBACK_DOMAIN_OPTIONS.hr
-  }, [optionsQuery.data, domain])
-
-  const [selectedEntity, setSelectedEntity] = useState(
-    (FALLBACK_DOMAIN_OPTIONS[defaultDomain] ?? FALLBACK_DOMAIN_OPTIONS.hr)[0]?.entity ?? 'employee'
-  )
+    : defaultOptions
+  const [selectedEntity, setSelectedEntity] = useState(defaultOptions[0]?.entity ?? 'employee')
 
   const currentEntityConfig =
     entityOptions.find((e) => e.entity === selectedEntity) ?? entityOptions[0]!
-
   const [selectedMetric, setSelectedMetric] = useState(
-    currentEntityConfig.metrics[0]?.id ?? 'record_count_by_employee_status'
+    defaultOptions[0]?.metrics[0]?.id ?? 'record_count'
   )
+  const effectiveMetric = currentEntityConfig.metrics.find(
+    (metric) => metric.id === selectedMetric
+  ) ??
+    currentEntityConfig.metrics[0] ?? { id: 'record_count', label: label('record_count') }
+  const canFilterDimension = effectiveMetric.id.startsWith('record_count_by_')
 
   const effectiveEntity = currentEntityConfig.entity
   const effectiveMetric = currentEntityConfig.metrics.some((m) => m.id === selectedMetric)
@@ -154,9 +146,9 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
 
   const params: AnalyticsFilters = {
     domain,
-    entity: effectiveEntity,
-    metric: effectiveMetric,
-    dimension_value: appliedDimensionValue || undefined,
+    entity: currentEntityConfig.entity,
+    metric: effectiveMetric.id,
+    dimension_value: canFilterDimension ? appliedDimensionValue || undefined : undefined,
     limit: pageSize,
     offset: page * pageSize,
   }
@@ -174,7 +166,7 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
     if (nextCfg?.metrics[0]) {
       setSelectedMetric(nextCfg.metrics[0].id)
     }
-    setPage(0)
+    resetDimensionFilter()
   }
 
   function handleDomainChange(newDomain: Domain) {
@@ -184,6 +176,10 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
       setSelectedEntity(nextEntityOpts[0].entity)
       setSelectedMetric(nextEntityOpts[0].metrics[0]?.id ?? 'record_count')
     }
+    resetDimensionFilter()
+  }
+
+  function resetDimensionFilter() {
     setDimensionValueInput('')
     setAppliedDimensionValue('')
     setPage(0)
@@ -247,7 +243,7 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
           <label className="flex items-center gap-2 text-xs font-medium text-slate-700">
             Thực thể
             <select
-              value={effectiveEntity}
+              value={currentEntityConfig.entity}
               onChange={(e) => handleEntityChange(e.target.value)}
               className="shadow-xs rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             >
@@ -262,10 +258,10 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
           <label className="flex items-center gap-2 text-xs font-medium text-slate-700">
             Chỉ số
             <select
-              value={effectiveMetric}
+              value={effectiveMetric.id}
               onChange={(e) => {
                 setSelectedMetric(e.target.value)
-                setPage(0)
+                resetDimensionFilter()
               }}
               className="shadow-xs rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             >
@@ -277,32 +273,28 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
             </select>
           </label>
 
-          <form
-            className="flex items-center gap-1.5"
-            onSubmit={(e) => {
-              e.preventDefault()
-              setAppliedDimensionValue(dimensionValueInput.trim())
-              setPage(0)
-            }}
-          >
-            <div className="relative">
-              <Search
-                className="pointer-events-none absolute left-2.5 top-2 size-3.5 text-slate-400"
-                aria-hidden="true"
-              />
+          {canFilterDimension && (
+            <form
+              className="flex items-center gap-1.5"
+              onSubmit={(event) => {
+                event.preventDefault()
+                setAppliedDimensionValue(dimensionValueInput.trim())
+                setPage(0)
+              }}
+            >
               <input
                 type="search"
                 aria-label="Lọc theo giá trị chiều"
                 placeholder="Lọc giá trị chiều…"
                 value={dimensionValueInput}
-                onChange={(e) => setDimensionValueInput(e.target.value)}
-                className="shadow-xs w-40 rounded-lg border border-slate-300 bg-white py-1.5 pl-8 pr-2.5 text-xs text-slate-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                onChange={(event) => setDimensionValueInput(event.target.value)}
+                className="shadow-xs w-40 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
-            </div>
-            <Button type="submit" variant="outline" className="h-7 px-2.5 text-xs">
-              Lọc
-            </Button>
-          </form>
+              <Button type="submit" variant="outline" className="h-7 px-2.5 text-xs">
+                Lọc
+              </Button>
+            </form>
+          )}
         </div>
 
         <div className="ml-auto flex items-center gap-2">
@@ -336,7 +328,7 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
             {/* Bar Chart Card */}
             <Card
               title="Phân bổ số lượng bản ghi"
-              subtitle={`Thực thể ${label(effectiveEntity)} theo ${(currentEntityConfig.metrics.find((m) => m.id === effectiveMetric)?.label ?? label(effectiveMetric)).toLowerCase()}`}
+              subtitle={`Thực thể ${currentEntityConfig.label} theo ${effectiveMetric.label.toLowerCase()}`}
             >
               <div className="h-72 w-full pt-2">
                 <ResponsiveContainer width="100%" height="100%">
