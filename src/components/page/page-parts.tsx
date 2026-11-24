@@ -110,12 +110,14 @@ export function KpiCard({
   hint,
   tone = 'slate',
   dashboard = false,
+  className,
 }: {
   label: string
   value: ReactNode
   hint?: ReactNode
   tone?: StatusTone
   dashboard?: boolean
+  className?: string
 }) {
   const Icon =
     tone === 'emerald'
@@ -126,7 +128,13 @@ export function KpiCard({
           ? CircleAlert
           : Database
   return (
-    <div className={cn('min-w-0 bg-card p-3.5', dashboard ? 'p-4 sm:p-5' : 'rounded-lg border')}>
+    <div
+      className={cn(
+        'min-w-0 bg-card p-3.5',
+        dashboard ? 'p-4 sm:p-5' : 'rounded-lg border',
+        className
+      )}
+    >
       <div className="flex items-start justify-between gap-2">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
         <Icon aria-hidden="true" className={cn('size-4 shrink-0', HINT_TONE[tone])} />

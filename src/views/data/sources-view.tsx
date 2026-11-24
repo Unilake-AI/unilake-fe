@@ -5,13 +5,14 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, Info, Plus, Search } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { API_UpdateDataSource } from '@/api/admindata/data-sources'
 import { API_CreateSourceSystem, API_ListSourceSystems } from '@/api/admindata/datasets'
 import { getApiErrorMessage } from '@/api/http'
 import { API_GetDataSource, API_ListDataSources } from '@/api/shared/data-sources'
+import { filterBarClassName, filterControlClassName } from '@/components/page/filter-bar'
 import {
   Button,
   Card,
@@ -232,20 +233,7 @@ export function SourcesView() {
         }
       />
 
-      <div className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
-        <Info className="mt-0.5 size-4 shrink-0 text-[#b91830]" aria-hidden="true" />
-        <p>
-          <strong>Phân biệt Nguồn dữ liệu và Bộ dữ liệu (Dataset):</strong> Nguồn dữ liệu khai báo
-          vị trí và giao thức đọc từ hệ thống ngoài; để lưu trữ vật lý tại tầng Bronze và chạy
-          pipeline, hãy đăng ký hoặc chọn bộ dữ liệu tương ứng tại{' '}
-          <Link href="/data/datasets" className="font-semibold text-[#b91830] hover:underline">
-            Bộ dữ liệu (Datasets)
-          </Link>
-          .
-        </p>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
+      <div className={filterBarClassName}>
         <label className="relative flex items-center text-xs text-slate-500">
           <span className="sr-only">Tìm theo tên hoặc vị trí nguồn</span>
           <Search
@@ -257,17 +245,17 @@ export function SourcesView() {
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="Tìm tên nguồn hoặc vị trí…"
-            className="h-8 w-56 rounded-md border border-slate-300 bg-white pl-8 pr-2 text-xs text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]"
+            className={`${filterControlClassName} w-56 pl-8`}
           />
         </label>
         <label className="flex items-center gap-1.5 text-xs text-slate-500">
-          Hệ thống nguồn:
+          <span className="sr-only">Hệ thống nguồn:</span>
           <select
-            className={selectClass}
+            className={filterControlClassName}
             value={systemId}
             onChange={(event) => resetPage(setSystemId)(event.target.value)}
           >
-            <option value="">Tất cả</option>
+            <option value="">Tất cả hệ thống nguồn</option>
             {sourceSystemOptions.map((system) => (
               <option key={system.id} value={system.id}>
                 {system.name}
@@ -276,13 +264,13 @@ export function SourcesView() {
           </select>
         </label>
         <label className="flex items-center gap-1.5 text-xs text-slate-500">
-          Loại nguồn:
+          <span className="sr-only">Loại nguồn:</span>
           <select
-            className={selectClass}
+            className={filterControlClassName}
             value={sourceType}
             onChange={(event) => resetPage(setSourceType)(event.target.value)}
           >
-            <option value="">Tất cả</option>
+            <option value="">Tất cả loại nguồn</option>
             {SOURCE_TYPES.map((type) => (
               <option key={type} value={type}>
                 {type}
@@ -291,13 +279,13 @@ export function SourcesView() {
           </select>
         </label>
         <label className="flex items-center gap-1.5 text-xs text-slate-500">
-          Trạng thái:
+          <span className="sr-only">Trạng thái:</span>
           <select
-            className={selectClass}
+            className={filterControlClassName}
             value={status}
             onChange={(event) => resetPage(setStatus)(event.target.value as DataSourceStatusFilter)}
           >
-            <option value="all">Tất cả</option>
+            <option value="all">Tất cả trạng thái</option>
             <option value="active">Đang hoạt động</option>
             <option value="inactive">Đã tắt</option>
           </select>

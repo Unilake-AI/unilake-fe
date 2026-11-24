@@ -6,7 +6,7 @@ import type { FormEvent } from 'react'
 import Link from 'next/link'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, Info, Plus, RefreshCw, Search, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Info, Plus, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
@@ -18,6 +18,7 @@ import {
   API_ListSourceSystems,
 } from '@/api/admindata/datasets'
 import { getApiErrorMessage } from '@/api/http'
+import { FilterForm, filterControlClassName } from '@/components/page/filter-bar'
 import {
   Button,
   Card,
@@ -317,22 +318,13 @@ export function DatasetsView() {
         title="Quản lý bộ dữ liệu tầng Bronze"
         description="Đăng ký và tra cứu các bộ dữ liệu Bronze đang hoạt động để phục vụ nạp dữ liệu và cấu hình Silver."
         actions={
-          <>
-            <Button
-              onClick={() => void listQuery.refetch()}
-              reading={listQuery.isFetching}
-              icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
-            >
-              Làm mới
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => setShowCreate(true)}
-              icon={<Plus className="size-3.5" aria-hidden="true" />}
-            >
-              Đăng ký bộ dữ liệu
-            </Button>
-          </>
+          <Button
+            variant="primary"
+            onClick={() => setShowCreate(true)}
+            icon={<Plus className="size-3.5" aria-hidden="true" />}
+          >
+            Đăng ký bộ dữ liệu
+          </Button>
         }
       />
 
@@ -351,55 +343,49 @@ export function DatasetsView() {
       {showCreate && <CreateDatasetPanel onClose={() => setShowCreate(false)} />}
 
       {/* Tìm kiếm và lọc */}
-      <Card>
-        <form className="flex flex-wrap items-end gap-3 text-xs" onSubmit={handleSearch}>
-          <div className="min-w-[220px] flex-1 space-y-1">
-            <label htmlFor="datasets-search" className="block font-semibold text-slate-700">
-              Tìm theo tên bộ dữ liệu
-            </label>
-            <div className="relative">
-              <Search
-                className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-slate-400"
-                aria-hidden="true"
-              />
-              <input
-                id="datasets-search"
-                type="search"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Nhập tên bộ dữ liệu…"
-                className={`${inputClass} pl-8`}
-              />
-            </div>
+      <FilterForm onSubmit={handleSearch}>
+        <div className="min-w-0 basis-full sm:basis-72">
+          <label htmlFor="datasets-search" className="sr-only">
+            Tìm theo tên bộ dữ liệu
+          </label>
+          <div className="relative">
+            <Search
+              className="pointer-events-none absolute left-2.5 top-3 size-4 text-slate-400"
+              aria-hidden="true"
+            />
+            <input
+              id="datasets-search"
+              type="search"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Nhập tên bộ dữ liệu…"
+              className={`${filterControlClassName} w-full pl-8`}
+            />
           </div>
+        </div>
 
-          <div className="space-y-1">
-            <label htmlFor="datasets-domain" className="block font-semibold text-slate-700">
-              Lĩnh vực
-            </label>
-            <select
-              id="datasets-domain"
-              value={domainFilter}
-              onChange={(e) => {
-                setDomainFilter(e.target.value)
-                setOffset(0)
-              }}
-              className="h-9 rounded-md border border-slate-300 bg-white px-3 text-xs text-slate-900"
-            >
-              <option value="">Tất cả lĩnh vực</option>
-              {DATA_DOMAINS.map((d) => (
-                <option key={d.value} value={d.value}>
-                  {d.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <Button type="submit" variant="outline" className="h-9">
-            Tìm kiếm
-          </Button>
-        </form>
-      </Card>
+        <div className="min-w-0 max-w-full">
+          <label htmlFor="datasets-domain" className="sr-only">
+            Lĩnh vực
+          </label>
+          <select
+            id="datasets-domain"
+            value={domainFilter}
+            onChange={(e) => {
+              setDomainFilter(e.target.value)
+              setOffset(0)
+            }}
+            className={filterControlClassName}
+          >
+            <option value="">Tất cả lĩnh vực</option>
+            {DATA_DOMAINS.map((d) => (
+              <option key={d.value} value={d.value}>
+                {d.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </FilterForm>
 
       {/* Danh sách bộ dữ liệu */}
       <Card title="Danh sách bộ dữ liệu Bronze" bodyClassName="p-0">

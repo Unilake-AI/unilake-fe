@@ -11,7 +11,6 @@ import {
   Eye,
   FileText,
   Play,
-  RefreshCw,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -26,6 +25,7 @@ import { API_GetCleaningSetup } from '@/api/admindata/cleaning-setup'
 import { API_ListProfiles } from '@/api/admindata/profiles'
 import { getApiErrorMessage } from '@/api/http'
 import { API_ListIngestionJobs } from '@/api/shared/ingestion'
+import { filterBarClassName, filterControlClassName } from '@/components/page/filter-bar'
 import {
   Button,
   Card,
@@ -412,19 +412,6 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
         breadcrumb={['Quản trị dữ liệu', 'Làm sạch & Kiểm tra']}
         title="Cleaning, Validation & Xuất bản Silver"
         description="Xem trước kết quả làm sạch từ bản Bronze SUCCESS, sau đó thực thi Cleaning Pipeline và theo dõi lịch sử xuất bản Silver."
-        actions={
-          <Button
-            onClick={() => {
-              void bronzeJobsQuery.refetch()
-              void profilesQuery.refetch()
-              if (selectedJob) void setupQuery.refetch()
-              void runsQuery.refetch()
-            }}
-            icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
-          >
-            Làm mới
-          </Button>
-        }
       />
 
       {/* Chọn dữ liệu đã nạp rồi xem hoặc thiết lập cách xử lý. */}
@@ -608,10 +595,10 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
 
       {/* Lịch sử Cleaning Runs */}
       <Card title="Lịch sử lượt chạy Cleaning (Cleaning Runs)" bodyClassName="p-0">
-        <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 px-4 py-3 text-xs">
+        <div className={`${filterBarClassName} px-4 py-2`}>
           <select
             aria-label="Lọc trạng thái Cleaning"
-            className="h-8 rounded-md border border-slate-300 bg-white px-2 text-xs"
+            className={filterControlClassName}
             value={cleaningStatusFilter}
             onChange={(e) => {
               setCleaningStatusFilter(e.target.value)
@@ -625,7 +612,7 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
           </select>
           <select
             aria-label="Lọc trạng thái xuất bản Silver"
-            className="h-8 rounded-md border border-slate-300 bg-white px-2 text-xs"
+            className={filterControlClassName}
             value={publicationStatusFilter}
             onChange={(e) => {
               setPublicationStatusFilter(e.target.value)

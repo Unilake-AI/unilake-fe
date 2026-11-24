@@ -49,8 +49,11 @@ export function ExploreView() {
         description="Xem danh sách bộ dữ liệu và thông tin trong từng cột."
       />
 
-      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-        Tầng dữ liệu:
+      <div
+        role="group"
+        aria-label="Tầng dữ liệu"
+        className="flex flex-wrap items-center gap-2 text-xs"
+      >
         {LAYERS.map((item) => (
           <button
             key={item}
@@ -64,7 +67,7 @@ export function ExploreView() {
                 : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
             )}
           >
-            {item === 'all' ? 'Tất cả' : item}
+            {item === 'all' ? 'Tất cả tầng' : item}
           </button>
         ))}
       </div>

@@ -100,6 +100,7 @@ describe('StaffOverviewView', () => {
             retry_wait: 1,
           },
           'get /ingestion/jobs': [],
+          'get /ingestion/jobs/metrics': { failure_rate_percent: 12.5 },
           'get /data-quality-issues/stats': {
             total: 4,
             assigned: 2,
@@ -120,6 +121,7 @@ describe('StaffOverviewView', () => {
       const { client } = renderWithClient()
       try {
         expect(await screen.findByText('12')).toBeInTheDocument()
+        expect(await screen.findByText('12,5%')).toBeVisible()
         expect(screen.queryByText('Lĩnh vực được cấp:')).not.toBeInTheDocument()
         expect(screen.queryByRole('link', { name: 'Nạp dữ liệu' })).not.toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'Quản lý yêu cầu' })).toHaveAttribute(
@@ -159,6 +161,15 @@ describe('StaffOverviewView', () => {
           config,
         })
       }
+      if (key === 'get /ingestion/jobs/metrics') {
+        return Promise.resolve({
+          data: { failure_rate_percent: null },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config,
+        })
+      }
       if (key.includes('stats')) {
         return Promise.resolve({
           data: {
@@ -186,6 +197,7 @@ describe('StaffOverviewView', () => {
       expect(
         await screen.findByText('Cần phân công phòng ban đang hiệu lực để nhận và báo sửa dữ liệu')
       ).toBeInTheDocument()
+      expect(await screen.findByText('Chưa có dữ liệu nạp')).toBeVisible()
     } finally {
       client.clear()
     }

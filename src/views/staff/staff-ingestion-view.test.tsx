@@ -70,20 +70,6 @@ describe('StaffIngestionView', () => {
           config,
         })
       }
-      if (key === 'get /ingestion/jobs/metrics') {
-        return Promise.resolve({
-          data: {
-            average_wait_seconds: 1.5,
-            average_processing_seconds: 3.2,
-            failure_rate_percent: 40,
-            oldest_queued_seconds: null,
-          },
-          status: 200,
-          statusText: 'OK',
-          headers: {},
-          config,
-        })
-      }
       if (key === 'get /datasets') {
         return Promise.resolve({
           data: [
@@ -193,14 +179,13 @@ describe('StaffIngestionView', () => {
       expect(screen.queryByText('Chuỗi các lần chạy (Attempts)')).not.toBeInTheDocument()
       expect(trackedPaths).not.toContain('/ingestion/jobs/101/attempts')
       expect(trackedPaths).not.toContain('/pipeline/auto/jobs')
+      expect(trackedPaths).not.toContain('/ingestion/jobs/metrics')
 
       // Tuyệt đối không có nút Manual Retry hoặc Cleaning/Silver cho STAFF
       expect(
         screen.queryByRole('button', { name: /Retry|Thử lại thủ công/i })
       ).not.toBeInTheDocument()
       expect(screen.queryByRole('button', { name: /Làm sạch|Silver/i })).not.toBeInTheDocument()
-
-
     } finally {
       client.clear()
     }

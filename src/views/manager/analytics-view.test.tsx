@@ -114,10 +114,9 @@ describe('ManagerAnalyticsView', () => {
       fireEvent.change(metricSelect, {
         target: { value: 'record_count_by_gender' },
       })
-      fireEvent.change(screen.getByLabelText('Lọc theo giá trị chiều'), {
+      fireEvent.change(screen.getByRole('searchbox', { name: 'Tìm theo giá trị' }), {
         target: { value: 'NU' },
       })
-      fireEvent.click(screen.getByRole('button', { name: 'Lọc' }))
 
       await waitFor(() =>
         expect(

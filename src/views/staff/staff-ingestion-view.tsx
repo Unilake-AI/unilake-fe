@@ -5,16 +5,16 @@ import { Fragment, useMemo, useState } from 'react'
 import Link from 'next/link'
 
 import { useQuery } from '@tanstack/react-query'
-import { CheckCircle2, ChevronLeft, ChevronRight, CircleAlert, RefreshCw } from 'lucide-react'
+import { CheckCircle2, ChevronLeft, ChevronRight, CircleAlert } from 'lucide-react'
 
 import { getApiErrorMessage, getErrorMessageForCode } from '@/api/http'
 import { API_ListDatasets } from '@/api/shared/datasets'
 import {
   API_GetIngestionJob,
-  API_GetIngestionMetrics,
   API_GetIngestionStats,
   API_ListIngestionJobs,
 } from '@/api/shared/ingestion'
+import { filterBarClassName, filterControlClassName } from '@/components/page/filter-bar'
 import {
   Button,
   Card,
@@ -52,12 +52,6 @@ const JOB_STATUS_OPTIONS = [
   { value: 'FAILED', label: 'Không thành công (FAILED)' },
   { value: 'REJECTED', label: 'Bị từ chối (REJECTED)' },
 ] as const
-
-function formatDuration(seconds: number | null | undefined): string {
-  if (seconds == null || !Number.isFinite(seconds)) return '—'
-  if (seconds < 60) return `${seconds.toFixed(1)} giây`
-  return `${(seconds / 60).toFixed(1)} phút`
-}
 
 function JobDetailSection({
   jobId,
@@ -192,11 +186,6 @@ function IngestionContent({ initialJobId }: { initialJobId?: number }) {
     queryFn: API_GetIngestionStats,
   })
 
-  const metricsQuery = useQuery({
-    queryKey: ['ingestion-jobs', 'metrics'],
-    queryFn: API_GetIngestionMetrics,
-  })
-
   const datasetsQuery = useQuery({
     queryKey: ['datasets', { limit: 100, offset: 0 }],
     queryFn: () => API_ListDatasets({ limit: 100, offset: 0 }),
@@ -241,22 +230,9 @@ function IngestionContent({ initialJobId }: { initialJobId?: number }) {
         breadcrumb={['Không gian nhân viên', 'Lịch sử nạp dữ liệu']}
         title="Lịch sử nạp dữ liệu"
         description="Theo dõi trạng thái nạp Bronze, số dòng đọc, ghi và bị từ chối."
-        actions={
-          <Button
-            onClick={() => {
-              void jobsQuery.refetch()
-              void statsQuery.refetch()
-              void metricsQuery.refetch()
-            }}
-            reading={jobsQuery.isFetching}
-            icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
-          >
-            Làm mới
-          </Button>
-        }
       />
 
-      {/* Thống kê & Chỉ số vận hành */}
+      {/* Thống kê */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
         <KpiCard
           label="Tổng lần nạp"
@@ -289,79 +265,51 @@ function IngestionContent({ initialJobId }: { initialJobId?: number }) {
         />
       </div>
 
-      {metricsQuery.data && (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard
-            label="Thời gian chờ trung bình"
-            value={formatDuration(metricsQuery.data.average_wait_seconds)}
-          />
-          <KpiCard
-            label="Thời gian xử lý trung bình"
-            value={formatDuration(metricsQuery.data.average_processing_seconds)}
-          />
-          <KpiCard
-            label="Tỷ lệ thất bại"
-            value={
-              metricsQuery.data.failure_rate_percent != null
-                ? `${metricsQuery.data.failure_rate_percent.toFixed(1)}%`
-                : '—'
-            }
-          />
-          <KpiCard
-            label="Lần nạp chờ lâu nhất"
-            value={formatDuration(metricsQuery.data.oldest_queued_seconds)}
-          />
-        </div>
-      )}
-
       {/* Bộ lọc */}
-      <Card>
-        <div className="flex flex-wrap items-end gap-3 text-xs">
-          <div className="space-y-1">
-            <label htmlFor="filter-job-status" className="block font-semibold text-slate-700">
-              Trạng thái
-            </label>
-            <select
-              id="filter-job-status"
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value)
-                setOffset(0)
-              }}
-              className="h-9 rounded-md border border-slate-300 bg-white px-3 text-xs text-slate-900"
-            >
-              {JOB_STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1">
-            <label htmlFor="filter-job-dataset" className="block font-semibold text-slate-700">
-              Bộ dữ liệu
-            </label>
-            <select
-              id="filter-job-dataset"
-              value={datasetIdFilter}
-              onChange={(e) => {
-                setDatasetIdFilter(e.target.value)
-                setOffset(0)
-              }}
-              className="h-9 min-w-[200px] rounded-md border border-slate-300 bg-white px-3 text-xs text-slate-900"
-            >
-              <option value="">Tất cả bộ dữ liệu</option>
-              {(datasetsQuery.data ?? []).map((ds) => (
-                <option key={ds.dataset_id} value={String(ds.dataset_id)}>
-                  {ds.dataset_name}
-                </option>
-              ))}
-            </select>
-          </div>
-
+      <div className={filterBarClassName}>
+        <div className="min-w-0 max-w-full">
+          <label htmlFor="filter-job-status" className="sr-only">
+            Trạng thái
+          </label>
+          <select
+            id="filter-job-status"
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value)
+              setOffset(0)
+            }}
+            className={filterControlClassName}
+          >
+            {JOB_STATUS_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
-      </Card>
+
+        <div className="min-w-0 max-w-full">
+          <label htmlFor="filter-job-dataset" className="sr-only">
+            Bộ dữ liệu
+          </label>
+          <select
+            id="filter-job-dataset"
+            value={datasetIdFilter}
+            onChange={(e) => {
+              setDatasetIdFilter(e.target.value)
+              setOffset(0)
+            }}
+            className={filterControlClassName}
+          >
+            <option value="">Tất cả bộ dữ liệu</option>
+            {(datasetsQuery.data ?? []).map((ds) => (
+              <option key={ds.dataset_id} value={String(ds.dataset_id)}>
+                {ds.dataset_name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       {/* Bảng danh sách */}
       <Card

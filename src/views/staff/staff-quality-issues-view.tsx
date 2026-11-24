@@ -10,6 +10,7 @@ import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { getApiErrorMessage } from '@/api/http'
 import { API_ListDatasets } from '@/api/shared/datasets'
 import { API_ListQualityIssues } from '@/api/shared/quality-issues'
+import { filterControlClassName } from '@/components/page/filter-bar'
 import {
   Button,
   Card,
@@ -39,12 +40,11 @@ const ISSUE_STATUS_OPTIONS = [
 
 function QualityIssuesContent({ context }: { context: StaffContext }) {
   const [statusFilter, setStatusFilter] = useState<string>('ASSIGNED')
-  const [mineOnly, setMineOnly] = useState(true)
   const [offset, setOffset] = useState(0)
 
   const filterParams = {
     status: (statusFilter as StaffQualityIssueStatusFilter) || undefined,
-    mine_only: mineOnly,
+    mine_only: true,
   }
 
   const issuesQuery = useQuery({
@@ -89,8 +89,8 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
         description="Xem danh sách các vấn đề chất lượng dữ liệu trong phạm vi đơn vị, tải tệp đã sửa và gửi báo cáo xác minh."
       />
 
-      <div className="space-y-1 text-xs">
-        <label htmlFor="filter-issue-status" className="block font-semibold text-slate-700">
+      <div className="min-w-0">
+        <label htmlFor="filter-issue-status" className="sr-only">
           Trạng thái yêu cầu
         </label>
         <select
@@ -100,7 +100,7 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
             setStatusFilter(e.target.value)
             setOffset(0)
           }}
-          className="h-9 rounded-md border border-slate-300 bg-white px-3 text-xs text-slate-900"
+          className={filterControlClassName}
         >
           {ISSUE_STATUS_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -131,7 +131,7 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
             description={
               context.needs_department_assignment
                 ? context.note
-                : 'Thử bỏ chọn "Chỉ hiển thị yêu cầu giao cho tôi" hoặc thay đổi bộ lọc trạng thái.'
+                : 'Thử chọn trạng thái khác để xem yêu cầu được giao.'
             }
           />
         ) : (

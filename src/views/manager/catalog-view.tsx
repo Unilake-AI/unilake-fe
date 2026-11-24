@@ -6,17 +6,7 @@ import type { FormEvent } from 'react'
 import Link from 'next/link'
 
 import { useQuery } from '@tanstack/react-query'
-import {
-  ArrowRight,
-  Eye,
-  FolderGit2,
-  Plus,
-  RefreshCw,
-  Search,
-  Table2,
-  Workflow,
-  X,
-} from 'lucide-react'
+import { ArrowRight, Eye, FolderGit2, Plus, Search, Table2, Workflow, X } from 'lucide-react'
 
 import { getApiErrorMessage } from '@/api/http'
 import {
@@ -26,6 +16,7 @@ import {
 } from '@/api/manager/catalog'
 import type { ExplorerDataset } from '@/api/manager/catalog'
 import type { ManagerContext } from '@/api/manager/reports'
+import { FilterForm, filterControlClassName } from '@/components/page/filter-bar'
 import {
   Button,
   Card,
@@ -151,7 +142,7 @@ function CatalogContent({ context }: { context: ManagerContext }) {
                 setSelectedDatasetId(null)
                 setLineageDataset(null)
               }}
-              className="h-9 rounded-lg border border-slate-300 bg-white px-3 text-xs text-slate-800"
+              className={filterControlClassName}
             >
               {context.domains.map((item) => (
                 <option key={item.domain} value={item.domain}>
@@ -160,16 +151,6 @@ function CatalogContent({ context }: { context: ManagerContext }) {
               ))}
             </select>
           )}
-          <Button
-            variant="outline"
-            onClick={() => void catalogQuery.refetch()}
-            disabled={catalogQuery.isFetching}
-            icon={
-              <RefreshCw className={`size-3.5 ${catalogQuery.isFetching ? 'animate-spin' : ''}`} />
-            }
-          >
-            Làm mới
-          </Button>
           <Link
             href="/manager/catalog/create"
             className="shadow-xs inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-primary/90"
@@ -181,38 +162,33 @@ function CatalogContent({ context }: { context: ManagerContext }) {
       </div>
 
       {/* Filter Bar */}
-      <Card>
-        <form onSubmit={handleSearchSubmit} className="flex flex-wrap items-center gap-3">
-          <div className="relative min-w-[220px] flex-1">
-            <Search className="pointer-events-none absolute left-3 top-2.5 size-4 text-slate-400" />
-            <input
-              type="search"
-              placeholder="Tìm kiếm bộ dữ liệu theo tên hoặc mã…"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="h-9 w-full rounded-md border border-slate-300 bg-white pl-9 pr-3 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
-            />
-          </div>
+      <FilterForm onSubmit={handleSearchSubmit}>
+        <div className="relative min-w-0 basis-full sm:basis-80">
+          <Search className="pointer-events-none absolute left-3 top-3 size-4 text-slate-400" />
+          <input
+            type="search"
+            aria-label="Tìm bộ dữ liệu theo tên hoặc mã"
+            placeholder="Tìm kiếm bộ dữ liệu theo tên hoặc mã…"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className={`${filterControlClassName} w-full pl-9`}
+          />
+        </div>
 
-          <div className="w-44">
-            <select
-              aria-label="Lọc theo trạng thái"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-xs text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
-            >
-              <option value="">Tất cả trạng thái</option>
-              <option value="ACTIVE">Hoạt động (ACTIVE)</option>
-              <option value="INACTIVE">Tạm dừng (INACTIVE)</option>
-              <option value="DEPRECATED">Ngưng dùng (DEPRECATED)</option>
-            </select>
-          </div>
-
-          <Button type="submit" variant="outline" className="h-9 text-xs">
-            Tìm kiếm
-          </Button>
-        </form>
-      </Card>
+        <div className="w-44">
+          <select
+            aria-label="Lọc theo trạng thái"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className={`${filterControlClassName} w-full`}
+          >
+            <option value="">Tất cả trạng thái</option>
+            <option value="ACTIVE">Hoạt động (ACTIVE)</option>
+            <option value="INACTIVE">Tạm dừng (INACTIVE)</option>
+            <option value="DEPRECATED">Ngưng dùng (DEPRECATED)</option>
+          </select>
+        </div>
+      </FilterForm>
 
       {/* Dataset Table */}
       <Card>

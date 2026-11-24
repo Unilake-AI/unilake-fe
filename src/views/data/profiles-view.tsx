@@ -4,7 +4,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, Edit3, Plus, RefreshCw, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Edit3, Plus, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { API_ListDatasets, API_ListSourceSystems } from '@/api/admindata/datasets'
@@ -724,22 +724,13 @@ export function ProfilesView() {
         title="Quản lý cấu hình chuẩn hóa Silver (Profiles)"
         description="Khai báo quy tắc ánh xạ cột, kiểu dữ liệu, hợp đồng schema và quyền xem cột nguồn cho quy trình Cleaning & Silver."
         actions={
-          <>
-            <Button
-              onClick={() => void listQuery.refetch()}
-              reading={listQuery.isFetching}
-              icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
-            >
-              Làm mới
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => setFormMode('create')}
-              icon={<Plus className="size-3.5" aria-hidden="true" />}
-            >
-              Tạo profile mới
-            </Button>
-          </>
+          <Button
+            variant="primary"
+            onClick={() => setFormMode('create')}
+            icon={<Plus className="size-3.5" aria-hidden="true" />}
+          >
+            Tạo profile mới
+          </Button>
         }
       />
 

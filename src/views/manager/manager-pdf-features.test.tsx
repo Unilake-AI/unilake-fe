@@ -203,38 +203,65 @@ describe('Manager PDF API integration', () => {
     }
   )
 
-  it('Hỏi AI chỉ hiển thị kết quả trả về từ server trong domain được cấp', async () => {
-    const calls: InternalAxiosRequestConfig[] = []
-    http.defaults.adapter = (config) => {
-      calls.push(config)
-      const data =
-        config.url === '/manager/context'
-          ? hrContext
-          : {
-              sql: 'SELECT value FROM manager_metrics',
-              rows: [{ value: 12 }],
-              answer: 'Có 12 bản ghi.',
-              truncated: false,
-            }
-      return Promise.resolve({ data, status: 200, statusText: 'OK', headers: {}, config })
+  it.each(['', 'Tại sao tỷ lệ đạt học kỳ này giảm?'])(
+    'Hỏi AI gửi câu hỏi trong domain được cấp với nội dung điền sẵn %j',
+    async (initialQuestion) => {
+      const suggestedQuestion = 'Cơ cấu nhân sự theo trạng thái làm việc hiện tại?'
+      if (initialQuestion) mockSearchParams.set('q', initialQuestion)
+      const calls: InternalAxiosRequestConfig[] = []
+      http.defaults.adapter = (config) => {
+        calls.push(config)
+        const data =
+          config.url === '/manager/context'
+            ? hrContext
+            : config.url === '/manager/history'
+              ? [
+                  {
+                    id: 'q-100',
+                    question: 'Số lượng giảng viên là bao nhiêu?',
+                    status: 'COMPLETED',
+                    created_at: '2026-11-18T11:00:00Z',
+                  },
+                ]
+              : {
+                  sql: 'SELECT value FROM manager_metrics',
+                  rows: [{ value: 12 }],
+                  answer: 'Có 12 bản ghi.',
+                  truncated: false,
+                }
+        return Promise.resolve({ data, status: 200, statusText: 'OK', headers: {}, config })
+      }
+      const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+      render(
+        <QueryClientProvider client={client}>
+          <ManagerAiView />
+        </QueryClientProvider>
+      )
+      const send = await screen.findByRole('button', { name: 'Gửi câu hỏi' })
+      expect(screen.getByRole('textbox', { name: 'Câu hỏi về dữ liệu' })).toHaveValue(
+        initialQuestion
+      )
+      expect(screen.getByRole('button', { name: 'Chat mới' })).toBeVisible()
+      expect(
+        await screen.findByRole('button', { name: 'Số lượng giảng viên là bao nhiêu?' })
+      ).toBeVisible()
+      expect(screen.getByRole('link', { name: 'Lịch sử' })).toHaveAttribute(
+        'href',
+        '/manager/ai?tab=history'
+      )
+      expect(screen.queryByText(/64,5%/)).toBeNull()
+      expect(calls.some((call) => call.url === '/nlq/ask')).toBe(false)
+      fireEvent.click(
+        initialQuestion ? send : screen.getByRole('button', { name: suggestedQuestion })
+      )
+      expect(await screen.findByText('Có 12 bản ghi.')).toBeInTheDocument()
+      expect(JSON.parse(String(calls.find((call) => call.url === '/nlq/ask')?.data))).toEqual({
+        question: initialQuestion || suggestedQuestion,
+        domain: 'hr',
+      })
+      client.clear()
     }
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    render(
-      <QueryClientProvider client={client}>
-        <ManagerAiView />
-      </QueryClientProvider>
-    )
-    const send = await screen.findByRole('button', { name: 'Gửi câu hỏi' })
-    expect(screen.queryByText(/64,5%/)).toBeNull()
-    expect(calls.some((call) => call.url === '/nlq/ask')).toBe(false)
-    fireEvent.click(send)
-    expect(await screen.findByText('Có 12 bản ghi.')).toBeInTheDocument()
-    expect(JSON.parse(String(calls.find((call) => call.url === '/nlq/ask')?.data))).toEqual({
-      question: 'Cơ cấu nhân sự theo trạng thái làm việc hiện tại?',
-      domain: 'hr',
-    })
-    client.clear()
-  })
+  )
 
   it('ManagerAnalyticsView gọi /manager/analysis-options và truyền dimension_value cho /manager/analytics', async () => {
     const calls: InternalAxiosRequestConfig[] = []
@@ -266,10 +293,9 @@ describe('Manager PDF API integration', () => {
     )
 
     expect(await screen.findByText('Phân bổ theo chức danh')).toBeInTheDocument()
-    fireEvent.change(screen.getByLabelText('Lọc theo giá trị chiều'), {
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Tìm theo giá trị' }), {
       target: { value: 'CHINH_THUC' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Lọc' }))
 
     await waitFor(() =>
       expect(
