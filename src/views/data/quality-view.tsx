@@ -6,15 +6,7 @@ import type { FormEvent } from 'react'
 import Link from 'next/link'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  CircleAlert,
-  Plus,
-  RefreshCw,
-  UserCheck,
-} from 'lucide-react'
+import { CheckCircle2, ChevronLeft, ChevronRight, CircleAlert, Plus, UserCheck } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { API_ListCleaningRuns } from '@/api/admindata/cleaning'
@@ -32,6 +24,7 @@ import {
   API_ListQualityIssues,
   API_GetQualityIssueStats,
 } from '@/api/shared/quality-issues'
+import { filterBarClassName, filterControlClassName } from '@/components/page/filter-bar'
 import {
   Button,
   Card,
@@ -662,25 +655,13 @@ export function QualityView() {
         title="Quản lý yêu cầu xử lý dữ liệu lỗi"
         description="Tạo yêu cầu từ hồ sơ Quarantine, phân công phòng ban/nhân viên và xác minh kết quả sửa lỗi trước khi hoàn tất."
         actions={
-          <>
-            <Button
-              onClick={() => {
-                void listQuery.refetch()
-                void statsQuery.refetch()
-              }}
-              reading={listQuery.isFetching}
-              icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
-            >
-              Làm mới
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => setShowCreate(true)}
-              icon={<Plus className="size-3.5" aria-hidden="true" />}
-            >
-              Tạo yêu cầu xử lý
-            </Button>
-          </>
+          <Button
+            variant="primary"
+            onClick={() => setShowCreate(true)}
+            icon={<Plus className="size-3.5" aria-hidden="true" />}
+          >
+            Tạo yêu cầu xử lý
+          </Button>
         }
       />
 
@@ -715,66 +696,64 @@ export function QualityView() {
       </div>
 
       {/* Bộ lọc */}
-      <Card>
-        <div className="flex flex-wrap items-end gap-3 text-xs">
-          <div className="space-y-1">
-            <label htmlFor="admin-qi-status" className="block font-semibold text-slate-700">
-              Trạng thái
-            </label>
-            <select
-              id="admin-qi-status"
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value)
-                setOffset(0)
-              }}
-              className="h-9 rounded-md border border-slate-300 bg-white px-3 text-xs"
-            >
-              <option value="">Tất cả</option>
-              <option value="ASSIGNED">Cần xử lý (ASSIGNED)</option>
-              <option value="PENDING_VERIFICATION">Chờ xác minh</option>
-              <option value="VERIFIED">Đã xác minh</option>
-            </select>
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="admin-qi-dept" className="block font-semibold text-slate-700">
-              Phòng ban
-            </label>
-            <select
-              id="admin-qi-dept"
-              value={departmentFilter}
-              onChange={(e) => {
-                setDepartmentFilter(e.target.value)
-                setOffset(0)
-              }}
-              className="h-9 rounded-md border border-slate-300 bg-white px-3 text-xs"
-            >
-              <option value="">Tất cả phòng ban</option>
-              {(departmentsQuery.data ?? []).map((d) => (
-                <option key={d.department_id} value={String(d.department_id)}>
-                  {d.department_name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="admin-qi-assignee" className="block font-semibold text-slate-700">
-              Lọc mã người phụ trách
-            </label>
-            <input
-              id="admin-qi-assignee"
-              inputMode="numeric"
-              value={assigneeFilter}
-              onChange={(e) => {
-                setAssigneeFilter(e.target.value)
-                setOffset(0)
-              }}
-              placeholder="ID người phụ trách"
-              className="h-9 w-40 rounded-md border border-slate-300 bg-white px-3 font-mono text-xs"
-            />
-          </div>
+      <div className={filterBarClassName}>
+        <div className="min-w-0 max-w-full">
+          <label htmlFor="admin-qi-status" className="sr-only">
+            Trạng thái
+          </label>
+          <select
+            id="admin-qi-status"
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value)
+              setOffset(0)
+            }}
+            className={filterControlClassName}
+          >
+            <option value="">Tất cả trạng thái</option>
+            <option value="ASSIGNED">Cần xử lý (ASSIGNED)</option>
+            <option value="PENDING_VERIFICATION">Chờ xác minh</option>
+            <option value="VERIFIED">Đã xác minh</option>
+          </select>
         </div>
-      </Card>
+        <div className="min-w-0 max-w-full">
+          <label htmlFor="admin-qi-dept" className="sr-only">
+            Phòng ban
+          </label>
+          <select
+            id="admin-qi-dept"
+            value={departmentFilter}
+            onChange={(e) => {
+              setDepartmentFilter(e.target.value)
+              setOffset(0)
+            }}
+            className={filterControlClassName}
+          >
+            <option value="">Tất cả phòng ban</option>
+            {(departmentsQuery.data ?? []).map((d) => (
+              <option key={d.department_id} value={String(d.department_id)}>
+                {d.department_name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="min-w-0 max-w-full">
+          <label htmlFor="admin-qi-assignee" className="sr-only">
+            Lọc mã người phụ trách
+          </label>
+          <input
+            id="admin-qi-assignee"
+            inputMode="numeric"
+            value={assigneeFilter}
+            onChange={(e) => {
+              setAssigneeFilter(e.target.value)
+              setOffset(0)
+            }}
+            placeholder="ID người phụ trách"
+            className={filterControlClassName}
+          />
+        </div>
+      </div>
 
       <div className="grid gap-4 xl:grid-cols-[1fr_460px]">
         <Card title="Danh sách yêu cầu xử lý" bodyClassName="p-0">

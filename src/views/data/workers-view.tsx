@@ -5,12 +5,11 @@ import { useState } from 'react'
 import Link from 'next/link'
 
 import { useQuery } from '@tanstack/react-query'
-import { Activity, Info, RefreshCw } from 'lucide-react'
+import { Activity, Info } from 'lucide-react'
 
 import { API_ListIngestionWorkers } from '@/api/admindata/ingestion'
 import { getApiErrorMessage } from '@/api/http'
 import {
-  Button,
   Card,
   EmptyState,
   ErrorState,
@@ -47,24 +46,15 @@ export function WorkersView() {
         title="Giám sát Worker xử lý Ingestion"
         description="Theo dõi tình trạng hoạt động (heartbeat) của các worker tiêu thụ hàng đợi nạp dữ liệu."
         actions={
-          <>
-            <label className="inline-flex h-8 cursor-pointer items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-xs font-medium text-slate-700">
-              <input
-                type="checkbox"
-                checked={autoRefresh}
-                onChange={(e) => setAutoRefresh(e.target.checked)}
-                className="size-3.5 accent-[#b91830]"
-              />
-              Tự động làm mới (5 giây)
-            </label>
-            <Button
-              onClick={() => void workersQuery.refetch()}
-              reading={workersQuery.isFetching}
-              icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
-            >
-              Làm mới
-            </Button>
-          </>
+          <label className="inline-flex h-8 cursor-pointer items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-xs font-medium text-slate-700">
+            <input
+              type="checkbox"
+              checked={autoRefresh}
+              onChange={(e) => setAutoRefresh(e.target.checked)}
+              className="size-3.5 accent-[#b91830]"
+            />
+            Tự động làm mới (5 giây)
+          </label>
         }
       />
 

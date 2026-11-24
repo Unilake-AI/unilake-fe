@@ -12,7 +12,6 @@ import {
   ChevronRight,
   CircleAlert,
   Play,
-  RefreshCw,
   RotateCcw,
   Upload,
   X,
@@ -33,6 +32,7 @@ import {
 } from '@/api/shared/ingestion'
 import { API_UploadIngestion } from '@/api/staff/upload'
 import { AutoSilverForIngestion } from '@/components/data/auto-silver-jobs'
+import { filterBarClassName, filterControlClassName } from '@/components/page/filter-bar'
 import {
   Button,
   Card,
@@ -1035,17 +1035,6 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
             >
               Tiến trình nạp & xử lý dữ liệu
             </Link>
-            <Button
-              onClick={() => {
-                void jobs.refetch()
-                void statsQuery.refetch()
-                void metricsQuery.refetch()
-              }}
-              reading={jobs.isFetching || statsQuery.isFetching || metricsQuery.isFetching}
-              icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
-            >
-              Làm mới
-            </Button>
           </>
         }
       />
@@ -1088,73 +1077,70 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
       </div>
 
       {/* Bộ lọc */}
-      <Card>
-        <div className="flex flex-wrap items-end gap-3 text-xs">
-          <div className="space-y-1">
-            <label htmlFor="admin-job-status" className="block font-semibold text-slate-700">
-              Trạng thái
-            </label>
-            <select
-              id="admin-job-status"
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value)
-                setOffset(0)
-              }}
-              className="h-9 rounded-md border border-slate-300 bg-white px-3 text-xs"
-            >
-              {JOB_STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="admin-job-dataset" className="block font-semibold text-slate-700">
-              Bộ dữ liệu
-            </label>
-            <select
-              id="admin-job-dataset"
-              value={datasetFilter}
-              onChange={(e) => {
-                setDatasetFilter(e.target.value)
-                setOffset(0)
-              }}
-              className="h-9 min-w-[180px] rounded-md border border-slate-300 bg-white px-3 text-xs"
-            >
-              <option value="">Tất cả bộ dữ liệu</option>
-              {(datasetsQuery.data ?? []).map((ds) => (
-                <option key={ds.dataset_id} value={String(ds.dataset_id)}>
-                  {ds.dataset_name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="admin-job-source" className="block font-semibold text-slate-700">
-              Nguồn dữ liệu
-            </label>
-            <select
-              id="admin-job-source"
-              value={sourceFilter}
-              onChange={(e) => {
-                setSourceFilter(e.target.value)
-                setOffset(0)
-              }}
-              className="h-9 min-w-[180px] rounded-md border border-slate-300 bg-white px-3 text-xs"
-            >
-              <option value="">Tất cả nguồn</option>
-              {(sourcesQuery.data?.items ?? []).map((s) => (
-                <option key={s.data_source_id} value={String(s.data_source_id)}>
-                  {s.source_name}
-                </option>
-              ))}
-            </select>
-          </div>
-
+      <div className={filterBarClassName}>
+        <div className="min-w-0 max-w-full">
+          <label htmlFor="admin-job-status" className="sr-only">
+            Trạng thái
+          </label>
+          <select
+            id="admin-job-status"
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value)
+              setOffset(0)
+            }}
+            className={filterControlClassName}
+          >
+            {JOB_STATUS_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
         </div>
-      </Card>
+        <div className="min-w-0 max-w-full">
+          <label htmlFor="admin-job-dataset" className="sr-only">
+            Bộ dữ liệu
+          </label>
+          <select
+            id="admin-job-dataset"
+            value={datasetFilter}
+            onChange={(e) => {
+              setDatasetFilter(e.target.value)
+              setOffset(0)
+            }}
+            className={filterControlClassName}
+          >
+            <option value="">Tất cả bộ dữ liệu</option>
+            {(datasetsQuery.data ?? []).map((ds) => (
+              <option key={ds.dataset_id} value={String(ds.dataset_id)}>
+                {ds.dataset_name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="min-w-0 max-w-full">
+          <label htmlFor="admin-job-source" className="sr-only">
+            Nguồn dữ liệu
+          </label>
+          <select
+            id="admin-job-source"
+            value={sourceFilter}
+            onChange={(e) => {
+              setSourceFilter(e.target.value)
+              setOffset(0)
+            }}
+            className={filterControlClassName}
+          >
+            <option value="">Tất cả nguồn</option>
+            {(sourcesQuery.data?.items ?? []).map((s) => (
+              <option key={s.data_source_id} value={String(s.data_source_id)}>
+                {s.source_name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <Card
         title="Lịch sử lần nạp dữ liệu"

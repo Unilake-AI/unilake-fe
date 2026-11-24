@@ -4,13 +4,13 @@ import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, RefreshCw, Search } from 'lucide-react'
+import { ArrowRight, Search } from 'lucide-react'
 
 import { API_GetLineage } from '@/api/admindata/governance'
 import { getApiErrorMessage } from '@/api/http'
 import { DetailDrawer } from '@/components/page/detail-drawer'
+import { FilterForm, filterControlClassName } from '@/components/page/filter-bar'
 import {
-  Button,
   Card,
   EmptyState,
   ErrorState,
@@ -99,82 +99,67 @@ export function LineageView() {
         breadcrumb={['Quản trị dữ liệu', 'Data Lineage']}
         title="Data Lineage — Truy vết nguồn gốc dữ liệu"
         description="Khám phá quan hệ nguồn và đích đã ghi nhận giữa các tầng dữ liệu."
-        actions={
-          <Button
-            onClick={() => void lineageQuery.refetch()}
-            reading={lineageQuery.isFetching}
-            icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
-          >
-            Làm mới
-          </Button>
-        }
       />
 
       {/* Bộ lọc */}
-      <Card>
-        <form className="flex flex-wrap items-end gap-3 text-xs" onSubmit={handleSearch}>
-          <div className="space-y-1">
-            <label htmlFor="lineage-domain" className="block font-semibold text-slate-700">
-              Lĩnh vực (domain_id)
-            </label>
-            <select
-              id="lineage-domain"
-              value={domainFilter}
-              onChange={(e) => setDomainFilter(e.target.value)}
-              className="h-9 rounded-md border border-slate-300 bg-white px-3 text-xs"
-            >
-              <option value="">Tất cả lĩnh vực</option>
-              {DATA_DOMAINS.map((d) => (
-                <option key={d.value} value={d.value}>
-                  {d.label}
-                </option>
-              ))}
-            </select>
-          </div>
+      <FilterForm onSubmit={handleSearch}>
+        <div className="min-w-0 max-w-full">
+          <label htmlFor="lineage-domain" className="sr-only">
+            Lĩnh vực (domain_id)
+          </label>
+          <select
+            id="lineage-domain"
+            value={domainFilter}
+            onChange={(e) => setDomainFilter(e.target.value)}
+            className={filterControlClassName}
+          >
+            <option value="">Tất cả lĩnh vực</option>
+            {DATA_DOMAINS.map((d) => (
+              <option key={d.value} value={d.value}>
+                {d.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
-          <div className="space-y-1">
-            <label htmlFor="lineage-layer" className="block font-semibold text-slate-700">
-              Tầng (layer)
-            </label>
-            <select
-              id="lineage-layer"
-              value={layerFilter}
-              onChange={(e) => setLayerFilter(e.target.value)}
-              className="h-9 rounded-md border border-slate-300 bg-white px-3 text-xs"
-            >
-              <option value="">Tất cả tầng</option>
-              <option value="SOURCE">SOURCE</option>
-              <option value="BRONZE">BRONZE</option>
-              <option value="SILVER">SILVER</option>
-              <option value="GOLD">GOLD</option>
-            </select>
-          </div>
+        <div className="min-w-0 max-w-full">
+          <label htmlFor="lineage-layer" className="sr-only">
+            Tầng (layer)
+          </label>
+          <select
+            id="lineage-layer"
+            value={layerFilter}
+            onChange={(e) => setLayerFilter(e.target.value)}
+            className={filterControlClassName}
+          >
+            <option value="">Tất cả tầng</option>
+            <option value="SOURCE">SOURCE</option>
+            <option value="BRONZE">BRONZE</option>
+            <option value="SILVER">SILVER</option>
+            <option value="GOLD">GOLD</option>
+          </select>
+        </div>
 
-          <div className="min-w-0 flex-1 basis-[200px] space-y-1">
-            <label htmlFor="lineage-search" className="block font-semibold text-slate-700">
-              Tìm kiếm node / bảng / tệp
-            </label>
-            <div className="relative">
-              <Search
-                className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-slate-400"
-                aria-hidden="true"
-              />
-              <input
-                id="lineage-search"
-                type="search"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Tìm theo tên node hoặc dataset…"
-                className="h-9 w-full rounded-md border border-slate-300 bg-white pl-8 pr-3 text-xs"
-              />
-            </div>
+        <div className="min-w-0 basis-full sm:basis-72">
+          <label htmlFor="lineage-search" className="sr-only">
+            Tìm kiếm node / bảng / tệp
+          </label>
+          <div className="relative">
+            <Search
+              className="pointer-events-none absolute left-2.5 top-3 size-4 text-slate-400"
+              aria-hidden="true"
+            />
+            <input
+              id="lineage-search"
+              type="search"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Tìm theo tên node hoặc dataset…"
+              className={`${filterControlClassName} w-full pl-8`}
+            />
           </div>
-
-          <Button type="submit" variant="outline" className="h-9">
-            Tìm kiếm
-          </Button>
-        </form>
-      </Card>
+        </div>
+      </FilterForm>
 
       {lineageQuery.isPending ? (
         <LoadingState label="Đang tải đồ thị Data Lineage…" />

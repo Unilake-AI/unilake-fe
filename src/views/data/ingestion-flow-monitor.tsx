@@ -14,6 +14,7 @@ import { API_ListIngestionFlows } from '@/api/admindata/ingestion-flows'
 import type { IngestionFlow, IngestionFlowStep } from '@/api/admindata/ingestion-flows'
 import { getApiErrorMessage, getErrorMessageForCode } from '@/api/http'
 import { DetailDrawer } from '@/components/page/detail-drawer'
+import { FilterForm, filterControlClassName } from '@/components/page/filter-bar'
 import {
   Button,
   Card,
@@ -301,8 +302,7 @@ export function IngestionFlowMonitor({ refresh = true }: { refresh?: boolean }) 
       title="Luồng xử lý theo lần nạp"
       subtitle="Gold chỉ hiển thị khi danh sách Gold hiện hành có kết quả khớp phiên bản Silver của lần nạp."
     >
-      <form
-        className="flex flex-wrap items-center gap-2"
+      <FilterForm
         onSubmit={(event) => {
           event.preventDefault()
           setSearch(input.trim())
@@ -316,13 +316,9 @@ export function IngestionFlowMonitor({ refresh = true }: { refresh?: boolean }) 
           placeholder="Tìm theo tên tệp, bộ dữ liệu hoặc người nạp"
           value={input}
           onChange={(event) => setInput(event.target.value)}
-          className="h-9 w-full rounded-md border bg-card px-3 text-sm sm:max-w-sm"
+          className={`${filterControlClassName} w-full sm:max-w-sm`}
         />
-        <Button type="submit">Tìm</Button>
-        <Button onClick={() => void flows.refetch()} reading={flows.isFetching}>
-          Làm mới luồng
-        </Button>
-      </form>
+      </FilterForm>
       {flows.isPending ? (
         <LoadingState />
       ) : flows.isError && !flows.data ? (

@@ -196,7 +196,7 @@ describe('Giao hồ sơ cách ly về phòng ban', () => {
       await user.click(screen.getByRole('button', { name: 'Gửi yêu cầu sửa về phòng ban' }))
       expect(await screen.findByText('1. Chọn hồ sơ cách ly (2 đã chọn) *')).toBeInTheDocument()
       expect(calls.filter((c) => c.url === '/quarantine-records')).toHaveLength(2)
-      await user.click(screen.getByRole('button', { name: 'Lọc hồ sơ' }))
+      await user.type(screen.getByLabelText('Mã lỗi (error_code)'), 'INVALID_DATE')
       await waitFor(() => expect(screen.getByText('Đã chọn 0 hồ sơ cách ly')).toBeInTheDocument())
       expect(screen.queryByRole('button', { name: 'Tạo yêu cầu' })).not.toBeInTheDocument()
     } finally {

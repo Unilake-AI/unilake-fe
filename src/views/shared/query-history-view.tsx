@@ -4,8 +4,9 @@ import { Fragment, useEffect, useState } from 'react'
 
 import Link from 'next/link'
 
-import { RefreshCw, Search, Trash2 } from 'lucide-react'
+import { Search, Trash2 } from 'lucide-react'
 
+import { filterBarClassName, filterControlClassName } from '@/components/page/filter-bar'
 import {
   Button,
   Card,
@@ -57,6 +58,13 @@ export function QueryHistoryView({ askHref }: { askHref: string }) {
         breadcrumb={[getDomain(domain.code).shortLabel, 'Lịch sử truy vấn']}
         title="Lịch sử truy vấn"
         description="Xem lại các câu hỏi đã gửi và kết quả truy vấn trước đó."
+        actions={
+          entries.length > 0 && (
+            <Button onClick={clearAll} icon={<Trash2 className="size-4" />}>
+              Xoá lịch sử trên máy này
+            </Button>
+          )
+        }
       />
       <p className="rounded-md border border-dashed border-slate-300 bg-white px-3 py-2 text-[11px] text-slate-600">
         Lịch sử chỉ được lưu trên trình duyệt bạn đang dùng.
@@ -80,15 +88,19 @@ export function QueryHistoryView({ askHref }: { askHref: string }) {
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3">
-        <label className="flex min-w-0 flex-1 basis-52 items-center gap-2 rounded-lg border border-[#cbd4e3] px-3">
-          <Search className="size-4 text-[#65718d]" />
+      <div className={filterBarClassName}>
+        <label className="relative min-w-0 max-w-full basis-full sm:basis-72">
+          <Search
+            className="pointer-events-none absolute left-3 top-3 size-4 text-muted-foreground"
+            aria-hidden="true"
+          />
           <span className="sr-only">Tìm kiếm câu hỏi</span>
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Tìm kiếm câu hỏi…"
-            className="h-10 min-w-0 flex-1 text-sm outline-none"
+            type="search"
+            className={`${filterControlClassName} w-full pl-9`}
           />
         </label>
         <label className="sr-only" htmlFor="history-period">
@@ -98,7 +110,7 @@ export function QueryHistoryView({ askHref }: { askHref: string }) {
           id="history-period"
           value={period}
           onChange={(event) => setPeriod(event.target.value)}
-          className="h-10 rounded-lg border border-[#cbd4e3] bg-white px-3 text-sm"
+          className={filterControlClassName}
         >
           <option value="all">Tất cả thời gian</option>
           <option value="7d">7 ngày qua</option>
@@ -111,24 +123,13 @@ export function QueryHistoryView({ askHref }: { askHref: string }) {
           id="history-status"
           value={status}
           onChange={(event) => setStatus(event.target.value)}
-          className="h-10 rounded-lg border border-[#cbd4e3] bg-white px-3 text-sm"
+          className={filterControlClassName}
         >
           <option value="all">Tất cả trạng thái</option>
           <option value="COMPLETED">Có kết quả</option>
           <option value="NO_DATA">Không có kết quả</option>
           <option value="FAILED">Lỗi truy vấn</option>
         </select>
-        <Button
-          onClick={() => setEntries(readQueryHistory())}
-          icon={<RefreshCw className="size-4" />}
-        >
-          Làm mới
-        </Button>
-        {entries.length > 0 && (
-          <Button onClick={clearAll} icon={<Trash2 className="size-4" />}>
-            Xoá lịch sử trên máy này
-          </Button>
-        )}
       </div>
 
       <Card

@@ -23,6 +23,7 @@ import { API_GetIngestionJob } from '@/api/shared/ingestion'
 import { API_GetQualityIssue } from '@/api/shared/quality-issues'
 import { API_SubmitQualityResolution } from '@/api/staff/quality-issues'
 import { API_UploadQualityIssueFile } from '@/api/staff/upload'
+import { filterControlClassName } from '@/components/page/filter-bar'
 import {
   Button,
   Card,
@@ -846,9 +847,9 @@ function IssueRecords({ records }: { records: QualityIssueDetail['quarantine_rec
       bodyClassName="p-0"
     >
       {records.length > 0 && (
-        <div className="border-b p-3">
+        <div className="p-3">
           <label className="grid max-w-md gap-1 text-xs font-medium">
-            Tìm bản ghi lỗi
+            <span className="sr-only">Tìm bản ghi lỗi</span>
             <input
               type="search"
               value={search}
@@ -857,7 +858,7 @@ function IssueRecords({ records }: { records: QualityIssueDetail['quarantine_rec
                 setPage(0)
               }}
               placeholder="Dòng, tệp, vị trí hoặc mã lỗi"
-              className="h-9 rounded-md border bg-card px-3 text-sm"
+              className={filterControlClassName}
             />
           </label>
         </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, ChevronLeft, ChevronRight, Info, RefreshCw } from 'lucide-react'
+import { CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { API_ListProfiles } from '@/api/admindata/profiles'
@@ -15,6 +15,7 @@ import {
   API_ListSnapshots,
 } from '@/api/admindata/snapshots'
 import { getApiErrorMessage } from '@/api/http'
+import { filterBarClassName, filterControlClassName } from '@/components/page/filter-bar'
 import {
   Button,
   Card,
@@ -170,72 +171,46 @@ export function SilverView() {
         breadcrumb={['Quản trị dữ liệu', 'Phiên bản Silver (Snapshots)']}
         title="Quản lý phiên bản Silver (Snapshots)"
         description="Theo dõi lịch sử các phiên bản Silver đã xuất bản theo Silver Profile, xem trước dữ liệu bảng và chuyển đổi phiên bản đang hoạt động."
-        actions={
-          <Button
-            reading={listQuery.isFetching || activeQuery.isFetching}
-            onClick={() => {
-              void activeQuery.refetch()
-              void listQuery.refetch()
-            }}
-            disabled={!selectedProfileId}
-            icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
-          >
-            Làm mới
-          </Button>
-        }
       />
 
-      <div className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
-        <Info className="mt-0.5 size-4 shrink-0 text-[#b91830]" aria-hidden="true" />
-        <p>
-          <strong>Mô hình phiên bản Silver:</strong> Mỗi lần công bố Silver tạo một snapshot hoàn
-          chỉnh cho toàn bộ thực thể/bảng (entity/table) thuộc phạm vi của profile, không cập nhật
-          từng dòng rời rạc.
-        </p>
-      </div>
-
       {/* Chọn Profile */}
-      <Card>
-        <div className="flex flex-wrap items-end gap-4 text-xs">
-          <div className="min-w-[260px] flex-1 space-y-1">
-            <label htmlFor="silver-profile-select" className="block font-semibold text-slate-700">
-              Chọn Silver Profile *
-            </label>
-            <select
-              id="silver-profile-select"
-              value={selectedProfileId}
-              onChange={(e) => {
-                setSelectedProfileId(e.target.value)
-                setSelectedSnapshotId(null)
-                setSnapshotOffset(0)
-                setDataOffset(0)
-              }}
-              className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900"
-            >
-              <option value="">
-                {profilesQuery.isPending ? 'Đang tải danh sách profile…' : 'Chọn profile'}
+      <div className={filterBarClassName}>
+        <div className="min-w-0 max-w-full">
+          <label htmlFor="silver-profile-select" className="sr-only">
+            Chọn Silver Profile *
+          </label>
+          <select
+            id="silver-profile-select"
+            value={selectedProfileId}
+            onChange={(e) => {
+              setSelectedProfileId(e.target.value)
+              setSelectedSnapshotId(null)
+              setSnapshotOffset(0)
+              setDataOffset(0)
+            }}
+            className={filterControlClassName}
+          >
+            <option value="">
+              {profilesQuery.isPending ? 'Đang tải danh sách profile…' : 'Chọn profile'}
+            </option>
+            {(profilesQuery.data ?? []).map((prof) => (
+              <option key={prof.profile_id} value={prof.profile_id}>
+                {prof.profile_id} (scope: {prof.definition.scope} · entity: {prof.definition.entity}
+                )
               </option>
-              {(profilesQuery.data ?? []).map((prof) => (
-                <option key={prof.profile_id} value={prof.profile_id}>
-                  {prof.profile_id} (scope: {prof.definition.scope} · entity:{' '}
-                  {prof.definition.entity})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {activeQuery.data && (
-            <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
-              <span className="text-[11px] text-emerald-700">
-                Phiên bản đang hoạt động (Active):
-              </span>
-              <p className="font-mono text-xs font-semibold text-emerald-900">
-                {activeSnapshotId ?? 'Chưa kích hoạt snapshot nào'}
-              </p>
-            </div>
-          )}
+            ))}
+          </select>
         </div>
-      </Card>
+
+        {activeQuery.data && (
+          <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
+            <span className="text-[11px] text-emerald-700">Phiên bản đang hoạt động (Active):</span>
+            <p className="font-mono text-xs font-semibold text-emerald-900">
+              {activeSnapshotId ?? 'Chưa kích hoạt snapshot nào'}
+            </p>
+          </div>
+        )}
+      </div>
 
       {activateMutation.isError && (
         <ErrorState

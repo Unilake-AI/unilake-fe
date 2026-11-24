@@ -131,7 +131,6 @@ describe('IngestionFlowMonitor', () => {
     fireEvent.change(screen.getByRole('searchbox', { name: 'Tìm lần nạp' }), {
       target: { value: 'nhan-vien.csv' },
     })
-    fireEvent.click(screen.getByRole('button', { name: /^Tìm$/ }))
     await waitFor(() =>
       expect(client.getQueryData(['ingestion-flow', 'list', 'nhan-vien.csv', 0])).toBeDefined()
     )

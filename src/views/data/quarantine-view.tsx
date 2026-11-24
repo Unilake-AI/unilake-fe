@@ -6,7 +6,7 @@ import type { FormEvent } from 'react'
 import Link from 'next/link'
 
 import { useQuery } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, Eye, RefreshCw } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Eye } from 'lucide-react'
 
 import { API_ListDatasets } from '@/api/admindata/datasets'
 import { API_ListIssueDepartments } from '@/api/admindata/quality-issues'
@@ -17,6 +17,7 @@ import {
   API_ListQuarantineRecords,
 } from '@/api/admindata/quarantine'
 import { getApiErrorMessage } from '@/api/http'
+import { FilterForm, filterControlClassName } from '@/components/page/filter-bar'
 import {
   Button,
   Card,
@@ -36,9 +37,6 @@ import { CreateIssuePanel } from './create-quality-issue-panel'
 import { domainLabel, formatCellValue } from './data-helpers'
 
 const PAGE_SIZE = 20
-
-const inputClass =
-  'h-8 rounded-md border border-slate-300 bg-white px-2.5 text-xs text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]/30'
 
 export function QuarantineView() {
   const [cleaningRunId, setCleaningRunId] = useState('')
@@ -189,18 +187,6 @@ export function QuarantineView() {
         breadcrumb={['Quản trị dữ liệu', 'Hồ sơ cách ly (Quarantine)']}
         title="Quản lý hồ sơ cách ly (Quarantine)"
         description="Tra cứu các bản ghi bị loại trong quá trình Cleaning, xem vị trí dòng nguồn và dữ liệu gốc trong phạm vi cột cho phép."
-        actions={
-          <Button
-            onClick={() => {
-              void listQuery.refetch()
-              void summaryQuery.refetch()
-            }}
-            reading={listQuery.isFetching}
-            icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
-          >
-            Làm mới
-          </Button>
-        }
       />
 
       {/* Summary KPIs */}
@@ -225,71 +211,66 @@ export function QuarantineView() {
       </div>
 
       {/* Bộ lọc */}
-      <Card>
-        <form className="flex flex-wrap items-end gap-2 text-xs" onSubmit={applyFilters}>
-          <label className="space-y-1">
-            <span className="block font-semibold text-slate-700">Cleaning Run ID</span>
-            <input
-              className={`${inputClass} w-52 font-mono`}
-              value={cleaningRunId}
-              onChange={(e) => setCleaningRunId(e.target.value)}
-              placeholder="UUID lượt chạy"
-            />
-          </label>
-          <label className="space-y-1">
-            <span className="block font-semibold text-slate-700">Job ID</span>
-            <input
-              className={`${inputClass} w-28 font-mono`}
-              inputMode="numeric"
-              value={ingestionJobId}
-              onChange={(e) => setIngestionJobId(e.target.value)}
-              placeholder="vd. 42"
-            />
-          </label>
-          <label className="space-y-1">
-            <span className="block font-semibold text-slate-700">Bộ dữ liệu</span>
-            <select
-              className={inputClass}
-              value={datasetId}
-              onChange={(e) => setDatasetId(e.target.value)}
-            >
-              <option value="">Tất cả</option>
-              {(datasetsQuery.data ?? []).map((ds) => (
-                <option key={ds.dataset_id} value={String(ds.dataset_id)}>
-                  {ds.dataset_name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="space-y-1">
-            <span className="block font-semibold text-slate-700">Đơn vị</span>
-            <select
-              className={inputClass}
-              value={departmentId}
-              onChange={(e) => setDepartmentId(e.target.value)}
-            >
-              <option value="">Tất cả</option>
-              {(departmentsQuery.data ?? []).map((dept) => (
-                <option key={dept.department_id} value={String(dept.department_id)}>
-                  {dept.department_name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="space-y-1">
-            <span className="block font-semibold text-slate-700">Mã lỗi (error_code)</span>
-            <input
-              className={`${inputClass} w-44 font-mono`}
-              value={errorCode}
-              onChange={(e) => setErrorCode(e.target.value)}
-              placeholder="vd. INVALID_DATE"
-            />
-          </label>
-          <Button type="submit" variant="primary">
-            Lọc hồ sơ
-          </Button>
-        </form>
-      </Card>
+      <FilterForm onSubmit={applyFilters}>
+        <label className="min-w-0 max-w-full">
+          <span className="sr-only">Cleaning Run ID</span>
+          <input
+            className={`${filterControlClassName} w-52 font-mono`}
+            value={cleaningRunId}
+            onChange={(e) => setCleaningRunId(e.target.value)}
+            placeholder="ID lượt Cleaning"
+          />
+        </label>
+        <label className="min-w-0 max-w-full">
+          <span className="sr-only">Job ID</span>
+          <input
+            className={`${filterControlClassName} w-28 font-mono`}
+            inputMode="numeric"
+            value={ingestionJobId}
+            onChange={(e) => setIngestionJobId(e.target.value)}
+            placeholder="ID lần nạp"
+          />
+        </label>
+        <label className="min-w-0 max-w-full">
+          <span className="sr-only">Bộ dữ liệu</span>
+          <select
+            className={filterControlClassName}
+            value={datasetId}
+            onChange={(e) => setDatasetId(e.target.value)}
+          >
+            <option value="">Tất cả bộ dữ liệu</option>
+            {(datasetsQuery.data ?? []).map((ds) => (
+              <option key={ds.dataset_id} value={String(ds.dataset_id)}>
+                {ds.dataset_name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="min-w-0 max-w-full">
+          <span className="sr-only">Đơn vị</span>
+          <select
+            className={filterControlClassName}
+            value={departmentId}
+            onChange={(e) => setDepartmentId(e.target.value)}
+          >
+            <option value="">Tất cả đơn vị</option>
+            {(departmentsQuery.data ?? []).map((dept) => (
+              <option key={dept.department_id} value={String(dept.department_id)}>
+                {dept.department_name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="min-w-0 max-w-full">
+          <span className="sr-only">Mã lỗi (error_code)</span>
+          <input
+            className={`${filterControlClassName} w-44 font-mono`}
+            value={errorCode}
+            onChange={(e) => setErrorCode(e.target.value)}
+            placeholder="Mã lỗi"
+          />
+        </label>
+      </FilterForm>
 
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm">

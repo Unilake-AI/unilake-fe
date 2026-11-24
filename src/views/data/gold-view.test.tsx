@@ -50,9 +50,7 @@ function environment(options: { failed?: boolean; unavailable?: boolean; blocked
     } else if (config.method === 'post' && url.endsWith('/retry')) {
       failed = false
       data = { job_id: id, status: 'QUEUED' }
-    } else if (url === '/pipeline/gold/recipes')
-      data = { version: 'group-counts-v1', note: 'Đếm bản ghi trong từng nguồn Silver' }
-    else if (url === '/pipeline/gold/workers')
+    } else if (url === '/pipeline/gold/workers')
       data = [{ worker_id: 'gold-local', healthy: true, heartbeat_at: '2026-11-16T10:00:00Z' }]
     else if (url === '/pipeline/gold/sources')
       data = [
@@ -165,7 +163,7 @@ describe('Giao diện Gold dùng API thật qua client chung', () => {
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined)
     await user.click(screen.getByRole('button', { name: 'Tải báo cáo CSV' }))
     await waitFor(() => expect(calls.some((call) => call.url.endsWith('/report'))).toBe(true))
-    for (const path of ['recipes', 'sources', 'jobs', 'metrics', 'workers'])
+    for (const path of ['sources', 'jobs', 'metrics', 'workers'])
       expect(calls.some((call) => call.url === `/pipeline/gold/${path}`)).toBe(true)
   })
 

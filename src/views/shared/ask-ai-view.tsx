@@ -23,8 +23,8 @@ import { API_AskNlq } from '@/api/shared/nlq'
 import { LoadingState } from '@/components/page/page-parts'
 import { useDomain } from '@/hooks/use-domain'
 import { addQueryHistory, readQueryHistory } from '@/lib/query-history'
-import type { DomainCode } from '@/types/domains'
-import type { NlqConversationTurn } from '@/types/nlq'
+import type { DomainCode, DomainDefinition } from '@/types/domains'
+import type { NlqConversationTurn, NlqResponse } from '@/types/nlq'
 import type { QueryHistoryEntry } from '@/types/query-history'
 
 import logo from '../../../public/logo.png'
@@ -161,17 +161,52 @@ export function AskAiView({
             : []
         )
       : SUGGESTIONS[domain.code]
-  const [question, setQuestion] = useState('')
-  const [turns, setTurns] = useState<NlqConversationTurn[]>([])
   const [historyEntries, setHistoryEntries] = useState<QueryHistoryEntry[]>([])
-  const nextId = useRef(1)
-  const composerRef = useRef<HTMLTextAreaElement>(null)
-  const latestTurnRef = useRef<HTMLElement>(null)
-  const latestTurnId = turns.at(-1)?.id
 
   useEffect(() => {
     setHistoryEntries(readQueryHistory())
   }, [])
+
+  return (
+    <AskAiChat
+      domain={domain}
+      suggestions={suggestions}
+      historyHref={historyHref}
+      historyEntries={historyEntries}
+      askQuestion={(text) => API_AskNlq(text, workspace)}
+      onHistoryEntry={(entry) => {
+        addQueryHistory(entry)
+        setHistoryEntries(readQueryHistory())
+      }}
+    />
+  )
+}
+
+export function AskAiChat({
+  domain,
+  suggestions,
+  historyHref,
+  historyEntries,
+  historyStatus = 'Chưa có câu hỏi nào.',
+  initialQuestion = '',
+  askQuestion,
+  onHistoryEntry,
+}: {
+  domain: DomainDefinition
+  suggestions: string[]
+  historyHref?: string
+  historyEntries: Pick<QueryHistoryEntry, 'id' | 'question'>[]
+  historyStatus?: string
+  initialQuestion?: string
+  askQuestion: (question: string) => Promise<NlqResponse>
+  onHistoryEntry: (entry: QueryHistoryEntry) => void
+}) {
+  const [question, setQuestion] = useState(initialQuestion)
+  const [turns, setTurns] = useState<NlqConversationTurn[]>([])
+  const nextId = useRef(1)
+  const composerRef = useRef<HTMLTextAreaElement>(null)
+  const latestTurnRef = useRef<HTMLElement>(null)
+  const latestTurnId = turns.at(-1)?.id
 
   useEffect(() => {
     if (latestTurnId !== undefined) {
@@ -183,14 +218,14 @@ export function AskAiView({
     meta: { readOnly: true },
     mutationFn: async ({ text }: { id: number; text: string }) => {
       const started = performance.now()
-      const result = await API_AskNlq(text, workspace)
+      const result = await askQuestion(text)
       return { result, durationMs: Math.round(performance.now() - started) }
     },
     onSuccess: ({ result, durationMs }, { id, text }) => {
       setTurns((prev) =>
         prev.map((t) => (t.id === id ? { ...t, state: 'done', result, durationMs } : t))
       )
-      addQueryHistory({
+      onHistoryEntry({
         id: `q_${Date.now()}`,
         question: text,
         status: result.rows.length ? 'COMPLETED' : 'NO_DATA',
@@ -199,7 +234,6 @@ export function AskAiView({
         durationMs,
         askedAt: new Date().toISOString(),
       })
-      setHistoryEntries(readQueryHistory())
     },
     onError: (error, { id, text }) => {
       const message = getApiErrorMessage(
@@ -209,7 +243,7 @@ export function AskAiView({
       setTurns((prev) =>
         prev.map((t) => (t.id === id ? { ...t, state: 'error', error: message } : t))
       )
-      addQueryHistory({
+      onHistoryEntry({
         id: `q_${Date.now()}`,
         question: text,
         status: 'FAILED',
@@ -219,7 +253,6 @@ export function AskAiView({
         askedAt: new Date().toISOString(),
         error: message,
       })
-      setHistoryEntries(readQueryHistory())
     },
   })
 
@@ -271,9 +304,7 @@ export function AskAiView({
                 : `Bạn muốn hỏi gì về ${domain.shortLabel}?`}
             </h2>
             <p className="mt-2 max-w-md text-center text-sm leading-relaxed text-muted-foreground">
-              {workspace === 'STAFF'
-                ? 'Tra cứu số liệu Gold đã công bố trong phạm vi phòng ban.'
-                : 'Đặt câu hỏi bằng tiếng Việt trong phạm vi dữ liệu được cấp quyền.'}
+              Tra cứu số liệu Gold đã công bố trong phạm vi được cấp quyền.
             </p>
             {suggestions.length > 0 && (
               <ul aria-label="Câu hỏi gợi ý" className="mt-5 flex flex-wrap justify-center gap-2">
@@ -383,6 +414,11 @@ export function AskAiView({
                             <SqlBlock sql={turn.result.sql} />
                           </details>
                         )}
+                        {turn.result.truncated && (
+                          <p role="status" className="text-xs text-amber-800">
+                            Kết quả hiển thị tối đa 200 dòng. Hãy thu hẹp câu hỏi để xem đầy đủ.
+                          </p>
+                        )}
                       </>
                     )}
                   </div>
@@ -463,7 +499,7 @@ export function AskAiView({
           )}
         </h2>
         {historyEntries.length === 0 ? (
-          <p className="px-3 pb-2 pt-1 text-sm text-muted-foreground">Chưa có câu hỏi nào.</p>
+          <p className="px-3 pb-2 pt-1 text-sm text-muted-foreground">{historyStatus}</p>
         ) : (
           <ul aria-label="Câu hỏi đã lưu" className="min-h-0 space-y-1 overflow-y-auto">
             {historyEntries.map((entry) => (

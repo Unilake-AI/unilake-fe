@@ -3,7 +3,7 @@
 import Link from 'next/link'
 
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, RefreshCw } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
 import { API_ListCleaningRuns } from '@/api/admindata/cleaning'
 import { API_ListIngestionWorkers } from '@/api/admindata/ingestion'
@@ -16,7 +16,6 @@ import {
 import { API_GetQualityIssueStats } from '@/api/shared/quality-issues'
 import { CountChart } from '@/components/charts/count-chart'
 import {
-  Button,
   Card,
   EmptyState,
   ErrorState,
@@ -33,6 +32,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { TableSkeleton } from '@/components/ui/table-skeleton'
 
 import { domainLabel, formatSeconds, jobTypeLabel } from './data-helpers'
+
+const ingestionStatsGrid =
+  'grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-3 lg:grid-cols-6'
+const ingestionStatPadding = 'px-3 py-2.5 sm:px-4 sm:py-3'
 
 export function DataDashboardView() {
   const statsQuery = useQuery({
@@ -60,57 +63,31 @@ export function DataDashboardView() {
     queryFn: () => API_ListCleaningRuns({ limit: 5, offset: 0 }),
   })
 
-  const isRefreshing =
-    statsQuery.isFetching ||
-    metricsQuery.isFetching ||
-    jobsQuery.isFetching ||
-    workersQuery.isFetching ||
-    issueStatsQuery.isFetching ||
-    cleaningQuery.isFetching
-
-  function refreshAll() {
-    void statsQuery.refetch()
-    void metricsQuery.refetch()
-    void jobsQuery.refetch()
-    void workersQuery.refetch()
-    void issueStatsQuery.refetch()
-    void cleaningQuery.refetch()
-  }
-
   const workers = workersQuery.data ?? []
   const healthyWorkers = workers.filter((w) => w.status.toUpperCase() === 'HEALTHY')
   const offlineWorkers = workers.filter((w) => w.status.toUpperCase() !== 'HEALTHY')
   const busyWorkers = healthyWorkers.filter((w) => w.current_job_id != null)
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <PageHeader
         dashboard
         breadcrumb={['Quản trị dữ liệu', 'Tổng quan']}
         title="Bảng điều khiển vận hành Data Lake"
         description="Theo dõi lượt nạp Bronze, tiến độ làm sạch và tình trạng vận hành."
         actions={
-          <>
-            <Button
-              onClick={refreshAll}
-              reading={isRefreshing}
-              icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
-            >
-              Làm mới
-            </Button>
-            <Link
-              href="/data/ingestion"
-              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#b91830] px-3 text-xs font-semibold text-white hover:bg-[#9e1429]"
-            >
-              Quản lý Ingestion
-              <ArrowRight className="size-3.5" aria-hidden="true" />
-            </Link>
-          </>
+          <Link
+            href="/data/ingestion"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#b91830] px-3 text-xs font-semibold text-white hover:bg-[#9e1429]"
+          >
+            Quản lý Ingestion
+            <ArrowRight className="size-3.5" aria-hidden="true" />
+          </Link>
         }
       />
 
       {/* Thống kê Ingestion toàn hệ thống */}
-      <section aria-labelledby="dash-ingestion-heading" className="space-y-3">
+      <section aria-labelledby="dash-ingestion-heading" className="space-y-2">
         <div className="flex items-center justify-between">
           <h2 id="dash-ingestion-heading" className="text-sm font-semibold text-slate-900">
             Tổng quan nạp dữ liệu
@@ -123,15 +100,16 @@ export function DataDashboardView() {
           </Link>
         </div>
         {statsQuery.isPending ? (
-          <div
-            role="status"
-            className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-3 xl:grid-cols-6"
-          >
+          <div role="status" className={ingestionStatsGrid}>
             <span className="sr-only">Đang tải thống kê lượt nạp…</span>
             {Array.from({ length: 6 }, (_, index) => (
-              <div key={index} aria-hidden="true" className="space-y-3 bg-card p-4 sm:p-5">
-                <Skeleton className="h-3 w-2/3" />
-                <Skeleton className="h-7 w-12" />
+              <div
+                key={index}
+                aria-hidden="true"
+                className={`space-y-1.5 bg-card ${ingestionStatPadding}`}
+              >
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-8 w-12" />
               </div>
             ))}
           </div>
@@ -142,38 +120,25 @@ export function DataDashboardView() {
             onRetry={() => void statsQuery.refetch()}
           />
         ) : (
-          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-3 xl:grid-cols-6">
-            <KpiCard dashboard label="Tổng lượt nạp" value={formatNumber(statsQuery.data.total)} />
-            <KpiCard
-              dashboard
-              label="Đang chờ"
-              value={formatNumber(statsQuery.data.queued)}
-              tone="amber"
-            />
-            <KpiCard
-              dashboard
-              label="Đang chạy"
-              value={formatNumber(statsQuery.data.running)}
-              tone="amber"
-            />
-            <KpiCard
-              dashboard
-              label="Chờ thử lại"
-              value={formatNumber(statsQuery.data.retry_wait)}
-              tone="amber"
-            />
-            <KpiCard
-              dashboard
-              label="Đã lưu Bronze"
-              value={formatNumber(statsQuery.data.success)}
-              tone="emerald"
-            />
-            <KpiCard
-              dashboard
-              label="Thất bại"
-              value={formatNumber(statsQuery.data.failed)}
-              tone="rose"
-            />
+          <div className={ingestionStatsGrid}>
+            {(
+              [
+                ['Tổng lượt nạp', statsQuery.data.total, 'slate'],
+                ['Đang chờ', statsQuery.data.queued, 'amber'],
+                ['Đang chạy', statsQuery.data.running, 'amber'],
+                ['Chờ thử lại', statsQuery.data.retry_wait, 'amber'],
+                ['Đã lưu Bronze', statsQuery.data.success, 'emerald'],
+                ['Thất bại', statsQuery.data.failed, 'rose'],
+              ] as const
+            ).map(([label, value, tone]) => (
+              <KpiCard
+                key={label}
+                className={`rounded-none border-0 ${ingestionStatPadding}`}
+                label={label}
+                value={formatNumber(value)}
+                tone={tone}
+              />
+            ))}
           </div>
         )}
       </section>

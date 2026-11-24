@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Edit3, Info, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react'
+import { Edit3, Info, Plus, Search, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import {
@@ -15,6 +15,7 @@ import {
   API_UpdateCatalog,
 } from '@/api/admindata/governance'
 import { getApiErrorMessage } from '@/api/http'
+import { filterControlClassName } from '@/components/page/filter-bar'
 import {
   Button,
   Card,
@@ -475,22 +476,13 @@ export function CatalogView() {
         title="Data Catalog — Từ điển dữ liệu & Schema"
         description="Quản lý siêu dữ liệu schema (bộ dữ liệu, cột, bảng) theo từng lĩnh vực và tầng dữ liệu."
         actions={
-          <>
-            <Button
-              onClick={() => void catalog.refetch()}
-              reading={catalog.isFetching}
-              icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
-            >
-              Làm mới
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => setFormMode('create')}
-              icon={<Plus className="size-3.5" aria-hidden="true" />}
-            >
-              Thêm mục Catalog
-            </Button>
-          </>
+          <Button
+            variant="primary"
+            onClick={() => setFormMode('create')}
+            icon={<Plus className="size-3.5" aria-hidden="true" />}
+          >
+            Thêm mục Catalog
+          </Button>
         }
       />
 
@@ -541,7 +533,7 @@ export function CatalogView() {
             <div className="space-y-2">
               <select
                 aria-label="Lọc catalog theo lĩnh vực"
-                className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
+                className={`${filterControlClassName} w-full`}
                 value={domainFilter}
                 onChange={(e) => setDomainFilter(e.target.value)}
               >
@@ -554,11 +546,12 @@ export function CatalogView() {
               <label className="relative block">
                 <span className="sr-only">Tìm dataset, bảng, cột</span>
                 <Search
-                  className="absolute left-2.5 top-2.5 size-3.5 text-slate-400"
+                  className="pointer-events-none absolute left-3 top-3 size-3.5 text-slate-400"
                   aria-hidden="true"
                 />
                 <input
-                  className="h-8 w-full rounded-md border border-slate-300 pl-8 pr-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91830]"
+                  type="search"
+                  className={`${filterControlClassName} w-full pl-9`}
                   placeholder="Tìm dataset, bảng, cột…"
                   value={keyword}
                   onChange={(event) => setKeyword(event.target.value)}

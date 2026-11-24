@@ -17,6 +17,7 @@ import { API_ListProfiles } from '@/api/admindata/profiles'
 import { getApiErrorMessage } from '@/api/http'
 import { API_ListAutoSilverJobs } from '@/api/shared/auto-pipeline'
 import { AutoSilverJobDetail, AutoSilverStatusTag } from '@/components/data/auto-silver-jobs'
+import { FilterForm, filterControlClassName } from '@/components/page/filter-bar'
 import {
   Button,
   Card,
@@ -308,31 +309,20 @@ export function AutoPipelineView({ initialJobId: _initialJobId }: { initialJobId
         title="Xử lý Silver tự động"
         description="Bật xử lý sau khi nạp Bronze, theo dõi kết quả và thử lại các lượt thất bại."
         actions={
-          <>
-            <label className="flex items-center gap-2 text-xs">
-              <input
-                type="checkbox"
-                checked={refresh}
-                onChange={(event) => setRefresh(event.target.checked)}
-              />
-              Tự làm mới mỗi 5 giây
-            </label>
-            <Button
-              reading={jobs.isFetching || workers.isFetching}
-              onClick={() => {
-                void jobs.refetch()
-                void workers.refetch()
-              }}
-            >
-              Làm mới
-            </Button>
-          </>
+          <label className="flex items-center gap-2 text-xs">
+            <input
+              type="checkbox"
+              checked={refresh}
+              onChange={(event) => setRefresh(event.target.checked)}
+            />
+            Tự làm mới mỗi 5 giây
+          </label>
         }
       />
       <IngestionFlowMonitor refresh={refresh} />
       <Card title="Chọn bộ dữ liệu và cách tự xử lý">
-        <form
-          className="mb-3 flex gap-2"
+        <FilterForm
+          className="mb-3"
           onSubmit={(event) => {
             event.preventDefault()
             setSearch(datasetSearch.trim())
@@ -341,14 +331,14 @@ export function AutoPipelineView({ initialJobId: _initialJobId }: { initialJobId
           }}
         >
           <input
+            type="search"
             aria-label="Tìm bộ dữ liệu tự chạy"
-            className={inputClass}
+            className={`${filterControlClassName} w-full sm:w-72`}
             value={datasetSearch}
             onChange={(event) => setDatasetSearch(event.target.value)}
             placeholder="Tìm theo tên bộ dữ liệu"
           />
-          <Button type="submit">Tìm bộ dữ liệu</Button>
-        </form>
+        </FilterForm>
         {datasets.isPending ? (
           <LoadingState />
         ) : datasets.isError ? (
@@ -363,7 +353,7 @@ export function AutoPipelineView({ initialJobId: _initialJobId }: { initialJobId
               <span>Bộ dữ liệu</span>
               <select
                 aria-label="Bộ dữ liệu tự chạy"
-                className={inputClass}
+                className={`${filterControlClassName} w-full sm:w-72`}
                 value={datasetId}
                 onChange={(event) => changeDataset(event.target.value)}
               >
@@ -404,8 +394,8 @@ export function AutoPipelineView({ initialJobId: _initialJobId }: { initialJobId
         )}
       </Card>
       <Card title="Các lượt tự xử lý Silver">
-        <form
-          className="mb-3 flex flex-wrap gap-2"
+        <FilterForm
+          className="mb-3"
           onSubmit={(event) => {
             event.preventDefault()
             const value = Number(ingestionInput)
@@ -420,13 +410,12 @@ export function AutoPipelineView({ initialJobId: _initialJobId }: { initialJobId
             aria-label="Lọc theo lần nạp Bronze"
             type="number"
             min="1"
-            className={inputClass}
+            className={`${filterControlClassName} w-full sm:w-72`}
             value={ingestionInput}
             onChange={(event) => setIngestionInput(event.target.value)}
             placeholder="Lần nạp Bronze (tùy chọn)"
           />
-          <Button type="submit">Lọc lượt chạy</Button>
-        </form>
+        </FilterForm>
         {jobs.isPending ? (
           <TableSkeleton columns={6} />
         ) : jobs.isError ? (

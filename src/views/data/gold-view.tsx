@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { useIsFetching, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
   API_GoldSources,
@@ -11,7 +11,6 @@ import {
   API_GoldMetrics,
   API_GoldAttempts,
   API_GoldWorkers,
-  API_GoldRecipes,
   API_RefreshGold,
   API_RetryGold,
   API_RetryGoldDatabaseSync,
@@ -19,6 +18,7 @@ import {
 } from '@/api/admindata/gold'
 import type { GoldDomain } from '@/api/admindata/gold'
 import { getApiErrorMessage } from '@/api/http'
+import { filterControlClassName } from '@/components/page/filter-bar'
 import {
   PageHeader,
   Card,
@@ -89,11 +89,9 @@ const fields: Record<string, string> = {
   degree_level: 'Bậc học',
 }
 const size = 20
-const inputClass = 'rounded-lg border border-slate-300 bg-white p-2 text-sm'
 
 export function GoldView() {
   const client = useQueryClient()
-  const refreshing = useIsFetching({ queryKey: ['gold'] }) > 0
   const [domain, setDomain] = useState<GoldDomain | ''>('')
   const [sourcePage, setSourcePage] = useState(0)
   const [jobPage, setJobPage] = useState(0)
@@ -123,7 +121,6 @@ export function GoldView() {
     queryFn: API_GoldWorkers,
     refetchInterval: 10000,
   })
-  const recipes = useQuery({ queryKey: ['gold', 'recipes'], queryFn: API_GoldRecipes })
   const detail = useQuery({
     queryKey: ['gold', 'detail', selected],
     queryFn: () => API_GoldJob(selected),
@@ -192,57 +189,26 @@ export function GoldView() {
         breadcrumb={['Quản trị dữ liệu', 'Gold']}
         title="Tổng hợp & Báo cáo Gold"
         description="Silver công bố xong sẽ tự tạo lượt Gold. Theo dõi công bố Gold, đồng bộ dữ liệu vào DB và tải báo cáo theo từng nguồn."
-        actions={
-          <Button
-            reading={refreshing}
-            onClick={() => void client.invalidateQueries({ queryKey: ['gold'] })}
-          >
-            Làm mới
-          </Button>
-        }
       />
-      <Card title="Phạm vi báo cáo">
-        <div className="space-y-3">
-          <label className="flex items-center gap-3">
-            Lĩnh vực
-            <select
-              aria-label="Lĩnh vực Gold"
-              className={inputClass}
-              value={domain}
-              onChange={(event) => {
-                setDomain(event.target.value as GoldDomain | '')
-                setSourcePage(0)
-                setJobPage(0)
-                setMetricPage(0)
-                setSelected('')
-              }}
-            >
-              <option value="">Cả ba lĩnh vực</option>
-              {Object.entries(domains).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <p className="text-sm text-slate-600">
-            {recipes.data?.note ??
-              'Đếm bản ghi trong từng nguồn Silver; không cộng thành số người duy nhất toàn trường.'}
-          </p>
-          <p className="text-xs text-slate-500">
-            Gold chỉ nhận các dòng đã đạt chuẩn. File chưa xác định loại dữ liệu chỉ được đếm số
-            dòng. Mã nhóm giữ nguyên giá trị từ Silver.
-          </p>
-          {recipes.isError && (
-            <ErrorState
-              message={getApiErrorMessage(
-                recipes.error,
-                'Chưa lấy được thông tin Gold. Vui lòng thử lại.'
-              )}
-            />
-          )}
-        </div>
-      </Card>
+      <select
+        aria-label="Lĩnh vực Gold"
+        className={filterControlClassName}
+        value={domain}
+        onChange={(event) => {
+          setDomain(event.target.value as GoldDomain | '')
+          setSourcePage(0)
+          setJobPage(0)
+          setMetricPage(0)
+          setSelected('')
+        }}
+      >
+        <option value="">Cả ba lĩnh vực</option>
+        {Object.entries(domains).map(([value, label]) => (
+          <option key={value} value={value}>
+            {label}
+          </option>
+        ))}
+      </select>
       {notice && (
         <p role="status" className="rounded-lg bg-green-50 p-3 text-sm text-green-800">
           {notice}

@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { listAuditEvents, listDomainOwnerAuditEvents } from '@/api/admin/client'
 import { getApiErrorMessage } from '@/api/http'
+import { filterControlClassName } from '@/components/page/filter-bar'
 import { Card, EmptyState, PageHeader } from '@/components/page/page-parts'
 import { Button } from '@/components/ui/button'
 
@@ -48,21 +49,21 @@ export function LogsView() {
   return (
     <div className="space-y-5">
       <PageHeader title="Nhật ký hệ thống" breadcrumb={['Quản trị hệ thống', 'Nhật ký hệ thống']} />
+      <label>
+        <span className="sr-only">Nhật ký</span>
+        <select
+          className={filterControlClassName}
+          value={domainOwners ? 'owners' : 'accounts'}
+          onChange={(event) => {
+            setDomainOwners(event.target.value === 'owners')
+            setOffset(0)
+          }}
+        >
+          <option value="accounts">Tài khoản và tổ chức</option>
+          <option value="owners">Domain Owner</option>
+        </select>
+      </label>
       <Card title="Sự kiện xác thực và phân quyền">
-        <label className="mb-3 flex items-center gap-2 text-sm">
-          Nhật ký
-          <select
-            className="h-9 rounded-md border bg-background px-2"
-            value={domainOwners ? 'owners' : 'accounts'}
-            onChange={(event) => {
-              setDomainOwners(event.target.value === 'owners')
-              setOffset(0)
-            }}
-          >
-            <option value="accounts">Tài khoản và tổ chức</option>
-            <option value="owners">Domain Owner</option>
-          </select>
-        </label>
         {events.isPending && <p role="status">Đang tải nhật ký…</p>}
         {events.isError && (
           <p role="alert" className="text-sm text-rose-700">

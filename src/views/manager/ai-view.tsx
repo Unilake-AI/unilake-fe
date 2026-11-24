@@ -1,13 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import type { FormEvent } from 'react'
 
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { Bot, Clock, Eye, History, RefreshCw, Send, Sparkles } from 'lucide-react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Eye, History } from 'lucide-react'
 
 import { getApiErrorMessage } from '@/api/http'
 import { API_ManagerHistory, API_ManagerHistoryDetail } from '@/api/manager/history'
@@ -21,7 +20,9 @@ import {
   Tag,
   formatDateTime,
 } from '@/components/page/page-parts'
-import type { NlqResponse } from '@/types/nlq'
+import { getDomain, isDomainCode } from '@/config/domains'
+import type { BusinessDomain } from '@/types/domains'
+import { AskAiChat } from '@/views/shared/ask-ai-view'
 
 import { ManagerGate, Paging, label, number } from './report-parts'
 
@@ -34,67 +35,104 @@ function formatCell(value: unknown): string {
   return JSON.stringify(value) ?? '—'
 }
 
-interface DomainAiPreset {
-  domainTitle: string
-  scopeText: string
-  defaultQuestion: string
+const MANAGER_SUGGESTIONS: Record<BusinessDomain, string[]> = {
+  hr: [
+    'Cơ cấu nhân sự theo trạng thái làm việc hiện tại?',
+    'Đơn vị nào có nhiều giảng viên nhất?',
+    'Cơ cấu học vị của giảng viên theo khoa?',
+  ],
+  academic: [
+    'Tỷ lệ đạt theo từng học kỳ?',
+    'Ngành nào có điểm trung bình cao nhất?',
+    'So sánh số sinh viên đang học theo từng khoa',
+  ],
+  admissions: [
+    'Tỷ lệ nhập học theo từng phương thức xét tuyển?',
+    'Ngành nào có nhiều hồ sơ nhất trong năm tuyển sinh gần đây?',
+    'So sánh số nhập học theo ngành giữa hai năm gần nhất',
+  ],
 }
 
-const DOMAIN_PRESETS: Record<string, DomainAiPreset> = {
-  hr: {
-    domainTitle: 'Trợ lý phân tích dữ liệu Nhân sự',
-    scopeText: 'Dữ liệu Gold của phòng Nhân sự',
-    defaultQuestion: 'Cơ cấu nhân sự theo trạng thái làm việc hiện tại?',
-  },
-  academic: {
-    domainTitle: 'Trợ lý phân tích dữ liệu Đào tạo',
-    scopeText: 'Dữ liệu Gold của phòng Đào tạo',
-    defaultQuestion: 'Số bản ghi sinh viên theo từng chương trình đào tạo?',
-  },
-  admissions: {
-    domainTitle: 'Trợ lý phân tích dữ liệu Tuyển sinh',
-    scopeText: 'Dữ liệu Gold của phòng Tuyển sinh',
-    defaultQuestion: 'Số hồ sơ theo trạng thái tuyển sinh?',
-  },
+const HISTORY_HREF = '/manager/ai?tab=history'
+const HISTORY_PAGE_SIZE = 20
+
+function useManagerHistory(userId: number, domain: string, page = 0) {
+  return useQuery({
+    queryKey: ['manager', 'history', userId, domain, page],
+    queryFn: () =>
+      API_ManagerHistory({
+        domain,
+        limit: HISTORY_PAGE_SIZE,
+        offset: page * HISTORY_PAGE_SIZE,
+      }),
+    retry: false,
+  })
 }
 
 export function ManagerAiView() {
   const params = useSearchParams()
-  const tab = params.get('tab') === 'history' ? 'history' : 'ask'
+  const initialQuestion = params.get('q') ?? ''
 
   return (
     <ManagerGate>
       {(context) => {
-        const domain = (context.default_domain ?? context.domains[0]?.domain ?? 'hr') as
-          'hr' | 'academic' | 'admissions'
-        const preset: DomainAiPreset =
-          DOMAIN_PRESETS[domain] ?? (DOMAIN_PRESETS.hr as DomainAiPreset)
-        const initialQ = params.get('q') ?? preset.defaultQuestion
+        const domain = context.default_domain ?? context.domains[0]?.domain ?? 'hr'
+        const key = `${context.user_id}:${domain}`
 
-        return (
-          <div className="space-y-6" key={context.user_id}>
-            {tab === 'history' ? (
-              <ManagerHistoryTab domain={domain} userId={context.user_id} />
-            ) : (
-              <ManagerAiContent domain={domain} initialQuestion={initialQ} preset={preset} />
-            )}
-          </div>
+        return params.get('tab') === 'history' ? (
+          <ManagerHistoryTab key={key} domain={domain} userId={context.user_id} />
+        ) : (
+          <ManagerChat
+            key={`${key}:${initialQuestion}`}
+            userId={context.user_id}
+            domain={domain}
+            initialQuestion={initialQuestion}
+          />
         )
       }}
     </ManagerGate>
   )
 }
 
+function ManagerChat({
+  domain,
+  userId,
+  initialQuestion,
+}: {
+  domain: string
+  userId: number
+  initialQuestion: string
+}) {
+  const domainInfo = getDomain(isDomainCode(domain) ? domain : 'all')
+  const history = useManagerHistory(userId, domain)
+  const queryClient = useQueryClient()
+
+  return (
+    <AskAiChat
+      domain={domainInfo}
+      suggestions={domainInfo.code === 'all' ? [] : MANAGER_SUGGESTIONS[domainInfo.code]}
+      initialQuestion={initialQuestion}
+      historyHref={HISTORY_HREF}
+      historyEntries={history.data?.items ?? []}
+      historyStatus={
+        history.isPending
+          ? 'Đang tải lịch sử…'
+          : history.isError
+            ? 'Không thể tải lịch sử.'
+            : undefined
+      }
+      askQuestion={(text) => API_AskNlq(text, { domain })}
+      onHistoryEntry={() => {
+        void queryClient.invalidateQueries({ queryKey: ['manager', 'history', userId, domain] })
+      }}
+    />
+  )
+}
+
 function ManagerHistoryTab({ domain, userId }: { domain: string; userId: number }) {
   const [page, setPage] = useState(0)
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const pageSize = 20
-
-  const historyQuery = useQuery({
-    queryKey: ['manager', 'history', userId, domain, page],
-    queryFn: () => API_ManagerHistory({ domain, limit: pageSize, offset: page * pageSize }),
-    retry: false,
-  })
+  const historyQuery = useManagerHistory(userId, domain, page)
 
   const detailQuery = useQuery({
     queryKey: ['manager', 'history', 'detail', userId, selectedId],
@@ -118,28 +156,12 @@ function ManagerHistoryTab({ domain, userId }: { domain: string; userId: number 
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <>
-            <Button
-              variant="outline"
-              onClick={() => void historyQuery.refetch()}
-              disabled={historyQuery.isFetching}
-              icon={
-                <RefreshCw
-                  className={`size-3.5 ${historyQuery.isFetching ? 'animate-spin' : ''}`}
-                />
-              }
-            >
-              Làm mới
-            </Button>
-          </>
-          <Link
-            href="/manager/ai"
-            className="shadow-xs rounded-lg border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-          >
-            Quay lại Hỏi AI
-          </Link>
-        </div>
+        <Link
+          href="/manager/ai"
+          className="shadow-xs rounded-lg border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          Quay lại Hỏi AI
+        </Link>
       </div>
 
       <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5">
@@ -200,7 +222,7 @@ function ManagerHistoryTab({ domain, userId }: { domain: string; userId: number 
               setPage={setPage}
               total={historyQuery.data.total}
               count={historyQuery.data.items.length}
-              size={pageSize}
+              size={HISTORY_PAGE_SIZE}
             />
           </>
         )}
@@ -296,196 +318,6 @@ function ManagerHistoryTab({ domain, userId }: { domain: string; userId: number 
           </div>
         ) : null}
       </DetailDrawer>
-    </div>
-  )
-}
-
-function ManagerAiContent({
-  domain,
-  initialQuestion,
-  preset,
-}: {
-  domain: string
-  initialQuestion: string
-  preset: DomainAiPreset
-}) {
-  const [activeQuestion, setActiveQuestion] = useState(initialQuestion)
-  const [inputQuestion, setInputQuestion] = useState(initialQuestion)
-  const [customResult, setCustomResult] = useState<NlqResponse | null>(null)
-  const [customError, setCustomError] = useState<string | null>(null)
-
-  const askMutation = useMutation({
-    meta: { readOnly: true },
-    mutationFn: async (text: string) => {
-      const result = await API_AskNlq(text, { domain })
-      return { result }
-    },
-    onSuccess: ({ result }) => {
-      setCustomResult(result)
-      setCustomError(null)
-    },
-    onError: (error) => {
-      const message = getApiErrorMessage(
-        error,
-        'Chưa thể trả lời câu hỏi lúc này. Vui lòng thử lại.'
-      )
-      setCustomError(message)
-      setCustomResult(null)
-    },
-  })
-
-  function handleSubmit(event: FormEvent) {
-    event.preventDefault()
-    const trimmed = inputQuestion.trim()
-    if (!trimmed || askMutation.isPending) return
-
-    setActiveQuestion(trimmed)
-    setCustomResult(null)
-    setCustomError(null)
-    askMutation.mutate(trimmed)
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Top Header */}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="shadow-xs grid size-10 place-items-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
-            <Bot className="size-5" aria-hidden="true" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900">Hỏi UniLake AI</h1>
-            <p className="text-xs text-slate-500">{preset.domainTitle}</p>
-          </div>
-        </div>
-
-        <Link
-          href="/manager/ai?tab=history"
-          className="shadow-xs inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
-          title="Lịch sử truy vấn"
-          aria-label="Lịch sử truy vấn"
-        >
-          <Clock className="size-4" aria-hidden="true" />
-          <span className="hidden sm:inline">Lịch sử truy vấn</span>
-        </Link>
-      </div>
-
-      {/* User Question Block */}
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-          Câu hỏi của bạn
-        </p>
-        <p className="mt-1 text-base font-semibold text-slate-900">{activeQuestion}</p>
-      </div>
-
-      {/* AI Analysis Result Card */}
-      <div className="shadow-xs space-y-6 rounded-xl border border-slate-200/90 bg-white p-6">
-        <div className="flex items-center gap-2 text-emerald-600">
-          <Sparkles className="size-4" aria-hidden="true" />
-          <h2 className="text-sm font-semibold">Kết quả phân tích</h2>
-        </div>
-
-        {customError ? (
-          <p role="alert" className="text-xs text-rose-600">
-            {customError}
-          </p>
-        ) : customResult ? (
-          <div className="space-y-4">
-            {customResult.answer ? (
-              <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-800">
-                {customResult.answer}
-              </div>
-            ) : (
-              <p className="text-sm leading-relaxed text-slate-800">
-                {customResult.rows.length
-                  ? `Tìm thấy ${customResult.rows.length} kết quả phù hợp từ cơ sở dữ liệu.`
-                  : 'Không có bản ghi nào phù hợp với câu hỏi.'}
-              </p>
-            )}
-            {customResult.rows.length > 0 && (
-              <div className="overflow-x-auto rounded-lg border border-slate-200">
-                <table className="w-full text-left text-xs">
-                  <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
-                    <tr>
-                      {Object.keys(customResult.rows[0] ?? {}).map((col) => (
-                        <th key={col} className="px-3.5 py-2.5 font-medium">
-                          {col}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-800">
-                    {customResult.rows
-                      .slice(0, 200)
-                      .map((row: Record<string, unknown>, idx: number) => (
-                        <tr key={idx} className="hover:bg-slate-50/50">
-                          {Object.keys(row).map((col) => (
-                            <td key={col} className="px-3.5 py-2.5">
-                              {formatCell(row[col])}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            {customResult.truncated && (
-              <p role="status" className="text-xs text-amber-800">
-                Kết quả hiển thị 200 dòng đầu. Hãy thu hẹp câu hỏi để xem đầy đủ.
-              </p>
-            )}
-            {customResult.sql && (
-              <details className="rounded-lg border border-slate-200 bg-slate-50/60 p-3 text-xs">
-                <summary className="cursor-pointer font-medium text-slate-600">
-                  Xem câu lệnh SQL phát sinh
-                </summary>
-                <pre className="mt-2 overflow-x-auto rounded bg-slate-900 p-2.5 font-mono text-[11px] text-slate-100">
-                  {customResult.sql}
-                </pre>
-              </details>
-            )}
-          </div>
-        ) : (
-          <p role="status" className="text-sm text-slate-600">
-            {askMutation.isPending
-              ? 'Đang phân tích câu hỏi…'
-              : 'Gửi câu hỏi để xem câu trả lời và bảng số liệu Gold của phòng ban.'}
-          </p>
-        )}
-      </div>
-
-      {/* Query Form at Bottom */}
-      <form onSubmit={handleSubmit} className="space-y-2">
-        <label
-          htmlFor="manager-question-input"
-          className="block text-xs font-semibold uppercase tracking-wider text-slate-500"
-        >
-          Đặt câu hỏi mới
-        </label>
-        <div className="shadow-xs relative rounded-xl border border-slate-300 bg-white p-3 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
-          <input
-            id="manager-question-input"
-            type="text"
-            value={inputQuestion}
-            onChange={(e) => setInputQuestion(e.target.value)}
-            placeholder={`Nhập câu hỏi phân tích dữ liệu ${domain.toUpperCase()}...`}
-            className="w-full bg-transparent text-sm text-slate-900 placeholder-slate-400 focus:outline-none"
-          />
-
-          <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2.5 text-xs text-slate-500">
-            <span>{preset.scopeText}</span>
-            <button
-              type="submit"
-              disabled={askMutation.isPending || !inputQuestion.trim()}
-              className="shadow-xs flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
-            >
-              <Send className="size-3.5" aria-hidden="true" />
-              <span>{askMutation.isPending ? 'Đang phân tích…' : 'Gửi câu hỏi'}</span>
-            </button>
-          </div>
-        </div>
-      </form>
     </div>
   )
 }

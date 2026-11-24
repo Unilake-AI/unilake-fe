@@ -4,11 +4,9 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  AlertCircle,
   ArrowRight,
   Briefcase,
   Building2,
@@ -23,14 +21,10 @@ import {
   Plus,
   RefreshCw,
   Search,
-  Shield,
   ShieldAlert,
   ShieldCheck,
-  Unlock,
-  UserCheck,
   UserPlus,
   Users,
-  UserX,
 } from 'lucide-react'
 
 import {
@@ -45,21 +39,14 @@ import {
   parseValidationErrors,
   updateAccountAccess,
 } from '@/api/admin/client'
-import type {
-  Account,
-  AssignmentCreatePayload,
-  DepartmentItem,
-  EmployeeItem,
-  PositionItem,
-  ValidationErrorItem,
-} from '@/api/admin/client'
+import type { Account, ValidationErrorItem } from '@/api/admin/client'
 import { getApiErrorMessage } from '@/api/http'
 import { DomainOwners } from '@/components/page/domain-owners'
+import { filterBarClassName, filterControlClassName } from '@/components/page/filter-bar'
 import { Card, EmptyState, KpiCard, PageHeader, Tag } from '@/components/page/page-parts'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -220,7 +207,9 @@ function CreateAccountModal({
               </button>
             </div>
             {password.length > 0 && password.length < 12 && (
-              <p className="text-[11px] text-rose-600">Cần thêm {12 - password.length} ký tự nữa.</p>
+              <p className="text-[11px] text-rose-600">
+                Cần thêm {12 - password.length} ký tự nữa.
+              </p>
             )}
           </div>
 
@@ -406,7 +395,7 @@ function EditAccessModal({
                       checked
                         ? 'border-rose-500 bg-rose-50/50 shadow-sm'
                         : 'border-slate-200 hover:bg-slate-50'
-                    } ${disabled ? 'opacity-80 cursor-not-allowed' : ''}`}
+                    } ${disabled ? 'cursor-not-allowed opacity-80' : ''}`}
                   >
                     <input
                       type="checkbox"
@@ -538,8 +527,8 @@ function LinkEmployeeModal({
             Liên kết hồ sơ nhân sự: {account.username}
           </DialogTitle>
           <DialogDescription>
-            Gắn tài khoản với hồ sơ nhân viên thực tế để tính toán phân công và quyền phụ trách phòng
-            ban.
+            Gắn tài khoản với hồ sơ nhân viên thực tế để tính toán phân công và quyền phụ trách
+            phòng ban.
           </DialogDescription>
         </DialogHeader>
 
@@ -681,7 +670,9 @@ function CreateAssignmentModal({
 
         <form className="space-y-4 pt-2" onSubmit={(e) => void handleSubmit(e)}>
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-700">Mã nhân viên (Employee ID)</label>
+            <label className="text-xs font-semibold text-slate-700">
+              Mã nhân viên (Employee ID)
+            </label>
             <Input
               type="number"
               value={employeeId}
@@ -741,11 +732,7 @@ function CreateAssignmentModal({
               <label className="text-xs font-semibold text-slate-700">
                 Ngày kết thúc (tùy chọn)
               </label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
+              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </div>
           </div>
 
@@ -791,7 +778,9 @@ function CreateAssignmentModal({
 export function UsersView() {
   const { user, roles } = useAuth()
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState<'accounts' | 'organization' | 'owners' | 'audit' | 'sessions'>('accounts')
+  const [activeTab, setActiveTab] = useState<
+    'accounts' | 'organization' | 'owners' | 'audit' | 'sessions'
+  >('accounts')
 
   // Search & Pagination
   const [search, setSearch] = useState('')
@@ -869,7 +858,7 @@ export function UsersView() {
 
       {/* Workspace Switcher Banner for dual-role users (ADMIN + DATA_ADMIN) */}
       {canSwitchWorkspace && (
-        <div className="flex flex-col items-start justify-between gap-3 rounded-lg border border-indigo-200 bg-gradient-to-r from-indigo-50/80 via-white to-purple-50/80 p-4 shadow-xs sm:flex-row sm:items-center">
+        <div className="shadow-xs flex flex-col items-start justify-between gap-3 rounded-lg border border-indigo-200 bg-gradient-to-r from-indigo-50/80 via-white to-purple-50/80 p-4 sm:flex-row sm:items-center">
           <div className="flex items-start gap-3">
             <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-indigo-600 text-white">
               <Database className="size-5" />
@@ -990,6 +979,25 @@ export function UsersView() {
 
         {/* TAB 1: ACCOUNTS LIST */}
         <TabsContent value="accounts" className="space-y-4 pt-2">
+          <div className={filterBarClassName}>
+            <label className="relative">
+              <span className="sr-only">Tìm theo tên đăng nhập</span>
+              <Search
+                className="pointer-events-none absolute left-2.5 top-3 size-4 text-slate-400"
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                className={`${filterControlClassName} w-64 pl-8`}
+                placeholder="Tìm theo tên đăng nhập…"
+                value={search}
+                onChange={(event) => {
+                  setSearch(event.target.value)
+                  setOffset(0)
+                }}
+              />
+            </label>
+          </div>
           <Card
             title="Danh sách tài khoản và phân quyền"
             subtitle="Xem xét, gán vai trò, quản lý trạng thái tài khoản và liên kết hồ sơ nhân sự"
@@ -1002,25 +1010,9 @@ export function UsersView() {
               </div>
             }
           >
-            {/* Search Bar */}
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="relative max-w-sm flex-1">
-                <Search className="absolute left-2.5 top-2.5 size-4 text-slate-400" />
-                <Input
-                  aria-label="Tìm theo tên đăng nhập"
-                  placeholder="Tìm theo tên đăng nhập…"
-                  value={search}
-                  onChange={(event) => {
-                    setSearch(event.target.value)
-                    setOffset(0)
-                  }}
-                  className="pl-9 text-xs"
-                />
-              </div>
-              <div className="text-xs text-slate-500">
-                Hiển thị từ {offset + 1} đến {offset + (accounts.data?.length ?? 0)}
-              </div>
-            </div>
+            <p className="mb-4 text-xs text-slate-500">
+              Hiển thị từ {offset + 1} đến {offset + (accounts.data?.length ?? 0)}
+            </p>
 
             {/* Loading & Error States */}
             {accounts.isPending && (
@@ -1285,7 +1277,9 @@ export function UsersView() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => void queryClient.invalidateQueries({ queryKey: ['admin', 'audit-events'] })}
+                onClick={() =>
+                  void queryClient.invalidateQueries({ queryKey: ['admin', 'audit-events'] })
+                }
               >
                 <RefreshCw className="mr-1.5 size-3.5" />
                 Làm mới
@@ -1327,9 +1321,7 @@ export function UsersView() {
                           {evt.occurred_at.slice(0, 19).replace('T', ' ')}
                         </td>
                         <td className="p-2.5 font-medium text-slate-900">{evt.username}</td>
-                        <td className="p-2.5">
-                          {AUDIT_ACTIONS[evt.action] ?? evt.action}
-                        </td>
+                        <td className="p-2.5">{AUDIT_ACTIONS[evt.action] ?? evt.action}</td>
                         <td className="p-2.5 font-mono text-slate-600">
                           {evt.target_id ? `#${evt.target_id}` : '—'}
                         </td>

@@ -235,9 +235,13 @@ describe('ManagerReportsView', () => {
           !call.url?.includes('/recipes')
       )
     ).toBe(true)
-    expect(screen.getByRole('link', { name: 'Hỏi UniLake AI để phân tích thêm' })).toHaveAttribute(
+    expect(screen.queryByText('Phân tích sâu hơn với AI')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: 'Hỏi UniLake AI để phân tích thêm' })
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Theo dõi chất lượng dữ liệu' })).toHaveAttribute(
       'href',
-      '/manager/ask'
+      '/manager/quality-issues'
     )
     client.clear()
   })
