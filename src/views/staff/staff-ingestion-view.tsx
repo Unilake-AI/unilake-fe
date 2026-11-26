@@ -32,6 +32,7 @@ import {
 import { TableSkeleton } from '@/components/ui/table-skeleton'
 import type { IngestionJobStatusFilter } from '@/types/ingestion'
 
+import { StaffBusinessImportStatus } from './staff-business-import'
 import { StaffContextGate } from './staff-context-gate'
 import {
   BRONZE_SUCCESS_MESSAGE,
@@ -131,9 +132,11 @@ function JobDetailSection({
           className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-900"
         >
           <CheckCircle2 className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />
-          <span>{BRONZE_SUCCESS_MESSAGE}</span>
+          <span>{job.import_type ? 'Đã lưu tệp vào Bronze' : BRONZE_SUCCESS_MESSAGE}</span>
         </div>
       )}
+
+      {status === 'SUCCESS' && job.import_type && <StaffBusinessImportStatus jobId={jobId} />}
 
       {job.quality_issue_id && (
         <div className="flex items-center justify-between rounded-md border border-[#ebc5cd] bg-[#fff3f5] px-3 py-2 text-[#7a1020]">
