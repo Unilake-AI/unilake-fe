@@ -1,6 +1,8 @@
 import type { components, paths } from '@/api/schema'
 
-export type IngestionJob = components['schemas']['IngestionJobRead']
+export type IngestionJob = components['schemas']['IngestionJobRead'] & {
+  import_type?: string | null
+}
 
 export type IngestionJobStats = components['schemas']['IngestionJobStats']
 

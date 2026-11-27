@@ -13,7 +13,12 @@ import { toast } from 'sonner'
 import { getApiErrorMessage, getErrorMessageForCode } from '@/api/http'
 import { API_ListDatasets } from '@/api/shared/datasets'
 import { API_GetIngestionJob } from '@/api/shared/ingestion'
-import { API_UploadIngestion } from '@/api/staff/upload'
+import {
+  API_AnalyzeStaffImport,
+  API_ListStaffImportTypes,
+  API_ReadUploadFileLayout,
+  API_UploadIngestion,
+} from '@/api/staff/upload'
 import {
   Button,
   Card,
@@ -31,8 +36,20 @@ import { ASK_AI_PATHS } from '@/config/menu'
 import type { DatasetItem } from '@/types/datasets'
 import type { IngestionJob } from '@/types/ingestion'
 import type { StaffContext } from '@/types/staff-context'
-import type { UploadDomain } from '@/types/staff-upload'
+import type {
+  StaffImportDateFormat,
+  StaffImportLayout,
+  StaffImportOptions,
+  UploadDomain,
+  UploadFileLayout,
+} from '@/types/staff-upload'
 
+import {
+  AdmissionsUpdateDownload,
+  ImportLayoutReview,
+  StaffBusinessImportStatus,
+  ignoreSourceColumn,
+} from './staff-business-import'
 import { StaffAccessDeniedState, StaffContextGate } from './staff-context-gate'
 import {
   BRONZE_SUCCESS_MESSAGE,
@@ -56,6 +73,14 @@ const uploadDialogTiming =
 
 const inputClass =
   'h-10 w-full rounded-lg border border-[#cbd4e3] bg-white px-3 text-sm text-[#17233d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6761ed]/30 disabled:bg-slate-50 disabled:text-slate-500'
+
+type CheckedUpload = {
+  file: File
+  parserKey: string
+  optionsKey: string
+  layout: UploadFileLayout
+  analysis: StaffImportLayout | null
+}
 
 function JobTrackerCard({ jobId, initialJob }: { jobId: number; initialJob: IngestionJob }) {
   const query = useQuery({
@@ -135,7 +160,9 @@ function JobTrackerCard({ jobId, initialJob }: { jobId: number; initialJob: Inge
           >
             <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" aria-hidden="true" />
             <div>
-              <p className="font-semibold">{BRONZE_SUCCESS_MESSAGE}</p>
+              <p className="font-semibold">
+                {job.import_type ? 'Đã lưu tệp vào Bronze' : BRONZE_SUCCESS_MESSAGE}
+              </p>
               <p className="mt-0.5 text-emerald-800">
                 Đã đọc {formatNumber(job.rows_read)} dòng · Đã ghi {formatNumber(job.rows_written)}{' '}
                 dòng · Loại {formatNumber(job.rows_rejected)} dòng.
@@ -143,6 +170,8 @@ function JobTrackerCard({ jobId, initialJob }: { jobId: number; initialJob: Inge
             </div>
           </div>
         )}
+
+        {status === 'SUCCESS' && job.import_type && <StaffBusinessImportStatus jobId={jobId} />}
 
         {(status === 'FAILED' || status === 'REJECTED') && (
           <div
@@ -204,6 +233,10 @@ function UploadContent({ context }: { context: StaffContext }) {
   const hasMultipleDomains = context.domains.length > 1 || context.default_domain == null
   const datasetDomain = hasMultipleDomains ? undefined : (context.default_domain as UploadDomain)
   const [selectedDatasetId, setSelectedDatasetId] = useState('')
+  const [selectedWorkflow, setSelectedWorkflow] = useState('')
+  const [dateFormat, setDateFormat] = useState<StaffImportDateFormat>('%Y-%m-%d')
+  const [columnChoices, setColumnChoices] = useState<Record<string, string>>({})
+  const [checkedUpload, setCheckedUpload] = useState<CheckedUpload | null>(null)
 
   // File & parser options
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -237,11 +270,50 @@ function UploadContent({ context }: { context: StaffContext }) {
     },
   })
 
+  const workflowsQuery = useQuery({
+    queryKey: ['staff-import-types', context.user_id],
+    queryFn: API_ListStaffImportTypes,
+    enabled: context.can_upload && Boolean(selectedDatasetId),
+  })
+
+  const checkMutation = useMutation({
+    mutationFn: async ({
+      file,
+      domain,
+      options,
+      parserOptions,
+      cachedLayout,
+    }: {
+      file: File
+      domain: UploadDomain
+      options: StaffImportOptions
+      parserOptions?: Record<string, unknown>
+      cachedLayout?: UploadFileLayout
+    }): Promise<CheckedUpload> => {
+      const layout = cachedLayout ?? (await API_ReadUploadFileLayout(file, domain, parserOptions))
+      const analysis =
+        layout.columns.length > 0
+          ? await API_AnalyzeStaffImport(domain, layout.columns, options)
+          : null
+      return {
+        file,
+        layout,
+        analysis,
+        parserKey: JSON.stringify(parserOptions ?? {}),
+        optionsKey: JSON.stringify(options),
+      }
+    },
+    onSuccess: setCheckedUpload,
+  })
+
   const uploadMutation = useMutation({
     mutationFn: API_UploadIngestion,
     onSuccess: (job) => {
       setSubmittedJob(job)
       setSelectedFile(null)
+      setCheckedUpload(null)
+      setColumnChoices({})
+      setExcelSheetName('')
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
@@ -292,9 +364,9 @@ function UploadContent({ context }: { context: StaffContext }) {
   }
 
   function buildParserOptions(): { options?: Record<string, unknown>; error?: string } {
-    if (!customizeParser || !selectedFile) {
-      return {}
-    }
+    if (!selectedFile) return {}
+    if (!customizeParser)
+      return isExcel && excelSheetName ? { options: { sheet_name: excelSheetName } } : {}
     const parsedSkip = Number(skipRows)
     if (!Number.isInteger(parsedSkip) || parsedSkip < 0) {
       return { error: 'Số dòng bỏ qua (skip_rows) phải là số nguyên lớn hơn hoặc bằng 0.' }
@@ -329,9 +401,7 @@ function UploadContent({ context }: { context: StaffContext }) {
         header_row: parsedHeaderRow,
         skip_rows: parsedSkip,
       }
-      if (excelSheetName.trim()) {
-        options.sheet_name = excelSheetName.trim()
-      }
+      if (excelSheetName) options.sheet_name = excelSheetName
       return { options }
     }
 
@@ -342,16 +412,63 @@ function UploadContent({ context }: { context: StaffContext }) {
   const selectedDataset = datasets.find(
     (dataset) => String(dataset.dataset_id) === selectedDatasetId
   )
+  const workflows = (workflowsQuery.data ?? []).filter(
+    (item) => item.enabled && item.domain === selectedDataset?.domain
+  )
+  const workflow = workflows.find((item) => item.import_type === selectedWorkflow)
+  const admissionsUpdate =
+    workflow?.import_type === 'admissions_results'
+      ? 'results'
+      : workflow?.import_type === 'admissions_enrollment'
+        ? 'enrollment'
+        : null
+  const { options: parserOptions, error: parserError } = buildParserOptions()
+  const importOptions: StaffImportOptions | undefined = workflow && {
+    import_type: workflow.import_type,
+    version: workflow.version,
+    field_mapping: Object.fromEntries(
+      Object.entries(columnChoices)
+        .filter(([, value]) => value && value !== ignoreSourceColumn)
+        .map(([column, field]) => [field, column])
+    ),
+    ignored_columns: Object.keys(columnChoices).filter(
+      (column) => columnChoices[column] === ignoreSourceColumn
+    ),
+    date_format: dateFormat,
+  }
+  const fileLayout = checkedUpload?.file === selectedFile ? checkedUpload?.layout : undefined
+  const currentCheck =
+    !parserError &&
+    checkedUpload?.file === selectedFile &&
+    checkedUpload?.parserKey === JSON.stringify(parserOptions ?? {})
+      ? checkedUpload
+      : undefined
+  const canSubmit = Boolean(
+    currentCheck?.analysis?.status === 'MAPPED' &&
+    currentCheck.optionsKey === JSON.stringify(importOptions)
+  )
+  const pending = uploadMutation.isPending || checkMutation.isPending
+
+  function clearMapping() {
+    setColumnChoices({})
+    setValidationError(null)
+    checkMutation.reset()
+    uploadMutation.reset()
+  }
 
   function handleUploadSubmit(event: FormEvent) {
     event.preventDefault()
-    if (uploadMutation.isPending) return
+    if (pending) return
 
     setValidationError(null)
     uploadMutation.reset()
 
     if (!selectedDataset) {
       setValidationError('Vui lòng chọn bộ dữ liệu tiếp nhận trước khi tải lên.')
+      return
+    }
+    if (!workflow || !importOptions) {
+      setValidationError('Vui lòng chọn công việc cần thực hiện.')
       return
     }
 
@@ -362,9 +479,22 @@ function UploadContent({ context }: { context: StaffContext }) {
     }
     const file = selectedFile!
 
-    const { options: parserOptions, error: parserErr } = buildParserOptions()
-    if (parserErr) {
-      setValidationError(parserErr)
+    if (parserError) {
+      setValidationError(parserError)
+      return
+    }
+    if (isExcel && (fileLayout?.sheet_names.length ?? 0) > 1 && !excelSheetName) {
+      setValidationError('Vui lòng chọn sheet cần nạp.')
+      return
+    }
+    if (!canSubmit) {
+      checkMutation.mutate({
+        file,
+        domain: workflow.domain,
+        options: importOptions,
+        parserOptions,
+        cachedLayout: currentCheck?.layout,
+      })
       return
     }
 
@@ -374,6 +504,7 @@ function UploadContent({ context }: { context: StaffContext }) {
       file,
       datasetId: selectedDataset.dataset_id,
       parserOptions,
+      importOptions,
       onUploadProgress: (percent) => setUploadProgress(percent),
     })
   }
@@ -393,13 +524,15 @@ function UploadContent({ context }: { context: StaffContext }) {
           <select
             id="upload-dataset"
             className={inputClass}
-            disabled={datasets.length === 0 || uploadMutation.isPending}
+            disabled={datasets.length === 0 || pending}
             required
             value={selectedDataset ? selectedDatasetId : ''}
             onChange={(event) => {
               setSelectedDatasetId(event.target.value)
-              setValidationError(null)
-              uploadMutation.reset()
+              setSelectedWorkflow('')
+              setDateFormat('%Y-%m-%d')
+              setCheckedUpload(null)
+              clearMapping()
             }}
           >
             <option value="" disabled>
@@ -421,6 +554,57 @@ function UploadContent({ context }: { context: StaffContext }) {
           </select>
         </div>
 
+        {selectedDataset && (
+          <div className="min-w-0 space-y-1.5">
+            <label htmlFor="upload-workflow" className="block text-xs font-semibold text-slate-700">
+              Công việc cần thực hiện *
+            </label>
+            <select
+              id="upload-workflow"
+              className={inputClass}
+              disabled={workflows.length === 0 || pending}
+              value={workflow?.import_type ?? ''}
+              onChange={(event) => {
+                setSelectedWorkflow(event.target.value)
+                setDateFormat('%Y-%m-%d')
+                setCheckedUpload(null)
+                clearMapping()
+              }}
+            >
+              <option value="" disabled>
+                {workflowsQuery.isPending ? 'Đang tải danh sách công việc…' : 'Chọn công việc'}
+              </option>
+              {workflows.map((item) => (
+                <option key={item.import_type} value={item.import_type}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+            {workflowsQuery.isError && (
+              <ErrorState
+                message={getApiErrorMessage(
+                  workflowsQuery.error,
+                  'Không tải được danh sách công việc.'
+                )}
+                retrying={workflowsQuery.isFetching}
+                onRetry={() => void workflowsQuery.refetch()}
+              />
+            )}
+            {workflowsQuery.isSuccess && workflows.length === 0 && (
+              <p className="text-xs text-slate-600">
+                Bộ dữ liệu này chưa có công việc nạp được hỗ trợ.
+              </p>
+            )}
+            {admissionsUpdate && (
+              <AdmissionsUpdateDownload
+                key={`${selectedDataset.dataset_id}-${admissionsUpdate}`}
+                datasetId={selectedDataset.dataset_id}
+                workflow={admissionsUpdate}
+              />
+            )}
+          </div>
+        )}
+
         <div className="min-w-0 space-y-1.5">
           <p id="upload-file-label" className="text-xs font-semibold text-slate-700">
             Tệp dữ liệu *
@@ -428,7 +612,7 @@ function UploadContent({ context }: { context: StaffContext }) {
           <div className="flex h-10 items-center gap-2">
             <Button
               variant="outline"
-              disabled={uploadMutation.isPending}
+              disabled={pending}
               onClick={() => fileInputRef.current?.click()}
               aria-describedby="upload-file-label upload-file-hint"
               className="h-10 shrink-0 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
@@ -443,14 +627,16 @@ function UploadContent({ context }: { context: StaffContext }) {
             >
               {selectedFile?.name}
             </span>
-            {selectedFile && !uploadMutation.isPending && (
+            {selectedFile && !pending && (
               <Button
                 variant="ghost"
                 aria-label="Bỏ chọn tệp"
                 title="Bỏ chọn tệp"
                 onClick={() => {
                   setSelectedFile(null)
-                  setValidationError(null)
+                  setCheckedUpload(null)
+                  setExcelSheetName('')
+                  clearMapping()
                   if (fileInputRef.current) {
                     fileInputRef.current.value = ''
                   }
@@ -466,13 +652,15 @@ function UploadContent({ context }: { context: StaffContext }) {
             hidden
             aria-labelledby="upload-file-label"
             accept={context.accepted_extensions.join(',')}
-            disabled={uploadMutation.isPending}
+            disabled={pending}
             onChange={(event) => {
               const file = event.target.files?.[0] ?? null
               setSelectedFile(file)
+              setCheckedUpload(null)
+              setExcelSheetName('')
+              clearMapping()
               setValidationError(file ? validateFile(file) : null)
               setUploadProgress(null)
-              uploadMutation.reset()
             }}
           />
         </div>
@@ -481,6 +669,41 @@ function UploadContent({ context }: { context: StaffContext }) {
           Tệp {context.accepted_extensions.join(', ')} có dòng tiêu đề, tối đa{' '}
           {formatBytes(context.max_file_bytes)} và {formatNumber(context.max_records)} dòng.
         </p>
+
+        {isExcel && (fileLayout?.sheet_names.length ?? 0) > 1 && (
+          <label className="grid gap-1.5 text-xs font-semibold text-slate-700">
+            Sheet cần nạp *
+            <select
+              className={inputClass}
+              value={excelSheetName}
+              disabled={pending}
+              onChange={(event) => {
+                setExcelSheetName(event.target.value)
+                clearMapping()
+              }}
+            >
+              <option value="">Chọn sheet</option>
+              {fileLayout?.sheet_names.map((sheet) => (
+                <option key={sheet} value={sheet}>
+                  {sheet}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+
+        {workflow && currentCheck?.analysis && (
+          <ImportLayoutReview
+            workflow={workflow}
+            columns={currentCheck.layout.columns}
+            analysis={currentCheck.analysis}
+            choices={columnChoices}
+            disabled={pending}
+            onChoose={(column, field) =>
+              setColumnChoices((previous) => ({ ...previous, [column]: field }))
+            }
+          />
+        )}
 
         {datasetsQuery.isError && (
           <ErrorState
@@ -494,11 +717,28 @@ function UploadContent({ context }: { context: StaffContext }) {
         )}
 
         {selectedFile && (
-          <details className="rounded-md border bg-slate-50 px-3">
+          <details className="rounded-md border bg-slate-50 px-3" inert={pending}>
             <summary className="py-2.5 text-sm font-medium">
               Nâng cao{customizeParser ? ' · Đang dùng cấu hình tùy chỉnh' : ''}
             </summary>
-            <div className="space-y-3 pb-3">
+            <div className="space-y-3 pb-3" onChange={clearMapping}>
+              {workflow?.fields.some(({ kind }) => kind === 'date') && (
+                <label className="grid gap-1 text-xs font-medium text-slate-700">
+                  Định dạng ngày trong tệp
+                  <select
+                    className={inputClass}
+                    value={dateFormat}
+                    onChange={(event) => {
+                      event.stopPropagation()
+                      setDateFormat(event.target.value as StaffImportDateFormat)
+                    }}
+                  >
+                    <option value="%Y-%m-%d">YYYY-MM-DD</option>
+                    <option value="%d/%m/%Y">DD/MM/YYYY</option>
+                    <option value="%m/%d/%Y">MM/DD/YYYY</option>
+                  </select>
+                </label>
+              )}
               <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-800">
                 <input
                   type="checkbox"
@@ -591,24 +831,7 @@ function UploadContent({ context }: { context: StaffContext }) {
               )}
 
               {customizeParser && isExcel && (
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="space-y-1">
-                    <label
-                      htmlFor="excel-sheet-name"
-                      className="block text-xs font-medium text-slate-700"
-                    >
-                      Tên sheet (tùy chọn)
-                    </label>
-                    <input
-                      id="excel-sheet-name"
-                      type="text"
-                      maxLength={200}
-                      value={excelSheetName}
-                      onChange={(e) => setExcelSheetName(e.target.value)}
-                      placeholder="Mặc định sheet đầu tiên"
-                      className={inputClass}
-                    />
-                  </div>
+                <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1">
                     <label
                       htmlFor="excel-header-row"
@@ -647,15 +870,17 @@ function UploadContent({ context }: { context: StaffContext }) {
           </details>
         )}
 
-        {(validationError || uploadMutation.isError) && (
+        {(validationError || checkMutation.isError || uploadMutation.isError) && (
           <div
             role="alert"
             className="rounded-md border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700"
           >
             {validationError ??
               getApiErrorMessage(
-                uploadMutation.error,
-                'Không thể tải tệp lên. Vui lòng kiểm tra lại thông tin và thử lại.'
+                checkMutation.error ?? uploadMutation.error,
+                checkMutation.isError
+                  ? 'Không kiểm tra được tiêu đề tệp.'
+                  : 'Không thể tải tệp lên.'
               )}
           </div>
         )}
@@ -675,14 +900,27 @@ function UploadContent({ context }: { context: StaffContext }) {
           </div>
         )}
 
+        {canSubmit && !pending && (
+          <p role="status" className="text-xs text-emerald-800">
+            Đã kiểm tra tiêu đề
+            {fileLayout?.sheet_name ? ` của sheet ${fileLayout.sheet_name}` : ''}. Có thể tải lên.
+          </p>
+        )}
+
         <Button
-          loading={uploadMutation.isPending}
+          loading={pending}
           type="submit"
           variant="primary"
           className="h-10 justify-self-end"
           icon={<Upload className="size-3.5" aria-hidden="true" />}
         >
-          {uploadMutation.isPending ? 'Đang tải lên…' : 'Tải lên'}
+          {uploadMutation.isPending
+            ? 'Đang tải lên…'
+            : checkMutation.isPending
+              ? 'Đang kiểm tra tệp…'
+              : canSubmit
+                ? 'Tải lên'
+                : 'Kiểm tra tệp'}
         </Button>
       </form>
       {submittedJob && (
@@ -710,7 +948,7 @@ export function StaffUploadDialog() {
       </div>
       <DialogContent
         aria-describedby={undefined}
-        className={`max-w-sm ${uploadDialogTiming}`}
+        className={`max-h-[90dvh] max-w-lg overflow-y-auto ${uploadDialogTiming}`}
         overlayClassName={uploadDialogTiming}
       >
         <DialogTitle className="pr-8">Nạp dữ liệu</DialogTitle>
