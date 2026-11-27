@@ -5,7 +5,7 @@ import { Fragment, useMemo, useState } from 'react'
 import Link from 'next/link'
 
 import { useQuery } from '@tanstack/react-query'
-import { CheckCircle2, ChevronLeft, ChevronRight, CircleAlert } from 'lucide-react'
+import { History, CheckCircle2, ChevronLeft, ChevronRight, CircleAlert } from 'lucide-react'
 
 import { getApiErrorMessage, getErrorMessageForCode } from '@/api/http'
 import { API_ListDatasets } from '@/api/shared/datasets'
@@ -230,6 +230,7 @@ function IngestionContent({ initialJobId }: { initialJobId?: number }) {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<History />}
         breadcrumb={['Không gian nhân viên', 'Lịch sử nạp dữ liệu']}
         title="Lịch sử nạp dữ liệu"
         description="Theo dõi trạng thái nạp Bronze, số dòng đọc, ghi và bị từ chối."

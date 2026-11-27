@@ -1,0 +1,179 @@
+/* Apply the dark palette to workspace views that still use light-only utility colors. */
+.dark :where(.workspace-main *, [data-workspace-surface], [data-workspace-surface] *) {
+  &:is(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) {
+    background-color: hsl(var(--card));
+  }
+
+  &:is(
+    .bg-slate-50,
+    .bg-slate-50\/40,
+    .bg-slate-50\/50,
+    .bg-slate-50\/60,
+    .bg-slate-50\/70,
+    .bg-slate-50\/80,
+    .bg-slate-100,
+    .bg-gray-50,
+    .bg-gray-100
+  ),
+  &:is(
+      .hover\:bg-slate-50,
+      .hover\:bg-slate-50\/50,
+      .hover\:bg-slate-50\/60,
+      .hover\:bg-slate-50\/70,
+      .hover\:bg-slate-100,
+      .hover\:bg-white
+    ):hover,
+  &.disabled\:bg-slate-50:disabled {
+    background-color: hsl(var(--muted));
+  }
+
+  &:is(.bg-slate-200, .bg-gray-200, .hover\:bg-slate-200:hover) {
+    background-color: hsl(var(--accent));
+  }
+
+  &:is(
+    .border-slate-100,
+    .border-slate-200,
+    .border-slate-200\/80,
+    .border-slate-200\/90,
+    .border-slate-300,
+    .border-rose-200,
+    .border-amber-200,
+    .border-emerald-200,
+    .border-sky-200,
+    .border-indigo-200,
+    .border-red-200,
+    .border-\[\#cbd4e3\],
+    .border-\[\#ebc5cd\],
+    .border-\[\#edf0f8\]
+  ) {
+    border-color: hsl(var(--border));
+  }
+
+  &:is(.divide-slate-100, .divide-slate-200, .divide-\[\#e5e9f3\])
+    > :not([hidden])
+    ~ :not([hidden]) {
+    border-color: hsl(var(--border));
+  }
+
+  &:is(
+    .text-slate-700,
+    .text-slate-800,
+    .text-slate-900,
+    .text-slate-950,
+    .text-\[\#111a35\],
+    .text-\[\#17233d\],
+    .text-\[\#34415f\],
+    .text-\[\#34486c\]
+  ) {
+    color: hsl(var(--foreground));
+  }
+
+  &:is(
+    .text-slate-400,
+    .text-slate-500,
+    .text-slate-600,
+    .text-\[\#596884\],
+    .text-\[\#5b6781\],
+    .text-\[\#63708d\],
+    .text-\[\#65718d\]
+  ),
+  &.disabled\:text-slate-500:disabled {
+    color: hsl(var(--muted-foreground));
+  }
+
+  &:is(.placeholder-slate-400, .placeholder\:text-slate-400)::placeholder {
+    color: hsl(var(--muted-foreground));
+  }
+
+  &:is(
+    .bg-rose-50,
+    .bg-rose-50\/20,
+    .bg-rose-100,
+    .bg-red-50,
+    .bg-red-100,
+    .bg-\[\#fbe4e9\],
+    .bg-\[\#fff3f5\],
+    .bg-\[\#fff3f5\]\/40,
+    .bg-\[\#fff5f7\],
+    .hover\:bg-rose-50:hover,
+    .enabled\:hover\:bg-rose-50:enabled:hover
+  ) {
+    background-color: rgb(251 113 133 / 12%);
+  }
+
+  &:is(
+    .text-rose-600,
+    .text-rose-700,
+    .text-rose-800,
+    .text-rose-900,
+    .text-red-600,
+    .text-red-700,
+    .text-\[\#b91830\],
+    .text-\[\#a9162e\],
+    .text-\[\#7a1020\]
+  ) {
+    color: #fda4af;
+  }
+
+  &:is(.bg-amber-50, .bg-amber-100, .bg-\[\#fff3dd\], .bg-\[\#fff9ee\], .bg-\[\#fffae9\]) {
+    background-color: rgb(251 191 36 / 12%);
+  }
+
+  &:is(.text-amber-600, .text-amber-700, .text-amber-800, .text-amber-900, .text-\[\#d38918\]) {
+    color: #fcd34d;
+  }
+
+  &:is(.bg-emerald-50, .bg-emerald-100, .bg-\[\#e7f8ef\], .bg-\[\#f0faf5\]) {
+    background-color: rgb(52 211 153 / 12%);
+  }
+
+  &:is(
+    .text-emerald-600,
+    .text-emerald-700,
+    .text-emerald-800,
+    .text-emerald-900,
+    .text-\[\#168c61\]
+  ) {
+    color: #6ee7b7;
+  }
+
+  &:is(
+    .bg-indigo-50,
+    .bg-indigo-100,
+    .bg-\[\#eeedff\],
+    .bg-\[\#f0f2ff\],
+    .bg-\[\#f6f5ff\],
+    .bg-\[\#f6f6ff\]
+  ) {
+    background-color: rgb(129 140 248 / 13%);
+  }
+
+  &:is(
+    .text-indigo-600,
+    .text-indigo-700,
+    .text-indigo-800,
+    .text-indigo-900,
+    .text-\[\#5146e7\],
+    .text-\[\#514cf2\]
+  ) {
+    color: #a5b4fc;
+  }
+
+  &:is(.bg-sky-50, .bg-sky-100, .bg-blue-50, .bg-blue-100) {
+    background-color: rgb(56 189 248 / 12%);
+  }
+
+  &:is(.text-sky-600, .text-sky-700, .text-sky-900, .text-blue-600, .text-blue-700) {
+    color: #7dd3fc;
+  }
+}
+
+.dark .dashboard-content table thead {
+  background-color: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+.dark .dashboard-content table tbody tr {
+  border-color: hsl(var(--border));
+}

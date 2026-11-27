@@ -5,6 +5,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 
 import { useQuery } from '@tanstack/react-query'
+import { LayoutDashboard } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import { getApiErrorMessage } from '@/api/http'
@@ -24,6 +25,7 @@ import type {
 import { DetailDrawer } from '@/components/page/detail-drawer'
 import { filterBarClassName, filterControlClassName } from '@/components/page/filter-bar'
 import {
+  PageHeader,
   Button,
   Card,
   EmptyState,
@@ -142,41 +144,30 @@ function ManagerWorkspace({ context, mode }: { context: ManagerContext; mode: Mo
 
   return (
     <div className={mode === 'overview' ? 'space-y-4' : 'space-y-6'}>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-            <span>Quản lý đơn vị</span>
-            <span>/</span>
-            <span className="font-semibold text-slate-700">{label(domain)}</span>
-          </div>
-          <h1
-            className={cn(
-              'mt-1 text-2xl font-bold tracking-tight text-slate-900',
-              mode === 'issues' && 'sm:text-3xl'
-            )}
-          >
-            {pageTitle}
-          </h1>
-          <p className="mt-1 text-sm text-slate-600">{pageSubtitle}</p>
-        </div>
-
-        {available.length > 1 && (
-          <label className="flex items-center gap-2 text-sm text-slate-700">
-            <span className="sr-only">Lĩnh vực</span>
-            <select
-              className={filterControlClassName}
-              value={domain}
-              onChange={(event) => setDomain(event.target.value as Domain)}
-            >
-              {available.map((item) => (
-                <option key={item.domain} value={item.domain}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-      </div>
+      <PageHeader
+        icon={<LayoutDashboard />}
+        breadcrumb={['Quản lý đơn vị', label(domain)]}
+        title={pageTitle}
+        description={pageSubtitle}
+        actions={
+          available.length > 1 ? (
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <span className="sr-only">Lĩnh vực</span>
+              <select
+                className={filterControlClassName}
+                value={domain}
+                onChange={(event) => setDomain(event.target.value as Domain)}
+              >
+                {available.map((item) => (
+                  <option key={item.domain} value={item.domain}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : undefined
+        }
+      />
 
       <div key={domain}>
         {mode === 'overview' && <Overview domain={domain} userId={context.user_id} />}

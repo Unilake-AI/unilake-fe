@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
-import { Search } from 'lucide-react'
+import { BarChart3, Search } from 'lucide-react'
 import {
   Bar,
   BarChart,
@@ -23,6 +23,7 @@ import { API_ManagerAnalysisOptions, API_ManagerAnalytics } from '@/api/manager/
 import type { AnalyticsFilters, ManagerContext } from '@/api/manager/reports'
 import { filterControlClassName } from '@/components/page/filter-bar'
 import {
+  PageHeader,
   Card,
   EmptyState,
   ErrorState,
@@ -221,39 +222,30 @@ function AnalyticsWorkspace({ context }: { context: ManagerContext }) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-            <span>Quản lý đơn vị</span>
-            <span>/</span>
-            <span className="font-semibold text-slate-700">Phân tích dữ liệu</span>
-          </div>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            Phân tích số liệu {label(domain)}
-          </h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Khai thác chuyên sâu các biểu đồ thống kê theo cơ cấu, trạng thái và tỷ lệ phân bổ.
-          </p>
-        </div>
-
-        {context.domains.length > 1 && (
-          <label className="min-w-0">
-            <span className="sr-only">Lĩnh vực</span>
-            <select
-              className={filterControlClassName}
-              value={domain}
-              onChange={(e) => handleDomainChange(e.target.value as Domain)}
-            >
-              {context.domains.map((item) => (
-                <option key={item.domain} value={item.domain}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-      </div>
+      <PageHeader
+        icon={<BarChart3 />}
+        breadcrumb={['Quản lý đơn vị', 'Phân tích dữ liệu']}
+        title={`Phân tích số liệu ${label(domain)}`}
+        description="Khai thác chuyên sâu các biểu đồ thống kê theo cơ cấu, trạng thái và tỷ lệ phân bổ."
+        actions={
+          context.domains.length > 1 ? (
+            <label className="min-w-0">
+              <span className="sr-only">Lĩnh vực</span>
+              <select
+                className={filterControlClassName}
+                value={domain}
+                onChange={(e) => handleDomainChange(e.target.value as Domain)}
+              >
+                {context.domains.map((item) => (
+                  <option key={item.domain} value={item.domain}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : undefined
+        }
+      />
 
       <div
         role="group"

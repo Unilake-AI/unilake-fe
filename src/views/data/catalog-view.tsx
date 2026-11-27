@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Edit3, Info, Plus, Search, Trash2, X } from 'lucide-react'
+import { BookOpen, Edit3, Info, Plus, Search, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import {
@@ -472,6 +472,7 @@ export function CatalogView() {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<BookOpen />}
         breadcrumb={['Quản trị dữ liệu', 'Data Catalog']}
         title="Data Catalog — Từ điển dữ liệu & Schema"
         description="Quản lý siêu dữ liệu schema (bộ dữ liệu, cột, bảng) theo từng lĩnh vực và tầng dữ liệu."

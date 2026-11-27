@@ -41,17 +41,19 @@ function NotificationButton({
       aria-haspopup="dialog"
       aria-expanded={open}
       aria-label={unreadCount ? `Thông báo, ${unreadCount} chưa đọc` : 'Thông báo'}
-      className="flex size-11 items-center justify-center rounded-md text-left text-sm font-medium text-slate-200 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2"
+      className="flex h-11 items-center justify-center gap-2 rounded-xl px-2.5 text-left text-sm font-medium transition-colors hover:bg-foreground/10 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 md:w-11 md:px-0"
     >
       <span className="relative size-5 shrink-0" aria-hidden="true">
         <Bell className="size-5" />
         {unreadCount > 0 && (
-          <span className="absolute -right-1.5 -top-1.5 grid size-4 place-items-center rounded-full bg-primary text-[9px] font-bold text-white ring-2 ring-sidebar">
+          <span className="absolute -right-1.5 -top-1.5 grid size-4 place-items-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground ring-2 ring-background">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </span>
-      <span className="sr-only">Thông báo</span>
+      <span aria-hidden="true" className="md:hidden">
+        Thông báo
+      </span>
     </button>
   )
 }
@@ -59,9 +61,11 @@ function NotificationButton({
 export function WorkspaceNotifications({
   workspace,
   fallbackFocus,
+  onNavigate,
 }: {
   workspace: Exclude<RoleWorkspace, 'VIEWER'>
   fallbackFocus: RefObject<HTMLButtonElement | null>
+  onNavigate?: () => void
 }) {
   const { user } = useAuth()
   const queryClient = useQueryClient()
@@ -110,13 +114,14 @@ export function WorkspaceNotifications({
         <DialogPortal>
           <DialogOverlay className="z-[60] bg-slate-950/35 motion-reduce:animate-none" />
           <DialogPrimitive.Content
+            data-workspace-surface=""
             aria-describedby={undefined}
             onCloseAutoFocus={(event) => {
               event.preventDefault()
               if (trigger.current?.getClientRects().length) trigger.current.focus()
               else fallbackFocus.current?.focus()
             }}
-            className="fixed bottom-0 right-0 top-[var(--workspace-header-height)] z-[61] flex w-full max-w-[390px] flex-col bg-white shadow-xl outline-none duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right-8 data-[state=open]:slide-in-from-right-8 motion-reduce:animate-none md:border-l md:border-slate-200"
+            className="fixed bottom-0 right-0 top-[var(--workspace-header-height)] z-[61] flex w-full max-w-[390px] flex-col bg-card text-card-foreground shadow-xl outline-none duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right-8 data-[state=open]:slide-in-from-right-8 motion-reduce:animate-none md:border-l md:border-slate-200"
           >
             <div className="flex shrink-0 items-start justify-between gap-2 border-b border-slate-200 px-5 py-4">
               <div>
@@ -169,7 +174,10 @@ export function WorkspaceNotifications({
                         {workspace === 'STAFF' ? (
                           <Link
                             href={`/staff/quality-issues/${encodeURIComponent(item.issue_id)}`}
-                            onClick={() => setOpen(false)}
+                            onNavigate={() => {
+                              setOpen(false)
+                              onNavigate?.()
+                            }}
                             className="block break-words text-sm font-semibold text-slate-900 hover:underline"
                           >
                             {item.title}

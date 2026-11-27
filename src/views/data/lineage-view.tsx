@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, Search } from 'lucide-react'
+import { Workflow, ArrowRight, Search } from 'lucide-react'
 
 import { API_GetLineage } from '@/api/admindata/governance'
 import { getApiErrorMessage } from '@/api/http'
@@ -96,6 +96,7 @@ export function LineageView() {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<Workflow />}
         breadcrumb={['Quản trị dữ liệu', 'Data Lineage']}
         title="Data Lineage — Truy vết nguồn gốc dữ liệu"
         description="Khám phá quan hệ nguồn và đích đã ghi nhận giữa các tầng dữ liệu."

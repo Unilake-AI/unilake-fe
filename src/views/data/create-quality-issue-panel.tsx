@@ -474,7 +474,7 @@ export function CreateIssuePanel({
           <Button
             loading={createMutation.isPending}
             type="submit"
-            variant="primary"
+            variant={returnToUploader ? 'primary' : 'positive'}
             disabled={
               createMutation.isPending ||
               (returnToUploader &&

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 
-import { ArrowRight, BookOpenCheck, GraduationCap, UsersRound } from 'lucide-react'
+import { BarChart3, ArrowRight, BookOpenCheck, GraduationCap, UsersRound } from 'lucide-react'
 
 import { Card, MockNotice, PageHeader, ProgressRow, Tag } from '@/components/page/page-parts'
 import { useDomain } from '@/hooks/use-domain'
@@ -133,7 +133,7 @@ export function DomainsCompareView({ detailHref }: { detailHref: string }) {
   return (
     <div className="space-y-5">
       <PageHeader
-        dashboard
+        icon={<BarChart3 />}
         breadcrumb={['Điều hành', 'Dashboard theo phân hệ']}
         title="Dashboard theo phân hệ"
         description="So sánh nhanh ba phân hệ Tuyển sinh, Đào tạo, Nhân sự. Bấm một phân hệ để xem dashboard chi tiết."

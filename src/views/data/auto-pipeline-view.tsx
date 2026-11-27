@@ -5,7 +5,13 @@ import type { FormEvent } from 'react'
 
 import Link from 'next/link'
 
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
+import { GitBranch } from 'lucide-react'
 
 import {
   API_GetAutoSilverPolicy,
@@ -34,7 +40,7 @@ import type { SilverProfileRead } from '@/types/silver-profiles'
 import { IngestionFlowMonitor } from './ingestion-flow-monitor'
 
 const inputClass = 'w-full rounded-md border border-slate-300 bg-white p-2 text-sm'
-const PAGE_SIZE = 20
+const PAGE_SIZE = 15
 
 function PolicyEditor({
   datasetId,
@@ -275,11 +281,14 @@ export function AutoPipelineView({ initialJobId: _initialJobId }: { initialJobId
   const [ingestionInput, setIngestionInput] = useState('')
   const [ingestionFilter, setIngestionFilter] = useState<number | undefined>()
   const [selectedJob, setSelectedJob] = useState<string | null>(null)
-  const [refresh, setRefresh] = useState(true)
   const datasets = useQuery({
     queryKey: ['auto-silver', 'datasets', search, datasetOffset],
     queryFn: () =>
-      API_ListDatasets({ search: search || undefined, limit: 100, offset: datasetOffset }),
+      API_ListDatasets({
+        search: search || undefined,
+        limit: PAGE_SIZE + 1,
+        offset: datasetOffset,
+      }),
   })
   const jobs = useQuery({
     queryKey: ['auto-silver', 'jobs', datasetId, ingestionFilter, offset],
@@ -287,15 +296,13 @@ export function AutoPipelineView({ initialJobId: _initialJobId }: { initialJobId
       API_ListAutoSilverJobs({
         dataset_id: datasetId ? Number(datasetId) : undefined,
         ingestion_job_id: ingestionFilter,
-        limit: PAGE_SIZE,
+        limit: PAGE_SIZE + 1,
         offset,
       }),
-    refetchInterval: refresh ? 5000 : false,
   })
   const workers = useQuery({
     queryKey: ['auto-silver', 'workers'],
     queryFn: API_ListSilverWorkers,
-    refetchInterval: refresh ? 5000 : false,
   })
   function changeDataset(value: string) {
     setDatasetId(value)
@@ -305,21 +312,12 @@ export function AutoPipelineView({ initialJobId: _initialJobId }: { initialJobId
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<GitBranch />}
         breadcrumb={['Quản trị dữ liệu', 'Xử lý Silver tự động']}
         title="Xử lý Silver tự động"
         description="Bật xử lý sau khi nạp Bronze, theo dõi kết quả và thử lại các lượt thất bại."
-        actions={
-          <label className="flex items-center gap-2 text-xs">
-            <input
-              type="checkbox"
-              checked={refresh}
-              onChange={(event) => setRefresh(event.target.checked)}
-            />
-            Tự làm mới mỗi 5 giây
-          </label>
-        }
       />
-      <IngestionFlowMonitor refresh={refresh} />
+      <IngestionFlowMonitor />
       <Card title="Chọn bộ dữ liệu và cách tự xử lý">
         <FilterForm
           className="mb-3"
@@ -333,7 +331,7 @@ export function AutoPipelineView({ initialJobId: _initialJobId }: { initialJobId
           <input
             type="search"
             aria-label="Tìm bộ dữ liệu tự chạy"
-            className={`${filterControlClassName} w-full sm:w-72`}
+            className={`${filterControlClassName} w-full sm:max-w-sm`}
             value={datasetSearch}
             onChange={(event) => setDatasetSearch(event.target.value)}
             placeholder="Tìm theo tên bộ dữ liệu"
@@ -349,36 +347,35 @@ export function AutoPipelineView({ initialJobId: _initialJobId }: { initialJobId
           />
         ) : (
           <>
-            <label className="block space-y-1 text-sm">
-              <span>Bộ dữ liệu</span>
+            <label className="grid w-full gap-2 sm:max-w-sm">
+              <span className="text-sm font-medium">Bộ dữ liệu tự chạy</span>
               <select
-                aria-label="Bộ dữ liệu tự chạy"
-                className={`${filterControlClassName} w-full sm:w-72`}
+                className={`${filterControlClassName} w-full`}
                 value={datasetId}
                 onChange={(event) => changeDataset(event.target.value)}
               >
-                <option value="">Chọn bộ dữ liệu — danh sách lượt chạy đang hiện tất cả</option>
-                {datasets.data.map((dataset) => (
+                <option value="">Tất cả bộ dữ liệu</option>
+                {datasets.data.slice(0, PAGE_SIZE).map((dataset) => (
                   <option key={dataset.dataset_id} value={String(dataset.dataset_id)}>
                     {dataset.dataset_name} · {dataset.domain}
                   </option>
                 ))}
               </select>
             </label>
-            <div className="my-3 flex gap-2">
+            <div className="my-3 flex flex-wrap gap-2">
               <Button
                 disabled={datasetOffset === 0}
                 onClick={() => {
-                  setDatasetOffset((value) => Math.max(0, value - 100))
+                  setDatasetOffset((value) => Math.max(0, value - PAGE_SIZE))
                   changeDataset('')
                 }}
               >
                 Trang bộ dữ liệu trước
               </Button>
               <Button
-                disabled={datasets.data.length < 100}
+                disabled={datasets.data.length <= PAGE_SIZE}
                 onClick={() => {
-                  setDatasetOffset((value) => value + 100)
+                  setDatasetOffset((value) => value + PAGE_SIZE)
                   changeDataset('')
                 }}
               >
@@ -446,7 +443,7 @@ export function AutoPipelineView({ initialJobId: _initialJobId }: { initialJobId
                 </tr>
               </thead>
               <tbody>
-                {jobs.data.map((job) => (
+                {jobs.data.slice(0, PAGE_SIZE).map((job) => (
                   <tr key={job.job_id} className="border-t">
                     <td className="p-2">
                       <button
@@ -473,22 +470,22 @@ export function AutoPipelineView({ initialJobId: _initialJobId }: { initialJobId
         )}
         <div className="mt-3 flex justify-end gap-2">
           <Button
-            disabled={offset === 0}
+            disabled={offset === 0 || jobs.isPending}
             onClick={() => {
               setOffset((value) => Math.max(0, value - PAGE_SIZE))
               setSelectedJob(null)
             }}
           >
-            Trước
+            Trang trước
           </Button>
           <Button
-            disabled={!jobs.data || jobs.data.length < PAGE_SIZE}
+            disabled={!jobs.data || jobs.data.length <= PAGE_SIZE}
             onClick={() => {
               setOffset((value) => value + PAGE_SIZE)
               setSelectedJob(null)
             }}
           >
-            Sau
+            Trang sau
           </Button>
         </div>
       </Card>

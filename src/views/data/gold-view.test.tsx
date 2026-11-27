@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AxiosError, AxiosHeaders } from 'axios'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -18,7 +18,9 @@ afterEach(() => {
 })
 const id = '11111111-1111-4111-8111-111111111111'
 const silver = '22222222-2222-4222-8222-222222222222'
-function environment(options: { failed?: boolean; unavailable?: boolean; blocked?: boolean } = {}) {
+function environment(
+  options: { failed?: boolean; unavailable?: boolean; blocked?: boolean; metricCount?: number } = {}
+) {
   const calls: { method: string; url: string; params: unknown; body: unknown }[] = []
   let ready = options.blocked ?? false
   let blocked = options.blocked ?? false
@@ -92,20 +94,31 @@ function environment(options: { failed?: boolean; unavailable?: boolean; blocked
       result: ready ? { records_read: 20, aggregate_rows: 1 } : null,
     }
     if (url === '/pipeline/gold/jobs') data = ready || failed ? [job] : []
-    else if (url === '/pipeline/gold/metrics')
-      data = ready
-        ? [
-            {
-              ...job,
-              gold_snapshot_id: id,
-              entity: 'employee',
-              metric: 'record_count',
-              dimensions: {},
-              value: 20,
-            },
-          ]
-        : []
-    else if (url === `/pipeline/gold/jobs/${id}`) data = job
+    else if (url === '/pipeline/gold/metrics') {
+      if (options.metricCount !== undefined) {
+        const { offset, limit } = config.params as { offset: number; limit: number }
+        data = Array.from({ length: options.metricCount }, (_, index) => ({
+          ...job,
+          gold_snapshot_id: id,
+          entity: 'employee',
+          metric: 'group_count',
+          dimensions: { birth_year: 1980 + index },
+          value: 1,
+        })).slice(offset, offset + limit)
+      } else
+        data = ready
+          ? [
+              {
+                ...job,
+                gold_snapshot_id: id,
+                entity: 'employee',
+                metric: 'record_count',
+                dimensions: {},
+                value: 20,
+              },
+            ]
+          : []
+    } else if (url === `/pipeline/gold/jobs/${id}`) data = job
     else if (url.endsWith('/attempts'))
       data = [
         {
@@ -138,6 +151,28 @@ function show() {
 }
 
 describe('Giao diện Gold dùng API thật qua client chung', () => {
+  it('hiển thị tối đa 10 dòng số liệu Gold mỗi trang', async () => {
+    const calls = environment({ metricCount: 11 })
+    const user = show()
+    const metrics = within(
+      screen.getByText('Số liệu Gold hiện hành', { exact: true }).closest('section')!
+    )
+
+    await metrics.findByText('Năm sinh: 1980')
+    expect(metrics.getAllByRole('row')).toHaveLength(11)
+    expect(metrics.queryByText('Năm sinh: 1990')).not.toBeInTheDocument()
+    await user.click(metrics.getByRole('button', { name: 'Trang sau' }))
+    await metrics.findByText('Năm sinh: 1990')
+    expect(metrics.getAllByRole('row')).toHaveLength(2)
+    expect(metrics.getByRole('button', { name: 'Trang sau' })).toBeDisabled()
+    expect(calls).toContainEqual(
+      expect.objectContaining({
+        url: '/pipeline/gold/metrics',
+        params: { limit: 10, offset: 10 },
+      })
+    )
+  })
+
   it('gọi API nguồn, chỉ số, worker; tạo lượt và tải báo cáo kèm nguồn Silver', async () => {
     const calls = environment()
     const user = show()

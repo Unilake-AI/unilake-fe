@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 
 import { QueryClient, QueryClientProvider, useIsMutating } from '@tanstack/react-query'
+import { ThemeProvider } from 'next-themes'
 
 import { shouldRetryRequest } from '@/api/http'
 import { PendingOverlay } from '@/components/page/page-parts'
@@ -31,9 +32,11 @@ export function Providers({ children }: { children: ReactNode }) {
       })
   )
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-      <PendingApiNotice />
-    </QueryClientProvider>
+    <ThemeProvider attribute="class" defaultTheme="system">
+      <QueryClientProvider client={queryClient}>
+        {children}
+        <PendingApiNotice />
+      </QueryClientProvider>
+    </ThemeProvider>
   )
 }

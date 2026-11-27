@@ -1,6 +1,6 @@
 'use client'
 
-import { Database, ShieldCheck, UserRound } from 'lucide-react'
+import { CircleUser, Database, ShieldCheck, UserRound } from 'lucide-react'
 
 import { Card, PageHeader, Tag, formatNumber } from '@/components/page/page-parts'
 import { ROLE_DEFINITIONS, toRoleCode } from '@/config/roles'
@@ -17,6 +17,7 @@ function ProfileContent({ context }: { context: StaffContext }) {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<CircleUser />}
         breadcrumb={['Không gian nhân viên', 'Hồ sơ cá nhân & Phiên đăng nhập']}
         title="Hồ sơ cá nhân và phiên đăng nhập"
         description="Thông tin tài khoản, phạm vi lĩnh vực, phân công đơn vị và quản lý các phiên đăng nhập đang hoạt động."

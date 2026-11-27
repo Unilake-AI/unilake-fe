@@ -122,6 +122,14 @@ export function LoginView() {
         height={180}
         aria-hidden="true"
       />
+      <Image
+        className={`${styles.waves} ${styles.wavesTop}`}
+        src="/login/waves.svg"
+        alt=""
+        width={720}
+        height={180}
+        aria-hidden="true"
+      />
       <div className={styles.panel}>
         <section className={styles.intro} aria-label="Giới thiệu UniLake AI">
           <div className={styles.cover} aria-hidden="true">

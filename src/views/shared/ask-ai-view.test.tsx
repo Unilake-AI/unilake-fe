@@ -29,7 +29,7 @@ it('đưa gợi ý Nhân sự vào cuộc hội thoại và lưu câu hỏi tron
   render(
     <QueryClientProvider client={client}>
       <DomainProvider role="HR_STAFF">
-        <AskAiView workspace="STAFF" historyHref="/staff/history" />
+        <AskAiView workspace="STAFF" />
       </DomainProvider>
     </QueryClientProvider>
   )
@@ -52,7 +52,7 @@ it('đưa gợi ý Nhân sự vào cuộc hội thoại và lưu câu hỏi tron
   const history = within(screen.getByRole('complementary', { name: 'Điều khiển và lịch sử chat' }))
   const savedQuestion = history.getByRole('button', { name: question })
   expect(savedQuestion).toBeVisible()
-  expect(history.getByRole('link', { name: 'Lịch sử' })).toHaveAttribute('href', '/staff/history')
+  expect(history.queryByText('Lịch sử', { exact: true })).not.toBeInTheDocument()
 
   await user.click(history.getByRole('button', { name: 'Chat mới' }))
   expect(screen.queryByRole('log')).not.toBeInTheDocument()

@@ -2,7 +2,7 @@
 
 // import { useQuery } from '@tanstack/react-query'
 // import axios from 'axios'
-import { KeyRound } from 'lucide-react'
+import { Settings, KeyRound } from 'lucide-react'
 
 // import { API_TIMEOUT, API_URL } from '@/api/api'
 // import { getApiErrorMessage } from '@/api/http'
@@ -79,6 +79,7 @@ export function SettingsView() {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<Settings />}
         breadcrumb={['Quản trị hệ thống', 'Cấu hình hệ thống & AI']}
         title="Cấu hình hệ thống & AI"
         description="Thiết lập mô hình ngôn ngữ dùng cho Hỏi AI, phiên đăng nhập và theo dõi trạng thái các dịch vụ nền."

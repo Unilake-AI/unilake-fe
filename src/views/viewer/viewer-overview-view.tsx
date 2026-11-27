@@ -1,19 +1,20 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+
 import Link from 'next/link'
-import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query'
+
+import { useQuery } from '@tanstack/react-query'
 import {
+  LayoutDashboard,
   AlertTriangle,
   ArrowRight,
-  BarChart3,
   Check,
   CheckCircle2,
   Clock,
   Database,
   Filter,
   Layers,
-  RefreshCw,
   ShieldAlert,
   Sparkles,
 } from 'lucide-react'
@@ -25,9 +26,8 @@ import {
   API_ViewerQualityIssues,
   API_ViewerQualityOverview,
 } from '@/api/viewer'
-import type { ViewerContext } from '@/api/viewer'
 import {
-  Button,
+  PageHeader,
   Card,
   EmptyState,
   ErrorState,
@@ -38,7 +38,6 @@ import { useDomain } from '@/hooks/use-domain'
 import { cn } from '@/lib/utils'
 
 import {
-  DOMAIN_NAMES,
   DomainStatusBadge,
   IssueStatusBadge,
   ViewerGate,
@@ -48,17 +47,10 @@ import {
 } from './viewer-parts'
 
 export function ViewerOverviewView() {
-  return (
-    <ViewerGate>
-      {(context) => <ViewerOverviewWorkspace context={context} />}
-    </ViewerGate>
-  )
+  return <ViewerGate>{() => <ViewerOverviewWorkspace />}</ViewerGate>
 }
 
-function ViewerOverviewWorkspace({ context }: { context: ViewerContext }) {
-  const client = useQueryClient()
-  const refreshing = useIsFetching({ queryKey: ['viewer'] }) > 0
-
+function ViewerOverviewWorkspace() {
   const { domain, availableDomains, setDomain } = useDomain()
   const isAll = domain.code === 'all'
   const currentDomain = !isAll ? (domain.code as 'academic' | 'hr' | 'admissions') : null
@@ -112,39 +104,23 @@ function ViewerOverviewWorkspace({ context }: { context: ViewerContext }) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-            <span>Điều hành</span>
-            <span>/</span>
-            <span className="font-semibold text-slate-700">
-              {currentDomain ? `Phân hệ ${labelDomain(currentDomain)}` : 'Tổng quan toàn trường'}
-            </span>
-          </div>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            {currentDomain
-              ? `Tổng quan phân hệ ${labelDomain(currentDomain)}`
-              : 'Tổng quan điều hành dữ liệu'}
-          </h1>
-          <p className="mt-1 text-sm text-slate-600">
-            {currentDomain
-              ? `Theo dõi trạng thái sẵn sàng, nguồn Gold và chất lượng dữ liệu của phân hệ ${labelDomain(currentDomain)}.`
-              : 'Phạm vi đọc gồm các bộ dữ liệu hoạt động của ba phân hệ Đào tạo, Nhân sự và Tuyển sinh trên toàn trường.'}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button
-            reading={refreshing}
-            onClick={() => void client.invalidateQueries({ queryKey: ['viewer'] })}
-            className="flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-xs hover:bg-slate-50"
-          >
-            <RefreshCw className="size-4 text-slate-500" />
-            <span>Làm mới</span>
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        icon={<LayoutDashboard />}
+        breadcrumb={[
+          'Điều hành',
+          currentDomain ? `Phân hệ ${labelDomain(currentDomain)}` : 'Tổng quan toàn trường',
+        ]}
+        title={
+          currentDomain
+            ? `Tổng quan phân hệ ${labelDomain(currentDomain)}`
+            : 'Tổng quan điều hành dữ liệu'
+        }
+        description={
+          currentDomain
+            ? `Theo dõi trạng thái sẵn sàng, nguồn Gold và chất lượng dữ liệu của phân hệ ${labelDomain(currentDomain)}.`
+            : 'Phạm vi đọc gồm các bộ dữ liệu hoạt động của ba phân hệ Đào tạo, Nhân sự và Tuyển sinh trên toàn trường.'
+        }
+      />
 
       {/* Domain Switcher Pills Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200/90 bg-white p-3 shadow-xs">

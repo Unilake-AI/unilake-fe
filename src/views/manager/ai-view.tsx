@@ -13,6 +13,7 @@ import { API_ManagerHistory, API_ManagerHistoryDetail } from '@/api/manager/hist
 import { API_AskNlq } from '@/api/shared/nlq'
 import { DetailDrawer } from '@/components/page/detail-drawer'
 import {
+  PageHeader,
   Button,
   EmptyState,
   ErrorState,
@@ -53,7 +54,6 @@ const MANAGER_SUGGESTIONS: Record<BusinessDomain, string[]> = {
   ],
 }
 
-const HISTORY_HREF = '/manager/ai?tab=history'
 const HISTORY_PAGE_SIZE = 20
 
 function useManagerHistory(userId: number, domain: string, page = 0) {
@@ -112,7 +112,6 @@ function ManagerChat({
       domain={domainInfo}
       suggestions={domainInfo.code === 'all' ? [] : MANAGER_SUGGESTIONS[domainInfo.code]}
       initialQuestion={initialQuestion}
-      historyHref={HISTORY_HREF}
       historyEntries={history.data?.items ?? []}
       historyStatus={
         history.isPending
@@ -143,26 +142,19 @@ function ManagerHistoryTab({ domain, userId }: { domain: string; userId: number 
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="shadow-xs grid size-10 place-items-center rounded-xl border border-slate-200 bg-white text-primary">
-            <History className="size-5" aria-hidden="true" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900">Lịch sử truy vấn</h1>
-            <p className="text-xs text-slate-500">
-              Các câu hỏi và kết quả phân tích UniLake AI gần đây trong phạm vi {label(domain)}
-            </p>
-          </div>
-        </div>
-
-        <Link
-          href="/manager/ai"
-          className="shadow-xs rounded-lg border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-        >
-          Quay lại Hỏi AI
-        </Link>
-      </div>
+      <PageHeader
+        icon={<History />}
+        title="Lịch sử truy vấn"
+        description={`Các câu hỏi và kết quả phân tích UniLake AI gần đây trong phạm vi ${label(domain)}`}
+        actions={
+          <Link
+            href="/manager/ai"
+            className="shadow-xs rounded-lg border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            Quay lại Hỏi AI
+          </Link>
+        }
+      />
 
       <div className="shadow-xs rounded-xl border border-slate-200/90 bg-white p-5">
         {historyQuery.isPending ? (

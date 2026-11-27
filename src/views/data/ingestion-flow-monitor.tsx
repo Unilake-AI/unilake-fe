@@ -5,7 +5,16 @@ import { useState } from 'react'
 import Link from 'next/link'
 
 import { useQuery } from '@tanstack/react-query'
-import { ArrowDown, ArrowRight, Check, Circle, Clock3, ShieldAlert, X } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowRight,
+  Check,
+  ChevronRight,
+  Circle,
+  Clock3,
+  ShieldAlert,
+  X,
+} from 'lucide-react'
 
 import { API_GetCleaningRun } from '@/api/admindata/cleaning'
 import { API_GoldSources } from '@/api/admindata/gold'
@@ -32,6 +41,47 @@ import type { CleaningRun } from '@/types/cleaning'
 
 const PAGE_SIZE = 10
 
+const layerLabels = {
+  Source: 'Nguồn dữ liệu',
+  Bronze: 'Tầng Đồng (Bronze)',
+  Silver: 'Tầng Bạc (Silver)',
+  Gold: 'Tầng Vàng (Gold)',
+} as const
+
+interface PipelineStage {
+  layer: keyof typeof layerLabels
+  status: string
+  detail?: string
+  done: boolean
+  error?: string | null
+}
+
+const stageStyles = {
+  rose: {
+    button:
+      'border-red-300 bg-red-50 text-red-800 hover:bg-red-100 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/70',
+    icon: 'bg-red-100 dark:bg-red-900/60',
+    status: 'font-medium',
+  },
+  emerald: {
+    button:
+      'border-emerald-300 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-950/70',
+    icon: 'bg-emerald-100 dark:bg-emerald-900/60',
+    status: 'font-medium',
+  },
+  slate: {
+    button: 'border-border bg-card text-foreground hover:bg-muted',
+    icon: 'bg-muted',
+    status: 'text-muted-foreground',
+  },
+}
+
+function stageTone(stage: PipelineStage): keyof typeof stageStyles {
+  const tone = statusTone(stage.status)
+  if (tone === 'rose') return 'rose'
+  return stage.done || tone === 'emerald' ? 'emerald' : 'slate'
+}
+
 const stepStatus: Record<IngestionFlowStep['state'], string> = {
   done: 'SUCCESS',
   running: 'RUNNING',
@@ -45,7 +95,7 @@ export function pipelineStages(
   flow: IngestionFlow,
   cleaning: CleaningRun | undefined,
   goldSources: GoldSource[]
-) {
+): PipelineStage[] {
   const source = flow.steps.find(({ key }) => key === 'received')
   const bronze = flow.steps.find(({ key }) => key === 'bronze')
   const publication = flow.steps.find(({ key }) => key === 'publication')
@@ -125,7 +175,7 @@ export function pipelineStages(
   ]
 }
 
-function FlowRow({ flow, refresh }: { flow: IngestionFlow; refresh: boolean }) {
+function FlowRow({ flow }: { flow: IngestionFlow }) {
   const [selected, setSelected] = useState<number | null>(null)
   const domain = ['hr', 'academic', 'admissions'].includes(flow.domain)
     ? (flow.domain as GoldDomain)
@@ -134,7 +184,6 @@ function FlowRow({ flow, refresh }: { flow: IngestionFlow; refresh: boolean }) {
     queryKey: ['ingestion-flow', 'gold-sources', domain],
     queryFn: () => API_GoldSources({ domain, limit: 100 }),
     enabled: Boolean(domain && flow.snapshot_id),
-    refetchInterval: refresh ? 5000 : false,
   })
   const cleaning = useQuery({
     queryKey: ['ingestion-flow', 'cleaning', flow.run_id],
@@ -161,51 +210,63 @@ function FlowRow({ flow, refresh }: { flow: IngestionFlow; refresh: boolean }) {
           </p>
         </div>
         <Link
-          className="text-xs font-medium text-primary hover:underline"
+          className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
           href={`/data/ingestion?jobId=${flow.ingestion_job_id}`}
         >
           Lần nạp #{flow.ingestion_job_id}
         </Link>
       </header>
-      <ol className="grid min-w-0 gap-1 md:grid-cols-4">
+      <ol aria-label="Các bước xử lý" className="grid min-w-0 gap-5 md:grid-cols-4 md:gap-6">
         {stages.map((item, index) => {
-          const tone = statusTone(item.status)
-          const Icon = item.done
-            ? Check
-            : item.status === 'BLOCKED'
-              ? ShieldAlert
-              : tone === 'rose'
-                ? X
-                : tone === 'amber'
+          const tone = stageTone(item)
+          const styles = stageStyles[tone]
+          const label = layerLabels[item.layer]
+          const status = statusLabel(item.status)
+          const Icon =
+            tone === 'rose'
+              ? item.status === 'BLOCKED'
+                ? ShieldAlert
+                : X
+              : tone === 'emerald'
+                ? Check
+                : statusTone(item.status) === 'amber'
                   ? Clock3
                   : Circle
-          const reached = item.done && stages.slice(0, index).every((previous) => previous.done)
           return (
-            <li
-              key={item.layer}
-              className="flex min-w-0 flex-col gap-1 md:flex-row md:items-center"
-            >
-              {index > 0 && (
-                <div
-                  className={cn('ml-4 md:ml-0', reached ? 'text-emerald-700' : 'text-slate-400')}
-                  aria-hidden="true"
-                >
-                  <ArrowDown className="size-4 md:hidden" />
-                  <ArrowRight className="hidden size-4 md:block" />
-                </div>
-              )}
+            <li key={item.layer} className="relative flex min-w-0">
               <button
                 type="button"
                 onClick={() => setSelected(index)}
+                aria-label={`${label} ${status}`}
                 aria-haspopup="dialog"
-                className="flex min-w-0 flex-1 items-center gap-2 rounded-md border px-2.5 py-2 text-left hover:bg-muted"
+                className={cn(
+                  'flex min-h-16 min-w-0 flex-1 items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none',
+                  styles.button
+                )}
               >
-                <Icon className="size-4 shrink-0" aria-hidden="true" />
-                <span className="grid min-w-0 gap-1">
-                  <span className="text-xs font-semibold">{item.layer}</span>
-                  <span className="text-xs text-muted-foreground">{statusLabel(item.status)}</span>
+                <span
+                  className={cn('grid size-8 shrink-0 place-items-center rounded-md', styles.icon)}
+                >
+                  <Icon className="size-4" aria-hidden="true" />
                 </span>
+                <span className="grid min-w-0 flex-1 gap-0.5">
+                  <span className="text-sm font-semibold leading-tight">{label}</span>
+                  <span className={cn('text-xs', styles.status)}>{status}</span>
+                </span>
+                <ChevronRight
+                  className="size-3.5 shrink-0 opacity-70 md:hidden lg:block"
+                  aria-hidden="true"
+                />
               </button>
+              {index < stages.length - 1 && (
+                <span
+                  className="pointer-events-none absolute -bottom-4 left-5 text-muted-foreground md:-right-5 md:bottom-auto md:left-auto md:top-1/2 md:-translate-y-1/2"
+                  aria-hidden="true"
+                >
+                  <ArrowDown className="size-3.5 md:hidden" />
+                  <ArrowRight className="hidden size-4 md:block" />
+                </span>
+              )}
             </li>
           )
         })}
@@ -214,11 +275,11 @@ function FlowRow({ flow, refresh }: { flow: IngestionFlow; refresh: boolean }) {
       <DetailDrawer
         open={stage !== undefined}
         onClose={() => setSelected(null)}
-        title={`${stage?.layer ?? ''} · Lần nạp #${flow.ingestion_job_id}`}
+        title={stage ? `${layerLabels[stage.layer]} · Lần nạp #${flow.ingestion_job_id}` : ''}
       >
         {stage && (
           <div className="space-y-4 text-sm">
-            <Tag tone={statusTone(stage.status)}>
+            <Tag tone={stageTone(stage)}>
               {stage.status} · {statusLabel(stage.status)}
             </Tag>
             <p>{stage.detail}</p>
@@ -286,7 +347,7 @@ function FlowRow({ flow, refresh }: { flow: IngestionFlow; refresh: boolean }) {
   )
 }
 
-export function IngestionFlowMonitor({ refresh = true }: { refresh?: boolean }) {
+export function IngestionFlowMonitor() {
   const [input, setInput] = useState('')
   const [search, setSearch] = useState('')
   const [offset, setOffset] = useState(0)
@@ -294,7 +355,6 @@ export function IngestionFlowMonitor({ refresh = true }: { refresh?: boolean }) 
     queryKey: ['ingestion-flow', 'list', search, offset],
     queryFn: () =>
       API_ListIngestionFlows({ search: search || undefined, offset, limit: PAGE_SIZE }),
-    refetchInterval: refresh ? 5000 : false,
   })
 
   return (
@@ -335,7 +395,7 @@ export function IngestionFlowMonitor({ refresh = true }: { refresh?: boolean }) 
             </p>
           )}
           {flows.data.items.map((flow) => (
-            <FlowRow key={flow.ingestion_job_id} flow={flow} refresh={refresh} />
+            <FlowRow key={flow.ingestion_job_id} flow={flow} />
           ))}
           <div className="flex flex-wrap justify-end gap-2">
             <Button

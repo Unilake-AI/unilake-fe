@@ -5,6 +5,7 @@ import localFont from 'next/font/local'
 import { Toaster } from '@/components/ui/sonner'
 
 import '../styles/globals.css'
+import '../styles/workspace-dark.css'
 import { Providers } from './providers'
 
 import type { Metadata } from 'next'
@@ -28,7 +29,7 @@ export default function RootLayout({
   children: ReactNode
 }>) {
   return (
-    <html lang="vi" className={inter.variable}>
+    <html lang="vi" className={inter.variable} suppressHydrationWarning>
       <body className="font-sans antialiased">
         <Providers>
           {children}

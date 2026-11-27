@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Save } from 'lucide-react'
+import { PlusCircle, ArrowLeft, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
@@ -15,7 +15,7 @@ import { API_ListSourceSystems } from '@/api/admindata/datasets'
 import { getApiErrorMessage } from '@/api/http'
 import { API_ManagerCreateDataset } from '@/api/manager/catalog'
 import type { ManagerContext } from '@/api/manager/reports'
-import { Card, Tag } from '@/components/page/page-parts'
+import { PageHeader, Card, Tag } from '@/components/page/page-parts'
 
 import { ManagerGate } from './report-parts'
 
@@ -149,12 +149,11 @@ function CreateDatasetForm({ context }: { context: ManagerContext }) {
           <ArrowLeft className="size-3.5" />
           <span>Quay lại danh mục bộ dữ liệu</span>
         </Link>
-        <h1 className="text-xl font-bold tracking-tight text-slate-900">
-          Quy hoạch bộ dữ liệu mới
-        </h1>
-        <p className="mt-0.5 text-xs text-slate-500">
-          Manager tạo bộ dữ liệu chuẩn mực để nhân viên phòng ban nạp tệp CSV/Excel vào
-        </p>
+        <PageHeader
+          icon={<PlusCircle />}
+          title="Quy hoạch bộ dữ liệu mới"
+          description="Tạo bộ dữ liệu để nhân viên phòng ban nạp tệp CSV hoặc Excel."
+        />
       </div>
 
       <Card>
@@ -339,7 +338,7 @@ function CreateDatasetForm({ context }: { context: ManagerContext }) {
                 !datasetCode.trim() ||
                 !sourceSystemId
               }
-              className="shadow-xs inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
+              className="shadow-xs action-positive inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold transition-colors disabled:opacity-50"
             >
               <Save className="size-3.5" />
               <span>{createMutation.isPending ? 'Đang tạo…' : 'Lưu bộ dữ liệu'}</span>

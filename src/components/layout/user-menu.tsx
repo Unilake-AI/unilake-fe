@@ -4,29 +4,58 @@ import { useEffect, useId, useRef, useState } from 'react'
 
 import Link from 'next/link'
 
-import { Check, ChevronDown, LogOut, Settings, Shield } from 'lucide-react'
+import { ChevronDown, LogOut, Monitor, Moon, Sun, UserRound } from 'lucide-react'
+import { useTheme } from 'next-themes'
 
 import { DatabaseLoader } from '@/components/page/page-parts'
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import {
-  ROLE_DEFINITIONS,
-  ROLE_PRIORITY,
-  ROLE_ROUTE_PREFIXES,
-  getWorkspaceForRole,
-} from '@/config/roles'
+import { ROLE_PRIORITY } from '@/config/roles'
 import { useAuth } from '@/hooks/use-auth'
 import type { UserMenuProps } from '@/types/layout/user-menu'
-import { SessionsPanel } from '@/views/admin/sessions-panel'
 
 const actionClass =
-  'flex h-10 w-full items-center gap-3 rounded-lg px-5 text-left text-sm font-medium transition-colors hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2'
+  'flex h-10 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2'
+
+const appearanceOptions = [
+  { value: 'system', label: 'Hệ thống', icon: Monitor },
+  { value: 'light', label: 'Sáng', icon: Sun },
+  { value: 'dark', label: 'Tối', icon: Moon },
+] as const
+
+function AppearanceSettings() {
+  const { theme, setTheme } = useTheme()
+  const fieldName = useId()
+
+  return (
+    <fieldset className="min-w-0">
+      <legend className="sr-only">Giao diện</legend>
+      <div className="grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">
+        {appearanceOptions.map(({ value, label, icon: Icon }) => (
+          <label key={value} className="cursor-pointer">
+            <input
+              type="radio"
+              name={fieldName}
+              value={value}
+              checked={(theme ?? 'system') === value}
+              onChange={() => setTheme(value)}
+              className="peer sr-only"
+            />
+            <span className="flex min-h-10 flex-wrap items-center justify-center gap-x-1 rounded-lg border border-transparent px-1 text-center text-xs font-medium text-muted-foreground transition-colors hover:text-foreground peer-checked:border-border peer-checked:bg-card peer-checked:text-foreground peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-ring">
+              <Icon className="size-3.5 shrink-0" aria-hidden="true" />
+              {label}
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  )
+}
 
 export function getInitials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean)
@@ -42,40 +71,38 @@ export function UserMenu({ role, onNavigate }: UserMenuProps) {
   const container = useRef<HTMLDivElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
   const displayName = user?.fullName ?? user?.username ?? 'Người dùng'
-  const secondaryLine = user?.email ?? user?.username
-  const isStaff = getWorkspaceForRole(role) === 'STAFF'
-  const switchableRoles = ROLE_PRIORITY.filter((item) => roles.includes(item))
+  const primaryRole = ROLE_PRIORITY.find((item) => roles.includes(item))
+  const profileHref = primaryRole && primaryRole !== role ? `/profile?role=${role}` : '/profile'
 
   useEffect(() => {
-    if (!expanded) return
-    function closeOutside(event: PointerEvent) {
-      if (
-        event.target instanceof Element &&
-        !document.querySelector('[role=dialog][data-state=open]') &&
-        !container.current?.contains(event.target)
-      )
-        setExpanded(false)
-    }
+    const menu = container.current
+    if (!expanded || !menu) return
+
     function closeOnEscape(event: KeyboardEvent) {
-      if (
-        event.key !== 'Escape' ||
-        event.defaultPrevented ||
-        !container.current?.contains(document.activeElement)
-      )
-        return
+      if (event.key !== 'Escape' || event.defaultPrevented) return
+      event.preventDefault()
       setExpanded(false)
       trigger.current?.focus()
     }
+
+    const closeOutside = (event: PointerEvent) => {
+      if (
+        event.target instanceof Element &&
+        !document.querySelector('[role=dialog][data-state=open]') &&
+        !menu.contains(event.target)
+      )
+        setExpanded(false)
+    }
+    menu.addEventListener('keydown', closeOnEscape)
     document.addEventListener('pointerdown', closeOutside)
-    document.addEventListener('keydown', closeOnEscape)
     return () => {
+      menu.removeEventListener('keydown', closeOnEscape)
       document.removeEventListener('pointerdown', closeOutside)
-      document.removeEventListener('keydown', closeOnEscape)
     }
   }, [expanded])
 
   return (
-    <div ref={container} className="relative">
+    <div ref={container} className="relative ml-auto min-w-0">
       <button
         ref={trigger}
         type="button"
@@ -84,18 +111,18 @@ export function UserMenu({ role, onNavigate }: UserMenuProps) {
         aria-expanded={expanded}
         title={displayName}
         onClick={() => setExpanded(!expanded)}
-        className="group flex h-11 items-center gap-2 rounded-md px-2 text-left text-sm font-medium text-slate-200 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 aria-expanded:bg-white/10"
+        className="group flex h-11 max-w-full items-center gap-2 rounded-xl px-2 text-left text-sm font-medium transition-colors hover:bg-foreground/10 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 aria-expanded:bg-foreground/10"
       >
         <span
           aria-hidden="true"
-          className="grid size-8 shrink-0 place-items-center rounded-full bg-rose-100 text-[10px] font-bold text-rose-800"
+          className="grid size-8 shrink-0 place-items-center rounded-full border border-foreground/15 bg-foreground/10 text-[10px] font-bold"
         >
           {getInitials(displayName)}
         </span>
-        <span className="hidden min-w-0 max-w-40 items-center gap-2 sm:flex">
+        <span className="flex min-w-0 max-w-32 items-center gap-2">
           <span className="min-w-0 truncate">{displayName}</span>
           <ChevronDown
-            className="size-4 shrink-0 text-slate-400 transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none"
+            className="hidden size-4 shrink-0 opacity-75 transition-transform group-aria-expanded:rotate-180 motion-reduce:transition-none sm:block"
             aria-hidden="true"
           />
         </span>
@@ -104,75 +131,34 @@ export function UserMenu({ role, onNavigate }: UserMenuProps) {
       <div
         id={actionsId}
         hidden={!expanded}
-        className="absolute right-0 top-full mt-2 w-52 space-y-1 rounded-lg border bg-card p-1.5 shadow-sm"
+        className="absolute bottom-full right-0 z-10 mb-2 w-52 space-y-1 rounded-xl border bg-popover p-1.5 text-popover-foreground shadow-xl md:bottom-auto md:top-full md:mb-0 md:mt-2"
       >
+        <Link
+          href={profileHref}
+          onNavigate={() => {
+            setExpanded(false)
+            onNavigate?.()
+          }}
+          className={actionClass}
+        >
+          <UserRound className="size-5 shrink-0" aria-hidden="true" />
+          Hồ sơ cá nhân
+        </Link>
         <Dialog>
           <DialogTrigger asChild>
-            <button
-              type="button"
-              aria-label="Cài đặt"
-              title="Cài đặt"
-              className={`${actionClass} text-slate-700`}
-            >
-              <Settings className="size-5 shrink-0" aria-hidden="true" />
-              <span className="[display:var(--sidebar-label-display,flex)]">Cài đặt</span>
+            <button type="button" className={actionClass}>
+              <Moon className="size-5 shrink-0" aria-hidden="true" />
+              Chế độ giao diện
             </button>
           </DialogTrigger>
-          <DialogContent className="max-h-[calc(100dvh_-_2rem)] w-[calc(100%_-_2rem)] max-w-3xl overflow-y-auto rounded-xl bg-white">
-            <DialogTitle>Cài đặt tài khoản</DialogTitle>
-            <DialogDescription>Thông tin tài khoản và không gian làm việc.</DialogDescription>
-            <div className="min-w-0 rounded-lg bg-slate-50 p-3">
-              <p className="break-words text-sm font-semibold text-slate-900">{displayName}</p>
-              {secondaryLine && secondaryLine !== displayName && (
-                <p className="break-words text-xs text-slate-500">{secondaryLine}</p>
-              )}
-              <p className="mt-1 text-xs font-medium text-slate-600">
-                {ROLE_DEFINITIONS[role].name}
-              </p>
-            </div>
-
-            {switchableRoles.length > 1 && (
-              <div>
-                <p className="mb-1 text-sm font-medium text-slate-600">
-                  Chuyển không gian làm việc
-                </p>
-                <ul className="space-y-1">
-                  {switchableRoles.map((item) => (
-                    <li key={item}>
-                      <DialogClose asChild>
-                        <Link
-                          href={ROLE_ROUTE_PREFIXES[item]}
-
-                          onClick={onNavigate}
-                          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                        >
-                          <Shield className="size-4" aria-hidden="true" />
-                          <span className="flex-1">{ROLE_DEFINITIONS[item].name}</span>
-                          {item === role && (
-                            <Check className="size-4 text-rose-700" aria-label="Đang mở" />
-                          )}
-                        </Link>
-                      </DialogClose>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {isStaff ? (
-              <DialogClose asChild>
-                <Link
-                  href="/staff/profile"
-
-                  onClick={onNavigate}
-                  className="text-sm font-medium text-rose-700 hover:underline"
-                >
-                  Hồ sơ cá nhân và phiên đăng nhập
-                </Link>
-              </DialogClose>
-            ) : (
-              <SessionsPanel />
-            )}
+          <DialogContent className="max-w-[19rem] gap-3 rounded-xl p-4 sm:rounded-xl">
+            <DialogTitle className="px-8 text-center text-base leading-5">
+              Chế độ giao diện
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Chọn giao diện sáng, tối hoặc theo hệ thống.
+            </DialogDescription>
+            <AppearanceSettings />
           </DialogContent>
         </Dialog>
         <button
@@ -182,16 +168,14 @@ export function UserMenu({ role, onNavigate }: UserMenuProps) {
           disabled={isLoggingOut}
           aria-busy={isLoggingOut}
           onClick={() => logout()}
-          className={`${actionClass} text-rose-700 disabled:opacity-50`}
+          className={`${actionClass} disabled:opacity-50`}
         >
           {isLoggingOut ? (
             <DatabaseLoader compact />
           ) : (
             <LogOut className="size-5 shrink-0" aria-hidden="true" />
           )}
-          <span className="[display:var(--sidebar-label-display,flex)]">
-            {isLoggingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}
-          </span>
+          <span>{isLoggingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}</span>
         </button>
       </div>
     </div>

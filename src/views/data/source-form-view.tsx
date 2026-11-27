@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CircleAlert } from 'lucide-react'
+import { Database, CircleAlert } from 'lucide-react'
 import { toast } from 'sonner'
 
 import {
@@ -184,6 +184,7 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
   return (
     <form className="space-y-5" onSubmit={onSubmit} noValidate>
       <PageHeader
+        icon={<Database />}
         breadcrumb={['Quản trị dữ liệu', 'Nguồn dữ liệu', isEdit ? 'Chỉnh sửa' : 'Thêm mới']}
         title={isEdit ? `Chỉnh sửa: ${initial.source_name}` : 'Thêm nguồn dữ liệu'}
         description={
@@ -203,7 +204,7 @@ function SourceForm({ initial }: { initial?: DataSourceItem }) {
               type="submit"
               disabled={save.isPending}
               aria-busy={save.isPending}
-              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#b91830] px-3 text-xs font-semibold text-white hover:bg-[#9e1429] disabled:opacity-70"
+              className={`inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors disabled:opacity-70 ${isEdit ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'action-positive'}`}
             >
               {save.isPending && <DatabaseLoader compact />}
               {save.isPending ? 'Đang lưu…' : isEdit ? 'Lưu thay đổi' : 'Lưu nguồn dữ liệu'}

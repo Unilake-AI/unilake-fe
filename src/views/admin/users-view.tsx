@@ -19,7 +19,6 @@ import {
   Link as LinkIcon,
   Lock,
   Plus,
-  RefreshCw,
   Search,
   ShieldAlert,
   ShieldCheck,
@@ -274,7 +273,7 @@ function CreateAccountModal({
             >
               Hủy
             </Button>
-            <Button type="submit" disabled={pending || password.length < 12}>
+            <Button type="submit" variant="positive" disabled={pending || password.length < 12}>
               {pending ? 'Đang tạo…' : 'Xác nhận tạo tài khoản'}
             </Button>
           </div>
@@ -843,12 +842,13 @@ export function UsersView() {
     <div className="space-y-6">
       {/* Page Header */}
       <PageHeader
+        icon={<Users />}
         breadcrumb={['Quản trị hệ thống', 'Quản lý tài khoản & phân quyền']}
         title="Quản trị tài khoản & Phân quyền"
         description="Quản lý danh tính, phân công, quyền truy cập hệ thống và lịch sử kiểm toán bảo mật (IAM)."
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button onClick={() => setShowCreateModal(true)}>
+            <Button variant="positive" onClick={() => setShowCreateModal(true)}>
               <UserPlus className="mr-1.5 size-4" />
               Tạo tài khoản mới
             </Button>
@@ -1003,7 +1003,7 @@ export function UsersView() {
             subtitle="Xem xét, gán vai trò, quản lý trạng thái tài khoản và liên kết hồ sơ nhân sự"
             right={
               <div className="flex items-center gap-2">
-                <Button size="sm" onClick={() => setShowCreateModal(true)}>
+                <Button size="sm" variant="positive" onClick={() => setShowCreateModal(true)}>
                   <UserPlus className="mr-1.5 size-4" />
                   Tạo tài khoản
                 </Button>
@@ -1273,18 +1273,6 @@ export function UsersView() {
           <Card
             title="Nhật ký kiểm toán bảo mật (IAM Audit Logs)"
             subtitle="Ghi nhận đăng nhập thành công, tạo tài khoản, đổi vai trò, khóa/mở khóa, liên kết hồ sơ và thêm phân công"
-            right={
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  void queryClient.invalidateQueries({ queryKey: ['admin', 'audit-events'] })
-                }
-              >
-                <RefreshCw className="mr-1.5 size-3.5" />
-                Làm mới
-              </Button>
-            }
           >
             {auditLogs.isPending && (
               <p className="py-6 text-center text-xs text-slate-500">Đang tải nhật ký kiểm toán…</p>

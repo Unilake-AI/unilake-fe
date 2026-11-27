@@ -7,6 +7,7 @@ import Link from 'next/link'
 
 import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  History,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
@@ -79,7 +80,7 @@ import {
   jobTypeLabel,
 } from './data-helpers'
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 15
 const INGESTION_FAILURE = 'Không thể nạp dữ liệu. Vui lòng kiểm tra nguồn và thử lại.'
 
 const inputClass =
@@ -735,12 +736,14 @@ export function UploadFilePanel({
         <div className="flex flex-wrap gap-2">
           <Button
             variant={uploadMode === 'existing' ? 'soft' : 'outline'}
+            aria-pressed={uploadMode === 'existing'}
             onClick={() => setUploadMode('existing')}
           >
             Chọn bộ dữ liệu đã có
           </Button>
           <Button
-            variant={uploadMode === 'new' ? 'soft' : 'outline'}
+            variant={uploadMode === 'new' ? 'positive' : 'outline'}
+            aria-pressed={uploadMode === 'new'}
             onClick={() => setUploadMode('new')}
           >
             Tạo bộ dữ liệu mới
@@ -941,7 +944,7 @@ export function UploadFilePanel({
           <Button
             loading={uploadMutation.isPending}
             type="submit"
-            variant="primary"
+            variant="positive"
             icon={<Upload className="size-3.5" aria-hidden="true" />}
           >
             {uploadMutation.isPending ? 'Đang tải lên…' : 'Tải lên và tạo job'}
@@ -988,7 +991,7 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
     queryKey: [
       'ingestion-jobs',
       {
-        limit: PAGE_SIZE,
+        limit: PAGE_SIZE + 1,
         offset,
         status: statusFilter || undefined,
         dataset_id: datasetFilter ? Number(datasetFilter) : undefined,
@@ -997,7 +1000,7 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
     ],
     queryFn: () =>
       API_ListIngestionJobs({
-        limit: PAGE_SIZE,
+        limit: PAGE_SIZE + 1,
         offset,
         status: (statusFilter as IngestionJobStatusFilter) || undefined,
         dataset_id: datasetFilter ? Number(datasetFilter) : undefined,
@@ -1015,12 +1018,14 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
     return map
   }, [datasetsQuery.data])
 
-  const list = jobs.data ?? []
+  const list = jobs.data?.slice(0, PAGE_SIZE) ?? []
+  const hasNextPage = (jobs.data?.length ?? 0) > PAGE_SIZE
   const stats = statsQuery.data
 
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<History />}
         breadcrumb={['Quản trị dữ liệu', 'Nạp dữ liệu']}
         title="Giám sát nạp dữ liệu (Ingestion)"
         description="Chạy nạp từ nguồn đã đăng ký và theo dõi kết quả lưu vào Bronze."
@@ -1163,111 +1168,108 @@ export function IngestionView({ initialJobId }: { initialJobId?: number }) {
             description="Dữ liệu do Staff các phòng ban nạp sẽ hiển thị tại đây để giám sát."
           />
         ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[820px] text-left text-xs">
-                <thead className="bg-slate-50 font-mono text-[10px] uppercase tracking-wider text-slate-500">
-                  <tr>
-                    {[
-                      'Lần nạp',
-                      'Tệp / bảng',
-                      'Bộ dữ liệu',
-                      'Loại',
-                      'Trạng thái',
-                      'Đọc / Ghi / Loại',
-                      'Thời gian tạo',
-                      'Lỗi',
-                    ].map((head) => (
-                      <th key={head} scope="col" className="px-3 py-2 font-medium">
-                        {head}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {list.map((job) => {
-                    const selected = selectedJobId === job.ingestion_job_id
-                    const dsName = datasetNameMap.get(job.dataset_id)
-                    return (
-                      <Fragment key={job.ingestion_job_id}>
-                        <tr className={selected ? 'bg-[#fff3f5]/50' : 'hover:bg-slate-50'}>
-                          <td className="px-3 py-2.5">
-                            <button
-                              type="button"
-                              className="font-mono font-semibold text-[#a9162e] hover:underline"
-                              aria-expanded={selected}
-                              onClick={() =>
-                                setSelectedJobId(selected ? null : job.ingestion_job_id)
-                              }
-                            >
-                              Chi tiết lần nạp #{job.ingestion_job_id}
-                            </button>
-                          </td>
-                          <td className="max-w-[160px] truncate px-3 py-2.5 font-mono text-slate-800">
-                            {job.source_table ?? '—'}
-                          </td>
-                          <td className="max-w-[160px] truncate px-3 py-2.5 text-slate-700">
-                            {dsName ?? `#${job.dataset_id}`}
-                          </td>
-                          <td className="px-3 py-2.5 text-slate-600">
-                            {jobTypeLabel(job.job_type)}
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <Tag tone={statusTone(job.status)}>{statusLabel(job.status)}</Tag>
-                          </td>
-                          <td className="px-3 py-2.5 font-mono text-slate-700">
-                            {formatNumber(job.rows_read)} / {formatNumber(job.rows_written)} /{' '}
-                            {formatNumber(job.rows_rejected)}
-                          </td>
-                          <td className="px-3 py-2.5 font-mono text-[11px] text-slate-500">
-                            {formatDateTime(job.created_at)}
-                          </td>
-                          <td className="max-w-[200px] truncate px-3 py-2.5 text-rose-700">
-                            {job.error_message
-                              ? (getErrorMessageForCode(job.error_message) ?? INGESTION_FAILURE)
-                              : '—'}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[820px] text-left text-xs">
+              <thead className="bg-slate-50 font-mono text-[10px] uppercase tracking-wider text-slate-500">
+                <tr>
+                  {[
+                    'Lần nạp',
+                    'Tệp / bảng',
+                    'Bộ dữ liệu',
+                    'Loại',
+                    'Trạng thái',
+                    'Đọc / Ghi / Loại',
+                    'Thời gian tạo',
+                    'Lỗi',
+                  ].map((head) => (
+                    <th key={head} scope="col" className="px-3 py-2 font-medium">
+                      {head}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {list.map((job) => {
+                  const selected = selectedJobId === job.ingestion_job_id
+                  const dsName = datasetNameMap.get(job.dataset_id)
+                  return (
+                    <Fragment key={job.ingestion_job_id}>
+                      <tr className={selected ? 'bg-[#fff3f5]/50' : 'hover:bg-slate-50'}>
+                        <td className="px-3 py-2.5">
+                          <button
+                            type="button"
+                            className="font-mono font-semibold text-[#a9162e] hover:underline"
+                            aria-expanded={selected}
+                            onClick={() => setSelectedJobId(selected ? null : job.ingestion_job_id)}
+                          >
+                            Chi tiết lần nạp #{job.ingestion_job_id}
+                          </button>
+                        </td>
+                        <td className="max-w-[160px] truncate px-3 py-2.5 font-mono text-slate-800">
+                          {job.source_table ?? '—'}
+                        </td>
+                        <td className="max-w-[160px] truncate px-3 py-2.5 text-slate-700">
+                          {dsName ?? `#${job.dataset_id}`}
+                        </td>
+                        <td className="px-3 py-2.5 text-slate-600">{jobTypeLabel(job.job_type)}</td>
+                        <td className="px-3 py-2.5">
+                          <Tag tone={statusTone(job.status)}>{statusLabel(job.status)}</Tag>
+                        </td>
+                        <td className="px-3 py-2.5 font-mono text-slate-700">
+                          {formatNumber(job.rows_read)} / {formatNumber(job.rows_written)} /{' '}
+                          {formatNumber(job.rows_rejected)}
+                        </td>
+                        <td className="px-3 py-2.5 font-mono text-[11px] text-slate-500">
+                          {formatDateTime(job.created_at)}
+                        </td>
+                        <td className="max-w-[200px] truncate px-3 py-2.5 text-rose-700">
+                          {job.error_message
+                            ? (getErrorMessageForCode(job.error_message) ?? INGESTION_FAILURE)
+                            : '—'}
+                        </td>
+                      </tr>
+                      {selected && (
+                        <tr className="bg-slate-50">
+                          <td colSpan={8} className="p-4">
+                            <JobDetails
+                              jobId={job.ingestion_job_id}
+                              datasetNameMap={datasetNameMap}
+                              onSelectJob={setSelectedJobId}
+                            />
                           </td>
                         </tr>
-                        {selected && (
-                          <tr className="bg-slate-50">
-                            <td colSpan={8} className="p-4">
-                              <JobDetails
-                                jobId={job.ingestion_job_id}
-                                datasetNameMap={datasetNameMap}
-                                onSelectJob={setSelectedJobId}
-                              />
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
-                    )
-                  })}
-                </tbody>
-              </table>
+                      )}
+                    </Fragment>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {(list.length > 0 || offset > 0) && (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 px-4 py-3 text-xs text-slate-500">
+            <span>
+              {list.length > 0
+                ? `Hiển thị lần nạp ${offset + 1}–${offset + list.length}`
+                : `Trang ${Math.floor(offset / PAGE_SIZE) + 1}`}
+            </span>
+            <div className="flex items-center gap-1.5">
+              <Button
+                disabled={offset === 0 || jobs.isFetching}
+                onClick={() => setOffset((prev) => Math.max(0, prev - PAGE_SIZE))}
+                icon={<ChevronLeft className="size-3.5" aria-hidden="true" />}
+              >
+                Trang trước
+              </Button>
+              <Button
+                disabled={!hasNextPage || jobs.isFetching}
+                onClick={() => setOffset((prev) => prev + PAGE_SIZE)}
+                icon={<ChevronRight className="size-3.5" aria-hidden="true" />}
+              >
+                Trang sau
+              </Button>
             </div>
-
-            <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3 text-xs text-slate-500">
-              <span>
-                Hiển thị {list.length} lần nạp (từ vị trí {offset + 1})
-              </span>
-              <div className="flex items-center gap-1.5">
-                <Button
-                  disabled={offset === 0 || jobs.isFetching}
-                  onClick={() => setOffset((prev) => Math.max(0, prev - PAGE_SIZE))}
-                  icon={<ChevronLeft className="size-3.5" aria-hidden="true" />}
-                >
-                  Trang trước
-                </Button>
-                <Button
-                  disabled={list.length < PAGE_SIZE || jobs.isFetching}
-                  onClick={() => setOffset((prev) => prev + PAGE_SIZE)}
-                  icon={<ChevronRight className="size-3.5" aria-hidden="true" />}
-                >
-                  Trang sau
-                </Button>
-              </div>
-            </div>
-          </>
+          </div>
         )}
       </Card>
 

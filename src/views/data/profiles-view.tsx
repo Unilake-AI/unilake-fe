@@ -4,7 +4,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, Edit3, Plus, X } from 'lucide-react'
+import { Settings, ChevronLeft, ChevronRight, Edit3, Plus, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { API_ListDatasets, API_ListSourceSystems } from '@/api/admindata/datasets'
@@ -689,7 +689,11 @@ function ProfileFormPanel({
           <Button variant="outline" onClick={onClose} disabled={saveMutation.isPending}>
             Hủy
           </Button>
-          <Button loading={saveMutation.isPending} type="submit" variant="primary">
+          <Button
+            loading={saveMutation.isPending}
+            type="submit"
+            variant={isEdit ? 'primary' : 'positive'}
+          >
             {saveMutation.isPending ? 'Đang lưu…' : isEdit ? 'Lưu cập nhật' : 'Tạo profile'}
           </Button>
         </div>
@@ -720,12 +724,13 @@ export function ProfilesView() {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<Settings />}
         breadcrumb={['Quản trị dữ liệu', 'Cấu hình Silver (Profiles)']}
         title="Quản lý cấu hình chuẩn hóa Silver (Profiles)"
         description="Khai báo quy tắc ánh xạ cột, kiểu dữ liệu, hợp đồng schema và quyền xem cột nguồn cho quy trình Cleaning & Silver."
         actions={
           <Button
-            variant="primary"
+            variant="positive"
             onClick={() => setFormMode('create')}
             icon={<Plus className="size-3.5" aria-hidden="true" />}
           >

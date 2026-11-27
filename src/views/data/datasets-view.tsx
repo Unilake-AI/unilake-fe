@@ -6,7 +6,7 @@ import type { FormEvent } from 'react'
 import Link from 'next/link'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, Info, Plus, Search, X } from 'lucide-react'
+import { Layers, ChevronLeft, ChevronRight, Info, Plus, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
@@ -314,6 +314,7 @@ export function DatasetsView() {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<Layers />}
         breadcrumb={['Quản trị dữ liệu', 'Bộ dữ liệu (Datasets)']}
         title="Quản lý bộ dữ liệu tầng Bronze"
         description="Đăng ký và tra cứu các bộ dữ liệu Bronze đang hoạt động để phục vụ nạp dữ liệu và cấu hình Silver."

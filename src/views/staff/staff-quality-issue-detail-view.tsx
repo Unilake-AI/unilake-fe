@@ -7,6 +7,7 @@ import Link from 'next/link'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  ShieldCheck,
   ArrowLeft,
   CheckCircle2,
   CircleAlert,
@@ -706,7 +707,7 @@ function ResolutionWorkflow({
             <Button
               loading={uploadMutation.isPending}
               type="submit"
-              variant="outline"
+              variant="positive"
               icon={<Upload className="size-3.5" aria-hidden="true" />}
             >
               {uploadMutation.isPending ? 'Đang tải tệp sửa…' : 'Tải lên tệp đã sửa'}
@@ -1020,6 +1021,7 @@ function IssueDetailContent({ context, issueId }: { context: StaffContext; issue
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<ShieldCheck />}
         breadcrumb={['Không gian nhân viên', 'Yêu cầu dữ liệu lỗi', issue.title]}
         title={issue.title}
         description={issue.description}

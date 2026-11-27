@@ -66,6 +66,53 @@ function baseAdapterResponses() {
 }
 
 describe('DATA_ADMIN IngestionView', () => {
+  it('hiển thị tối đa 15 lần nạp mỗi trang và dừng ở trang cuối đủ 15 mục', async () => {
+    const jobs = Array.from({ length: 30 }, (_, index) => ({
+      ingestion_job_id: index + 1,
+      dataset_id: 8,
+      status: 'SUCCESS',
+      job_type: 'UPLOAD_V1',
+    }))
+    const responses: Record<string, unknown> = baseAdapterResponses()
+    const originalAdapter = http.defaults.adapter
+    http.defaults.adapter = (config) => {
+      const { limit = 0, offset = 0 } = (config.params ?? {}) as {
+        limit?: number
+        offset?: number
+      }
+      return Promise.resolve({
+        data:
+          config.url === '/ingestion/jobs'
+            ? jobs.slice(offset, offset + limit)
+            : responses[`${config.method} ${config.url}`],
+        config,
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+      })
+    }
+
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    try {
+      const user = userEvent.setup()
+      render(
+        <QueryClientProvider client={client}>
+          <IngestionView />
+        </QueryClientProvider>
+      )
+      expect(await screen.findByText('Hiển thị lần nạp 1–15')).toBeVisible()
+      expect(screen.getAllByRole('button', { name: /Chi tiết lần nạp #/ })).toHaveLength(15)
+      await user.click(screen.getByRole('button', { name: 'Trang sau' }))
+      expect(await screen.findByText('Hiển thị lần nạp 16–30')).toBeVisible()
+      expect(screen.getByRole('button', { name: 'Trang sau' })).toBeDisabled()
+      await user.click(screen.getByRole('button', { name: 'Trang trước' }))
+      expect(await screen.findByText('Hiển thị lần nạp 1–15')).toBeVisible()
+    } finally {
+      client.clear()
+      http.defaults.adapter = originalAdapter
+    }
+  })
+
   it('tải chi tiết khi mở job và chỉ chạy Cleaning sau khi người dùng bấm nút', async () => {
     const job = {
       ingestion_job_id: 42,

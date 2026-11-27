@@ -79,7 +79,7 @@ function show(items: IngestionFlow[]) {
   clients.push(client)
   render(
     <QueryClientProvider client={client}>
-      <IngestionFlowMonitor refresh={false} />
+      <IngestionFlowMonitor />
     </QueryClientProvider>
   )
   return { client }
@@ -94,7 +94,15 @@ describe('IngestionFlowMonitor', () => {
       'href',
       '/data/ingestion?jobId=22'
     )
-    fireEvent.click(screen.getByRole('button', { name: /Silver/ }))
+    const silver = screen.getByRole('button', { name: 'Tầng Bạc (Silver) Bị chặn xuất bản' })
+    expect(silver).toHaveClass('bg-red-50')
+    expect(screen.getByRole('button', { name: 'Tầng Đồng (Bronze) Thành công' })).toHaveClass(
+      'bg-emerald-50'
+    )
+    expect(screen.getByRole('button', { name: 'Tầng Vàng (Gold) Chưa xác định' })).toHaveClass(
+      'bg-card'
+    )
+    fireEvent.click(silver)
     const drawer = await screen.findByRole('dialog')
     expect(drawer).toHaveTextContent('Chất lượng chưa đạt điều kiện công bố')
     expect(drawer).toHaveTextContent('BLOCKED')
@@ -120,7 +128,9 @@ describe('IngestionFlowMonitor', () => {
       },
     ])
     await screen.findByText('nhan-vien.csv')
-    expect(screen.getByRole('button', { name: /Bronze/ })).toHaveTextContent('Không thành công')
+    expect(screen.getByRole('button', { name: 'Tầng Đồng (Bronze) Không thành công' })).toHaveClass(
+      'bg-red-50'
+    )
     fireEvent.click(screen.getByRole('button', { name: /Silver/ }))
     expect(await screen.findByRole('dialog')).toHaveTextContent('NOT_STARTED')
   })

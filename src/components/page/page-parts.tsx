@@ -1,74 +1,70 @@
 import type { ReactNode } from 'react'
 
-import { CheckCircle2, ChevronRight, CircleAlert, Clock3, Database, RefreshCw } from 'lucide-react'
+import {
+  CheckCircle2,
+  ChevronRight,
+  CircleAlert,
+  Clock3,
+  Database,
+  LayoutTemplate,
+  RefreshCw,
+} from 'lucide-react'
 
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import type { StatusTone } from '@/types/page/page-parts'
 
 export function PageHeader({
-  breadcrumb,
+  breadcrumb = [],
+  icon = <LayoutTemplate />,
   title,
   description,
   actions,
-  dashboard = false,
 }: {
-  breadcrumb: string[]
+  breadcrumb?: readonly string[]
+  icon?: ReactNode
   title: string
   description?: ReactNode
   actions?: ReactNode
-  dashboard?: boolean
 }) {
+  const context = breadcrumb.at(-1) === title ? breadcrumb.slice(0, -1) : breadcrumb
+
   return (
-    <header
-      className={cn(
-        'flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between',
-        dashboard ? 'rounded-lg bg-sidebar px-5 py-5 text-white sm:px-6' : 'border-b pb-4'
-      )}
-    >
-      <div className="min-w-0 space-y-2">
-        <nav aria-label="Breadcrumb">
-          <ol
-            className={cn(
-              'flex flex-wrap items-center gap-2 text-xs font-medium',
-              dashboard ? 'text-slate-300' : 'text-[#63708d]'
-            )}
-          >
-            {breadcrumb.map((item, index) => (
-              <li key={`${item}-${index}`} className="flex items-center gap-1">
-                {index > 0 && <ChevronRight className="size-3.5" aria-hidden="true" />}
-                <span
-                  className={cn(
-                    index === breadcrumb.length - 1 &&
-                      (dashboard ? 'font-semibold text-white' : 'font-semibold text-primary')
-                  )}
-                >
-                  {item}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </nav>
-        <h1
-          className={cn(
-            'text-2xl font-semibold tracking-tight sm:text-[28px]',
-            dashboard ? 'text-white' : 'text-foreground'
-          )}
+    <header className="flex flex-col gap-4 rounded-2xl border bg-card p-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+        <div
+          aria-hidden="true"
+          className="grid size-10 shrink-0 place-items-center rounded-xl border border-primary/15 bg-primary/10 text-primary sm:size-12 [&_svg]:size-5"
         >
-          {title}
-        </h1>
-        {description && (
-          <p
-            className={cn(
-              'max-w-3xl text-sm leading-5',
-              dashboard ? 'text-slate-300' : 'text-muted-foreground'
-            )}
-          >
-            {description}
-          </p>
-        )}
+          {icon}
+        </div>
+        <div className="min-w-0">
+          {context.length > 0 && (
+            <nav
+              aria-label="Vị trí trang"
+              className="mb-1 text-xs font-medium text-muted-foreground"
+            >
+              <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+                {context.map((item, index) => (
+                  <li key={`${item}-${index}`} className="flex min-w-0 items-center gap-1.5">
+                    {index > 0 && <ChevronRight className="size-3 shrink-0" aria-hidden="true" />}
+                    <span className="break-words">{item}</span>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          )}
+          <h1 className="text-balance break-words text-xl font-semibold leading-tight tracking-tight text-foreground sm:text-2xl lg:text-[28px]">
+            {title}
+          </h1>
+          {description && (
+            <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+              {description}
+            </p>
+          )}
+        </div>
       </div>
-      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className="flex min-w-0 flex-wrap items-center gap-2">{actions}</div>}
     </header>
   )
 }
@@ -162,12 +158,12 @@ const TAG_TONE: Record<StatusTone, string> = {
 }
 
 const HINT_TONE: Record<StatusTone, string> = {
-  slate: 'text-slate-500',
-  indigo: 'text-indigo-600',
-  emerald: 'text-emerald-600',
-  amber: 'text-amber-600',
-  rose: 'text-rose-600',
-  sky: 'text-sky-600',
+  slate: 'text-slate-500 dark:text-slate-300',
+  indigo: 'text-indigo-600 dark:text-indigo-300',
+  emerald: 'text-emerald-600 dark:text-emerald-300',
+  amber: 'text-amber-600 dark:text-amber-300',
+  rose: 'text-rose-600 dark:text-rose-300',
+  sky: 'text-sky-600 dark:text-sky-300',
 }
 
 export function Tag({ children, tone = 'slate' }: { children: ReactNode; tone?: StatusTone }) {
@@ -304,13 +300,14 @@ export function Button({
   className,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'outline' | 'soft' | 'ghost'
+  variant?: 'primary' | 'positive' | 'outline' | 'soft' | 'ghost'
   icon?: ReactNode
   loading?: boolean
   reading?: boolean
 }) {
   const styles = {
     primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
+    positive: 'action-positive',
     outline: 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
     soft: 'border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100',
     ghost: 'text-slate-600 hover:bg-slate-100',
@@ -405,14 +402,15 @@ export function ErrorState({
   return (
     <div
       role="alert"
-      className="flex flex-col items-center gap-3 rounded-xl border border-rose-200 bg-[#fff5f7] px-4 py-7 text-center"
+      className="flex flex-col items-center gap-3 rounded-xl border border-rose-200 bg-[#fff5f7] px-4 py-7 text-center dark:border-rose-300/30 dark:bg-rose-400/10"
     >
-      <div className="flex items-center gap-2 text-sm font-medium text-rose-700">
+      <div className="flex items-center gap-2 text-sm font-medium text-rose-700 dark:text-rose-200">
         <CircleAlert className="size-4" aria-hidden="true" />
         {message}
       </div>
       {onRetry && (
         <Button
+          className="dark:border-input dark:bg-card dark:text-foreground dark:hover:bg-muted"
           onClick={onRetry}
           reading={retrying}
           icon={<RefreshCw className="size-3.5" aria-hidden="true" />}
@@ -427,9 +425,11 @@ export function ErrorState({
 export function EmptyState({ title, description }: { title: string; description?: string }) {
   return (
     <div className="flex flex-col items-center gap-2 px-4 py-7 text-center">
-      <Database aria-hidden="true" className="size-5 text-slate-500" />
-      <p className="text-sm font-bold text-[#17233d]">{title}</p>
-      {description && <p className="max-w-md text-xs leading-5 text-[#65718d]">{description}</p>}
+      <Database aria-hidden="true" className="size-5 text-muted-foreground" />
+      <p className="text-sm font-bold text-foreground">{title}</p>
+      {description && (
+        <p className="max-w-md text-xs leading-5 text-muted-foreground">{description}</p>
+      )}
     </div>
   )
 }

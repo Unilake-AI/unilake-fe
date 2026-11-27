@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react'
+import { Database, ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { API_UpdateDataSource } from '@/api/admindata/data-sources'
@@ -216,6 +216,7 @@ export function SourcesView() {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<Database />}
         breadcrumb={['Quản trị dữ liệu', 'Nguồn dữ liệu']}
         title="Quản lý nguồn dữ liệu"
         description="Đăng ký, chỉnh sửa và bật/tắt các kết nối nguồn dữ liệu (CSV, Excel, JSON, REST API, PostgreSQL)."
@@ -224,7 +225,7 @@ export function SourcesView() {
             <CreateSourceSystemDialog />
             <Link
               href="/data/sources/new"
-              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#b91830] px-3 text-xs font-semibold text-white hover:bg-[#9e1429]"
+              className="action-positive inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors"
             >
               <Plus className="size-3.5" aria-hidden="true" />
               Thêm nguồn dữ liệu

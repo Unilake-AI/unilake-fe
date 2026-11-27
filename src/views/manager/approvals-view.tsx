@@ -3,7 +3,7 @@
 import { useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { History } from 'lucide-react'
+import { ClipboardCheck, History } from 'lucide-react'
 
 import { getApiErrorMessage } from '@/api/http'
 import {
@@ -13,7 +13,7 @@ import {
   API_RevokeApproval,
 } from '@/api/manager/reviews'
 import type { ReviewProfile } from '@/api/manager/reviews'
-import { EmptyState, ErrorState, LoadingState, formatDateTime } from '@/components/page/page-parts'
+import { PageHeader, EmptyState, ErrorState, LoadingState, formatDateTime } from '@/components/page/page-parts'
 import { cn } from '@/lib/utils'
 
 import { ManagerGate, label } from './report-parts'
@@ -35,20 +35,12 @@ function ReviewList({ userId }: { userId: number }) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-          <span>Quản lý đơn vị</span>
-          <span>/</span>
-          <span className="font-semibold text-slate-700">Phê duyệt nguồn</span>
-        </div>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-          Phê duyệt quy tắc chuẩn hóa dữ liệu
-        </h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Xem các quy tắc chuẩn hóa dữ liệu do Data Admin đề xuất, tra cứu lịch sử phiên bản và phê
-          duyệt hoặc thu hồi trong phạm vi Domain Owner.
-        </p>
-      </div>
+      <PageHeader
+        icon={<ClipboardCheck />}
+        breadcrumb={['Quản lý đơn vị', 'Phê duyệt nguồn']}
+        title="Phê duyệt quy tắc chuẩn hóa dữ liệu"
+        description="Xem các quy tắc chuẩn hóa dữ liệu do Data Admin đề xuất, tra cứu lịch sử phiên bản và phê duyệt hoặc thu hồi trong phạm vi Domain Owner."
+      />
 
       {query.isPending ? (
         <LoadingState />

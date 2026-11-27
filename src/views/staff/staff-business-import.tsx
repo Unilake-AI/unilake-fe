@@ -6,7 +6,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 
 import { getApiErrorMessage } from '@/api/http'
 import { API_DownloadAdmissionsUpdate, API_GetStaffImportReport } from '@/api/staff/upload'
-import { Button, ErrorState, formatNumber } from '@/components/page/page-parts'
+import { ErrorState, formatNumber } from '@/components/page/page-parts'
 import type {
   StaffImportIssue,
   StaffImportLayout,
@@ -237,11 +237,6 @@ export function StaffBusinessImportStatus({ jobId }: { jobId: number }) {
               ? 'Lần nạp chưa ghi được DB'
               : 'Đang xử lý sau Bronze'}
         </p>
-        {failed && (
-          <Button type="button" variant="ghost" onClick={() => void query.refetch()}>
-            Làm mới
-          </Button>
-        )}
       </div>
       <dl className="grid grid-cols-3 gap-2 text-slate-600">
         {[
