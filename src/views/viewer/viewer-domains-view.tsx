@@ -42,6 +42,7 @@ import type {
 } from '@/api/viewer'
 import { DetailDrawer } from '@/components/page/detail-drawer'
 import {
+  PageHeader,
   Button,
   Card,
   EmptyState,
@@ -229,22 +230,12 @@ function ViewerDomainsWorkspace({ context }: { context: ViewerContext }) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-          <span>Điều hành</span>
-          <span>/</span>
-          <span>Dashboard theo phân hệ</span>
-          <span>/</span>
-          <span className="font-semibold text-slate-700">{labelDomain(selectedDomain)}</span>
-        </div>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-          Phân tích dữ liệu {labelDomain(selectedDomain)}
-        </h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Khai thác và giám sát các chỉ số Gold, metadata bộ dữ liệu và tiến độ xử lý dữ liệu.
-        </p>
-      </div>
+      <PageHeader
+        icon={<BarChart3 />}
+        breadcrumb={['Điều hành', 'Dashboard theo phân hệ', labelDomain(selectedDomain)]}
+        title={`Phân tích dữ liệu ${labelDomain(selectedDomain)}`}
+        description="Khai thác và giám sát các chỉ số Gold, metadata bộ dữ liệu và tiến độ xử lý dữ liệu."
+      />
 
       {/* Domain Navigation Tabs */}
       <div className="flex border-b border-slate-200">

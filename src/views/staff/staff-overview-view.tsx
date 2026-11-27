@@ -3,20 +3,25 @@
 import Link from 'next/link'
 
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, ChartPie, Layers3 } from 'lucide-react'
+import { ArrowRight, ChartPie, Layers3, LayoutDashboard } from 'lucide-react'
 
 import { getApiErrorMessage } from '@/api/http'
 import { API_GetIngestionMetrics, API_GetIngestionStats } from '@/api/shared/ingestion'
 import { API_GetQualityIssueStats } from '@/api/shared/quality-issues'
+import { BarChartCard } from '@/components/charts/bar-chart-card'
 import { CountChart } from '@/components/charts/count-chart'
-import { ErrorState, KpiCard, LoadingState, formatNumber } from '@/components/page/page-parts'
+import {
+  Card,
+  ErrorState,
+  LoadingState,
+  PageHeader,
+  formatNumber,
+} from '@/components/page/page-parts'
 import { Button } from '@/components/ui/button'
+import type { IngestionJobStats } from '@/types/ingestion'
 import type { StaffContext } from '@/types/staff-context'
 
 import { DepartmentAssignmentBanner, StaffContextGate } from './staff-context-gate'
-
-const statCardClassName =
-  'rounded-xl border shadow-sm [&>div]:min-h-12 [&>div]:items-center sm:[&>div]:min-h-9 [&_svg]:box-content [&_svg]:rounded-lg [&_svg]:bg-muted [&_svg]:p-2'
 
 const percentFormatter = new Intl.NumberFormat('vi-VN', {
   style: 'percent',
@@ -76,6 +81,62 @@ function FailureRateChart() {
   )
 }
 
+function IngestionSummary({ stats }: { stats: IngestionJobStats }) {
+  const outcomes = [
+    { label: 'Tổng số lượt', value: stats.total },
+    { label: 'Thành công', value: stats.success, color: 'hsl(var(--chart-2))' },
+    { label: 'Thất bại', value: stats.failed, color: 'hsl(var(--chart-5))' },
+  ]
+  const queue = [
+    { label: 'Đang chờ', count: stats.queued },
+    { label: 'Đang xử lý', count: stats.running },
+    { label: 'Chờ thử lại', count: stats.retry_wait ?? 0 },
+  ]
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <Card title="Kết quả nạp dữ liệu">
+        <figure aria-label="Biểu đồ kết quả nạp dữ liệu">
+          <figcaption className="sr-only">
+            {outcomes.map(({ label, value }) => `${label}: ${formatNumber(value)}.`).join(' ')}
+          </figcaption>
+          <BarChartCard data={outcomes} />
+          {stats.total === 0 && (
+            <p className="mt-1 text-center text-xs text-muted-foreground">
+              Chưa ghi nhận lượt nạp nào.
+            </p>
+          )}
+        </figure>
+      </Card>
+
+      <Card title="Hàng đợi xử lý">
+        <table aria-label="Hàng đợi xử lý" className="w-full text-left text-sm">
+          <thead className="text-xs text-muted-foreground">
+            <tr className="border-b">
+              <th scope="col" className="p-2 font-medium">
+                Trạng thái
+              </th>
+              <th scope="col" className="p-2 text-right font-medium">
+                Số lượt
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {queue.map(({ label, count }) => (
+              <tr key={label} className="border-b last:border-b-0">
+                <th scope="row" className="p-2 font-medium">
+                  {label}
+                </th>
+                <td className="p-2 text-right font-semibold tabular-nums">{formatNumber(count)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  )
+}
+
 function OverviewContent({ context }: { context: StaffContext }) {
   const jobStats = useQuery({
     queryKey: ['ingestion-jobs', 'stats'],
@@ -98,37 +159,7 @@ function OverviewContent({ context }: { context: StaffContext }) {
             onRetry={() => void jobStats.refetch()}
           />
         ) : (
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <KpiCard
-              dashboard
-              className={statCardClassName}
-              label="Tổng số lần nạp"
-              value={formatNumber(jobStats.data.total)}
-            />
-            <KpiCard
-              dashboard
-              className={statCardClassName}
-              label="Nạp thành công"
-              value={formatNumber(jobStats.data.success)}
-              tone="emerald"
-            />
-            <KpiCard
-              dashboard
-              className={statCardClassName}
-              label="Đang chờ hoặc xử lý"
-              value={formatNumber(
-                jobStats.data.queued + jobStats.data.running + (jobStats.data.retry_wait ?? 0)
-              )}
-              tone="amber"
-            />
-            <KpiCard
-              dashboard
-              className={statCardClassName}
-              label="Nạp thất bại"
-              value={formatNumber(jobStats.data.failed)}
-              tone="rose"
-            />
-          </div>
+          <IngestionSummary stats={jobStats.data} />
         )}
       </section>
 
@@ -199,12 +230,8 @@ function QualityIssueSummary() {
 
 export function StaffOverviewView() {
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6">
-      <header className="border-b pb-4">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-          Tổng quan
-        </h1>
-      </header>
+    <div className="space-y-6">
+      <PageHeader icon={<LayoutDashboard />} title="Tổng quan" />
       <StaffContextGate showAssignmentBanner={false}>
         {(context) => <OverviewContent context={context} />}
       </StaffContextGate>

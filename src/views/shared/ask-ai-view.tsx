@@ -4,22 +4,13 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 
 import Image from 'next/image'
-import Link from 'next/link'
 
 import { useMutation } from '@tanstack/react-query'
-import {
-  ArrowUpRight,
-  Check,
-  CircleAlert,
-  Copy,
-  History,
-  SearchX,
-  Send,
-  SquarePen,
-} from 'lucide-react'
+import { ArrowUpRight, Check, CircleAlert, Copy, SearchX, Send, SquarePen } from 'lucide-react'
 
 import { getApiErrorMessage } from '@/api/http'
 import { API_AskNlq } from '@/api/shared/nlq'
+import campus from '@/assets/login/ai-campus-composition.webp'
 import { LoadingState } from '@/components/page/page-parts'
 import { useDomain } from '@/hooks/use-domain'
 import { addQueryHistory, readQueryHistory } from '@/lib/query-history'
@@ -148,10 +139,7 @@ function SqlBlock({ sql }: { sql: string }) {
   )
 }
 
-export function AskAiView({
-  historyHref,
-  workspace,
-}: { historyHref?: string; workspace?: 'STAFF' } = {}) {
+export function AskAiView({ workspace }: { workspace?: 'STAFF' } = {}) {
   const { domain, availableDomains } = useDomain()
   const suggestions =
     workspace === 'STAFF'
@@ -171,7 +159,6 @@ export function AskAiView({
     <AskAiChat
       domain={domain}
       suggestions={suggestions}
-      historyHref={historyHref}
       historyEntries={historyEntries}
       askQuestion={(text) => API_AskNlq(text, workspace)}
       onHistoryEntry={(entry) => {
@@ -185,7 +172,6 @@ export function AskAiView({
 export function AskAiChat({
   domain,
   suggestions,
-  historyHref,
   historyEntries,
   historyStatus = 'Chưa có câu hỏi nào.',
   initialQuestion = '',
@@ -194,7 +180,6 @@ export function AskAiChat({
 }: {
   domain: DomainDefinition
   suggestions: string[]
-  historyHref?: string
   historyEntries: Pick<QueryHistoryEntry, 'id' | 'question'>[]
   historyStatus?: string
   initialQuestion?: string
@@ -274,23 +259,24 @@ export function AskAiChat({
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_15rem] xl:grid-cols-[minmax(0,1fr)_17rem]">
-      <section className="relative isolate flex min-h-[calc(100dvh-var(--workspace-header-height)-2.75rem)] min-w-0 flex-col rounded-2xl border bg-card">
-        {turns.length === 0 && (
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-full rounded-[inherit] bg-[radial-gradient(ellipse_at_50%_35%,#fff2e5_0%,#fff6f7_30%,transparent_68%)]"
-          />
-        )}
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 px-4 py-3 sm:px-6">
-          <div>
-            <h1 className="font-semibold text-foreground">Hỏi UniLake AI</h1>
-            <p className="text-xs text-muted-foreground">{domain.shortLabel}</p>
-          </div>
-        </header>
+    <div className="isolate grid gap-4 lg:grid-cols-[12rem_minmax(0,1fr)_12rem] xl:grid-cols-[15rem_minmax(0,1fr)_15rem]">
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <Image
+          src={campus}
+          alt=""
+          fill
+          sizes="100vw"
+          className="scale-[1.02] object-cover object-bottom blur-[2px]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/75 to-background/65" />
+      </div>
+      <section
+        className={`flex min-h-[calc(100dvh-var(--workspace-header-height)-2.75rem)] min-w-0 flex-col lg:col-start-2 lg:row-start-1 ${turns.length === 0 ? 'justify-center py-8' : ''}`}
+      >
+        <h1 className="sr-only">Hỏi UniLake AI</h1>
 
         {turns.length === 0 && (
-          <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-end px-4 pb-5 pt-10 sm:px-8 sm:pb-7 sm:pt-14">
+          <div className="mx-auto flex w-full max-w-3xl flex-col items-center px-4 pb-5 sm:px-8 sm:pb-7">
             <Image
               src={logo}
               alt=""
@@ -303,7 +289,7 @@ export function AskAiChat({
                 ? 'Bạn muốn hỏi gì về dữ liệu?'
                 : `Bạn muốn hỏi gì về ${domain.shortLabel}?`}
             </h2>
-            <p className="mt-2 max-w-md text-center text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-2 max-w-md text-center text-sm leading-relaxed text-foreground/90">
               Tra cứu số liệu Gold đã công bố trong phạm vi được cấp quyền.
             </p>
             {suggestions.length > 0 && (
@@ -313,7 +299,7 @@ export function AskAiChat({
                     <button
                       type="button"
                       onClick={() => send(item)}
-                      className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-xl border border-rose-100 bg-white/90 px-3 py-2 text-left text-sm font-medium text-foreground shadow-sm transition-colors hover:border-primary/30 hover:bg-rose-50"
+                      className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-xl border bg-card px-3 py-2 text-left text-sm font-medium text-card-foreground shadow-sm transition-colors hover:border-primary/30 hover:bg-accent"
                     >
                       <span>{item}</span>
                       <ArrowUpRight className="size-4 shrink-0 text-primary" aria-hidden="true" />
@@ -431,8 +417,8 @@ export function AskAiChat({
         <div
           className={
             turns.length === 0
-              ? 'mx-auto w-full max-w-3xl flex-1 px-4 pb-8 sm:px-8 sm:pb-12'
-              : 'sticky bottom-0 z-10 rounded-b-2xl border-t bg-card px-4 py-3 sm:px-8'
+              ? 'mx-auto w-full max-w-3xl px-4 sm:px-8'
+              : 'sticky bottom-0 z-10 px-4 py-3 sm:px-8'
           }
         >
           <form
@@ -473,7 +459,7 @@ export function AskAiChat({
       </section>
       <aside
         aria-label="Điều khiển và lịch sử chat"
-        className="flex max-h-80 min-w-0 flex-col rounded-2xl border bg-card p-3 lg:sticky lg:top-[calc(var(--workspace-header-height)+1.25rem)] lg:max-h-[calc(100dvh-var(--workspace-header-height)-2.75rem)] lg:self-start"
+        className="flex max-h-80 min-w-0 flex-col gap-2 border-t border-foreground/15 p-3 lg:sticky lg:top-[calc(var(--workspace-header-height)+1.25rem)] lg:col-start-1 lg:row-start-1 lg:max-h-[calc(100dvh-var(--workspace-header-height)-2.75rem)] lg:self-start lg:border-r lg:border-t-0"
       >
         <button
           type="button"
@@ -483,23 +469,13 @@ export function AskAiChat({
             setQuestion('')
             composerRef.current?.focus()
           }}
-          className="flex min-h-10 shrink-0 items-center gap-2 rounded-xl bg-primary/10 px-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/20 disabled:opacity-60"
+          className="flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-primary/20 bg-accent px-3 text-sm font-semibold text-accent-foreground transition-colors hover:border-primary/50 disabled:opacity-60"
         >
           <SquarePen className="size-4" aria-hidden="true" />
           Chat mới
         </button>
-        <h2 className="mb-1 mt-4 flex shrink-0 items-center gap-2 px-3 text-xs font-semibold text-muted-foreground">
-          <History className="size-3.5" aria-hidden="true" />
-          {historyHref ? (
-            <Link href={historyHref} className="hover:text-primary hover:underline">
-              Lịch sử
-            </Link>
-          ) : (
-            'Lịch sử'
-          )}
-        </h2>
         {historyEntries.length === 0 ? (
-          <p className="px-3 pb-2 pt-1 text-sm text-muted-foreground">{historyStatus}</p>
+          <p className="px-3 pb-2 pt-1 text-sm text-foreground/90">{historyStatus}</p>
         ) : (
           <ul aria-label="Câu hỏi đã lưu" className="min-h-0 space-y-1 overflow-y-auto">
             {historyEntries.map((entry) => (
@@ -511,7 +487,7 @@ export function AskAiChat({
                     composerRef.current?.focus()
                   }}
                   title={entry.question}
-                  className="block w-full truncate rounded-lg px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted"
+                  className="block w-full truncate rounded-lg px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-card focus-visible:bg-card"
                 >
                   {entry.question}
                 </button>

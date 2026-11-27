@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 
-import { Sparkles } from 'lucide-react'
+import { LayoutDashboard, Sparkles } from 'lucide-react'
 import {
   CartesianGrid,
   Legend,
@@ -253,7 +253,7 @@ export function DomainOverviewView({ askHref }: { askHref: string }) {
   return (
     <div className="space-y-5">
       <PageHeader
-        dashboard
+        icon={<LayoutDashboard />}
         breadcrumb={[domain.code === 'all' ? 'Tuyển sinh' : domain.shortLabel, 'Tổng quan']}
         title={meta.title}
         description={meta.description}

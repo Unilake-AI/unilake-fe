@@ -6,7 +6,7 @@ import type { FormEvent } from 'react'
 import Link from 'next/link'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, ChevronLeft, ChevronRight, CircleAlert, Plus, UserCheck } from 'lucide-react'
+import { ShieldCheck, CheckCircle2, ChevronLeft, ChevronRight, CircleAlert, Plus, UserCheck } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { API_ListCleaningRuns } from '@/api/admindata/cleaning'
@@ -651,12 +651,13 @@ export function QualityView() {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<ShieldCheck />}
         breadcrumb={['Quản trị dữ liệu', 'Yêu cầu xử lý dữ liệu lỗi']}
         title="Quản lý yêu cầu xử lý dữ liệu lỗi"
         description="Tạo yêu cầu từ hồ sơ Quarantine, phân công phòng ban/nhân viên và xác minh kết quả sửa lỗi trước khi hoàn tất."
         actions={
           <Button
-            variant="primary"
+            variant="positive"
             onClick={() => setShowCreate(true)}
             icon={<Plus className="size-3.5" aria-hidden="true" />}
           >

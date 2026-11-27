@@ -4,7 +4,7 @@ import { Fragment, useEffect, useState } from 'react'
 
 import Link from 'next/link'
 
-import { Search, Trash2 } from 'lucide-react'
+import { History, Search, Trash2 } from 'lucide-react'
 
 import { filterBarClassName, filterControlClassName } from '@/components/page/filter-bar'
 import {
@@ -55,6 +55,7 @@ export function QueryHistoryView({ askHref }: { askHref: string }) {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<History />}
         breadcrumb={[getDomain(domain.code).shortLabel, 'Lịch sử truy vấn']}
         title="Lịch sử truy vấn"
         description="Xem lại các câu hỏi đã gửi và kết quả truy vấn trước đó."

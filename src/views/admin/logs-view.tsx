@@ -3,6 +3,7 @@
 import { useState } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
+import { ScrollText } from 'lucide-react'
 
 import { listAuditEvents, listDomainOwnerAuditEvents } from '@/api/admin/client'
 import { getApiErrorMessage } from '@/api/http'
@@ -48,7 +49,11 @@ export function LogsView() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Nhật ký hệ thống" breadcrumb={['Quản trị hệ thống', 'Nhật ký hệ thống']} />
+      <PageHeader
+        icon={<ScrollText />}
+        title="Nhật ký hệ thống"
+        breadcrumb={['Quản trị hệ thống', 'Nhật ký hệ thống']}
+      />
       <label>
         <span className="sr-only">Nhật ký</span>
         <select

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  ListChecks,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
@@ -409,6 +410,7 @@ export function CleaningView({ initialJobId }: { initialJobId?: number }) {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<ListChecks />}
         breadcrumb={['Quản trị dữ liệu', 'Làm sạch & Kiểm tra']}
         title="Cleaning, Validation & Xuất bản Silver"
         description="Xem trước kết quả làm sạch từ bản Bronze SUCCESS, sau đó thực thi Cleaning Pipeline và theo dõi lịch sử xuất bản Silver."

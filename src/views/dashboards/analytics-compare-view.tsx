@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 import Link from 'next/link'
 
-import { Sparkles } from 'lucide-react'
+import { BarChart3, Sparkles } from 'lucide-react'
 import {
   Bar,
   BarChart,
@@ -51,6 +51,7 @@ export function AnalyticsCompareView({ askHref }: { askHref: string }) {
     return (
       <div className="space-y-5">
         <PageHeader
+          icon={<BarChart3 />}
           breadcrumb={[domain.shortLabel, 'Phân tích & So sánh']}
           title={`Phân tích & So sánh — ${domain.shortLabel}`}
         />
@@ -67,6 +68,7 @@ export function AnalyticsCompareView({ askHref }: { askHref: string }) {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<BarChart3 />}
         breadcrumb={['Tuyển sinh', 'Phân tích & So sánh']}
         title="Phân tích & So sánh"
         description="So sánh chỉ số tuyển sinh theo ngành giữa hai kỳ."

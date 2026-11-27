@@ -3,6 +3,7 @@
 import { useState } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
+import { Search } from 'lucide-react'
 
 import { API_GetCatalog } from '@/api/admindata/governance'
 import { getApiErrorMessage } from '@/api/http'
@@ -44,6 +45,7 @@ export function ExploreView() {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<Search />}
         breadcrumb={['Phân tích', 'Khám phá dữ liệu']}
         title="Khám phá dữ liệu"
         description="Xem danh sách bộ dữ liệu và thông tin trong từng cột."

@@ -33,12 +33,15 @@ export function DepartmentAssignmentBanner({ note }: { note: string }) {
   return (
     <div
       role="status"
-      className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900"
+      className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:border-amber-300/30 dark:bg-amber-400/10 dark:text-amber-100"
     >
-      <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" aria-hidden="true" />
+      <AlertTriangle
+        className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-300"
+        aria-hidden="true"
+      />
       <div className="space-y-0.5">
         <p className="font-semibold">Tài khoản chưa có phân công đơn vị đang hiệu lực</p>
-        <p className="text-amber-800">{note}</p>
+        <p className="text-amber-800 dark:text-amber-200">{note}</p>
       </div>
     </div>
   )
@@ -48,11 +51,13 @@ export function StaffAccessDeniedState() {
   return (
     <div
       role="alert"
-      className="flex flex-col items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-6 py-10 text-center"
+      className="flex flex-col items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-6 py-10 text-center dark:border-rose-300/30 dark:bg-rose-400/10"
     >
-      <ShieldAlert className="size-8 text-rose-600" aria-hidden="true" />
-      <h2 className="text-base font-semibold text-rose-900">Không có quyền truy cập</h2>
-      <p className="max-w-md text-xs leading-5 text-rose-700">
+      <ShieldAlert className="size-8 text-rose-600 dark:text-rose-300" aria-hidden="true" />
+      <h2 className="text-base font-semibold text-rose-900 dark:text-rose-100">
+        Không có quyền truy cập
+      </h2>
+      <p className="max-w-md text-xs leading-5 text-rose-700 dark:text-rose-200">
         Tài khoản của bạn không được cấp quyền sử dụng không gian làm việc dành cho nhân viên phòng
         ban. Vui lòng liên hệ quản trị viên nếu bạn cần được phân quyền.
       </p>

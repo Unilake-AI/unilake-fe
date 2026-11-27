@@ -95,7 +95,7 @@ function show(options: { healthy?: number; unavailable?: boolean; empty?: boolea
   clients.push(client)
   render(
     <QueryClientProvider client={client}>
-      <PipelineDashboard refresh={false} />
+      <PipelineDashboard />
     </QueryClientProvider>
   )
   return { calls }

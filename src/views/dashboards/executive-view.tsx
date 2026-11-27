@@ -1,4 +1,4 @@
-import { TriangleAlert } from 'lucide-react'
+import { LayoutDashboard, TriangleAlert } from 'lucide-react'
 
 import {
   Card,
@@ -126,7 +126,7 @@ export function ExecutiveView() {
   return (
     <div className="space-y-5">
       <PageHeader
-        dashboard
+        icon={<LayoutDashboard />}
         breadcrumb={['Điều hành', 'Tổng quan']}
         title="Tổng quan điều hành toàn trường"
         description="Bức tranh liên kết ba phân hệ Tuyển sinh – Đào tạo – Nhân sự phục vụ Ban Giám hiệu ra quyết định."

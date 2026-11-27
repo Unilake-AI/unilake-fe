@@ -1,11 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-
 import Link from 'next/link'
 
 import { useQuery } from '@tanstack/react-query'
-import { Activity, Info } from 'lucide-react'
+import { HardDrive, Activity, Info } from 'lucide-react'
 
 import { API_ListIngestionWorkers } from '@/api/admindata/ingestion'
 import { getApiErrorMessage } from '@/api/http'
@@ -22,15 +20,10 @@ import {
 } from '@/components/page/page-parts'
 import { TableSkeleton } from '@/components/ui/table-skeleton'
 
-const WORKER_POLL_MS = 5000
-
 export function WorkersView() {
-  const [autoRefresh, setAutoRefresh] = useState(true)
-
   const workersQuery = useQuery({
     queryKey: ['ingestion-workers'],
     queryFn: API_ListIngestionWorkers,
-    refetchInterval: autoRefresh ? WORKER_POLL_MS : false,
   })
 
   const workers = workersQuery.data ?? []
@@ -42,20 +35,10 @@ export function WorkersView() {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<HardDrive />}
         breadcrumb={['Quản trị dữ liệu', 'Giám sát Worker']}
         title="Giám sát Worker xử lý Ingestion"
         description="Theo dõi tình trạng hoạt động (heartbeat) của các worker tiêu thụ hàng đợi nạp dữ liệu."
-        actions={
-          <label className="inline-flex h-8 cursor-pointer items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-xs font-medium text-slate-700">
-            <input
-              type="checkbox"
-              checked={autoRefresh}
-              onChange={(e) => setAutoRefresh(e.target.checked)}
-              className="size-3.5 accent-[#b91830]"
-            />
-            Tự động làm mới (5 giây)
-          </label>
-        }
       />
 
       <div className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">

@@ -245,10 +245,7 @@ describe('Manager PDF API integration', () => {
       expect(
         await screen.findByRole('button', { name: 'Số lượng giảng viên là bao nhiêu?' })
       ).toBeVisible()
-      expect(screen.getByRole('link', { name: 'Lịch sử' })).toHaveAttribute(
-        'href',
-        '/manager/ai?tab=history'
-      )
+      expect(screen.queryByRole('link', { name: 'Lịch sử' })).not.toBeInTheDocument()
       expect(screen.queryByText(/64,5%/)).toBeNull()
       expect(calls.some((call) => call.url === '/nlq/ask')).toBe(false)
       fireEvent.click(

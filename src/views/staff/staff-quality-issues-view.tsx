@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ShieldCheck, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { getApiErrorMessage } from '@/api/http'
 import { API_ListDatasets } from '@/api/shared/datasets'
@@ -84,6 +84,7 @@ function QualityIssuesContent({ context }: { context: StaffContext }) {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<ShieldCheck />}
         breadcrumb={['Không gian nhân viên', 'Yêu cầu xử lý dữ liệu lỗi']}
         title="Yêu cầu xử lý dữ liệu lỗi"
         description="Xem danh sách các vấn đề chất lượng dữ liệu trong phạm vi đơn vị, tải tệp đã sửa và gửi báo cáo xác minh."

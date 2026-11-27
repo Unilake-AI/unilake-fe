@@ -18,6 +18,7 @@ import type { ExplorerDataset } from '@/api/manager/catalog'
 import type { ManagerContext } from '@/api/manager/reports'
 import { FilterForm, filterControlClassName } from '@/components/page/filter-bar'
 import {
+  PageHeader,
   Button,
   Card,
   EmptyState,
@@ -113,55 +114,44 @@ function CatalogContent({ context }: { context: ManagerContext }) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-            <span>Quản lý dữ liệu</span>
-            <span>/</span>
-            <span className="font-semibold uppercase text-primary">{label(domain)}</span>
-            {departmentName && <span>· {departmentName}</span>}
-          </div>
-          <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-900">
-            Danh mục bộ dữ liệu phòng ban (Data Catalog)
-          </h1>
-          <p className="mt-0.5 text-xs text-slate-500">
-            Xem danh sách bộ dữ liệu, cấu trúc bảng/cột và truy vết nguồn gốc dữ liệu Bronze →
-            Silver → Gold.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {context.domains.length > 1 && (
-            <select
-              aria-label="Chọn lĩnh vực"
-              value={domain}
-              onChange={(e) => {
-                setDomain(e.target.value as Domain)
-                setPage(0)
-                setSelectedDatasetId(null)
-                setLineageDataset(null)
-              }}
-              className={filterControlClassName}
+      <PageHeader
+        icon={<FolderGit2 />}
+        breadcrumb={['Quản lý dữ liệu', label(domain), ...(departmentName ? [departmentName] : [])]}
+        title="Danh mục bộ dữ liệu phòng ban (Data Catalog)"
+        description="Xem danh sách bộ dữ liệu, cấu trúc bảng/cột và truy vết nguồn gốc dữ liệu Bronze → Silver → Gold."
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            {context.domains.length > 1 && (
+              <select
+                aria-label="Chọn lĩnh vực"
+                value={domain}
+                onChange={(e) => {
+                  setDomain(e.target.value as Domain)
+                  setPage(0)
+                  setSelectedDatasetId(null)
+                  setLineageDataset(null)
+                }}
+                className={filterControlClassName}
+              >
+                {context.domains.map((item) => (
+                  <option key={item.domain} value={item.domain}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            )}
+            <Link
+              href="/manager/catalog/create"
+              className="shadow-xs action-positive inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors"
             >
-              {context.domains.map((item) => (
-                <option key={item.domain} value={item.domain}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          )}
-          <Link
-            href="/manager/catalog/create"
-            className="shadow-xs inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-primary/90"
-          >
-            <Plus className="size-3.5" aria-hidden="true" />
-            <span>Tạo bộ dữ liệu mới</span>
-          </Link>
-        </div>
-      </div>
+              <Plus className="size-3.5" aria-hidden="true" />
+              <span>Tạo bộ dữ liệu mới</span>
+            </Link>
+          </div>
+        }
+      />
 
-      {/* Filter Bar */}
+      {/* Bộ lọc danh mục */}
       <FilterForm onSubmit={handleSearchSubmit}>
         <div className="relative min-w-0 basis-full sm:basis-80">
           <Search className="pointer-events-none absolute left-3 top-3 size-4 text-slate-400" />

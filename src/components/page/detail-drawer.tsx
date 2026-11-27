@@ -37,8 +37,9 @@ export function DetailDrawer({
       <DialogPortal>
         <DialogOverlay />
         <DialogPrimitive.Content
+          data-workspace-surface=""
           aria-describedby={undefined}
-          className="fixed inset-y-0 right-0 z-50 flex w-full max-w-xl flex-col border-l bg-card outline-none motion-safe:data-[state=open]:animate-in motion-safe:data-[state=open]:slide-in-from-right-4"
+          className="fixed inset-y-0 right-0 z-50 flex w-full max-w-xl flex-col border-l border-border bg-card text-card-foreground outline-none motion-safe:data-[state=open]:animate-in motion-safe:data-[state=open]:slide-in-from-right-4"
           onOpenAutoFocus={() => {
             returnFocus.current =
               document.activeElement instanceof HTMLElement ? document.activeElement : null

@@ -6,7 +6,7 @@ import type { FormEvent } from 'react'
 import Link from 'next/link'
 
 import { useQuery } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, Eye } from 'lucide-react'
+import { FileWarning, ChevronLeft, ChevronRight, Eye } from 'lucide-react'
 
 import { API_ListDatasets } from '@/api/admindata/datasets'
 import { API_ListIssueDepartments } from '@/api/admindata/quality-issues'
@@ -184,6 +184,7 @@ export function QuarantineView() {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<FileWarning />}
         breadcrumb={['Quản trị dữ liệu', 'Hồ sơ cách ly (Quarantine)']}
         title="Quản lý hồ sơ cách ly (Quarantine)"
         description="Tra cứu các bản ghi bị loại trong quá trình Cleaning, xem vị trí dòng nguồn và dữ liệu gốc trong phạm vi cột cho phép."

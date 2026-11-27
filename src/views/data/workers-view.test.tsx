@@ -1,10 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { http } from '@/api/http'
 
 import { WorkersView } from './workers-view'
+
+import type { AxiosAdapter } from 'axios'
 
 describe('WorkersView', () => {
   const originalAdapter = http.defaults.adapter
@@ -14,7 +16,7 @@ describe('WorkersView', () => {
   })
 
   it('phân biệt worker đang xử lý job, worker rảnh (idle) và worker ngoại tuyến', async () => {
-    http.defaults.adapter = (config) =>
+    const loadWorkers = vi.fn<AxiosAdapter>((config) =>
       Promise.resolve({
         data: [
           {
@@ -41,6 +43,8 @@ describe('WorkersView', () => {
         headers: {},
         config,
       })
+    )
+    http.defaults.adapter = loadWorkers
 
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     try {
@@ -57,6 +61,9 @@ describe('WorkersView', () => {
         'href',
         '/data/ingestion?jobId=77'
       )
+      expect(screen.queryByRole('checkbox', { name: /tự động làm mới/i })).not.toBeInTheDocument()
+      expect(loadWorkers).toHaveBeenCalledTimes(1)
+      expect(screen.queryByRole('button', { name: /làm mới/i })).not.toBeInTheDocument()
     } finally {
       client.clear()
     }

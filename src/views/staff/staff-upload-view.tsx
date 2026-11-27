@@ -910,7 +910,7 @@ function UploadContent({ context }: { context: StaffContext }) {
         <Button
           loading={pending}
           type="submit"
-          variant="primary"
+          variant={canSubmit || uploadMutation.isPending ? 'positive' : 'primary'}
           className="h-10 justify-self-end"
           icon={<Upload className="size-3.5" aria-hidden="true" />}
         >
@@ -938,7 +938,7 @@ export function StaffUploadDialog() {
       <div className="h-14">
         <DialogTrigger asChild>
           <Button
-            variant="primary"
+            variant="positive"
             className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-30 sm:right-6"
             icon={<Upload className="size-3.5" aria-hidden="true" />}
           >

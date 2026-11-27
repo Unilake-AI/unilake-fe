@@ -1,4 +1,5 @@
 .page {
+  color-scheme: light;
   --red: hsl(var(--primary));
   --ink: hsl(var(--foreground));
   position: relative;
@@ -73,6 +74,12 @@
   bottom: 0;
   width: min(49vw, 700px);
   height: auto;
+}
+
+.wavesTop {
+  top: 0;
+  bottom: auto;
+  transform: scaleY(-1);
 }
 
 .panel {

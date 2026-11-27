@@ -32,7 +32,6 @@ import {
 } from '@/components/ui/dialog'
 import type { AutoSilverJob, AutoSilverStatus } from '@/types/auto-pipeline'
 
-const active = new Set<AutoSilverStatus>(['QUEUED', 'RUNNING', 'RETRY_WAIT'])
 const labels: Record<AutoSilverStatus, string> = {
   QUEUED: 'Chờ xử lý Silver',
   RUNNING: 'Đang làm sạch và chuẩn hóa',
@@ -63,13 +62,10 @@ export function AutoSilverJobDetail({
   const detail = useQuery({
     queryKey: ['auto-silver', 'job', jobId],
     queryFn: () => API_GetAutoSilverJob(jobId),
-    refetchInterval: (query) =>
-      query.state.data && active.has(query.state.data.status) ? 5000 : false,
   })
   const attempts = useQuery({
     queryKey: ['auto-silver', 'attempts', jobId, detail.data?.status, detail.data?.attempt_number],
     queryFn: () => API_ListAutoSilverAttempts(jobId),
-    refetchInterval: detail.data && active.has(detail.data.status) ? 5000 : false,
   })
   const retry = useMutation({
     mutationFn: () => API_RetryAutoSilverJob(jobId),
@@ -236,8 +232,6 @@ export function AutoSilverForIngestion({
     queryKey: ['auto-silver', 'ingestion', ingestionJobId],
     queryFn: () =>
       API_ListAutoSilverJobs({ ingestion_job_id: ingestionJobId, limit: 20, offset: 0 }),
-    refetchInterval: (query) =>
-      query.state.data?.some((job) => active.has(job.status)) ? 5000 : false,
   })
   return (
     <section
@@ -265,7 +259,7 @@ export function AutoSilverForIngestion({
       ) : jobs.data.length === 0 ? (
         <EmptyState
           title="Chưa có lượt tự xử lý Silver cho lần nạp này"
-          description="Sau khi Bronze thành công, hệ thống tự xếp hàng xử lý Silver. Nếu chưa xuất hiện lượt chạy, hãy làm mới hoặc kiểm tra dịch vụ xử lý."
+          description="Sau khi Bronze thành công, hệ thống tự xếp hàng xử lý Silver. Nếu chưa xuất hiện lượt chạy, hãy kiểm tra dịch vụ xử lý."
         />
       ) : (
         jobs.data.map((job) => <AutoSilverJobDetail key={job.job_id} jobId={job.job_id} />)

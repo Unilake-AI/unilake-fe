@@ -77,25 +77,25 @@ a {
     --sidebar-border: 217 33% 17%;
     --sidebar-ring: 239 84% 67%;
   }
-  .dark {
-    --background: 229 84% 5%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 239 84% 67%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
+  .dark :where(.workspace-main, .workspace-header, [data-workspace-surface], .toaster) {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 8%;
+    --card-foreground: var(--foreground);
+    --popover: 0 0% 9%;
+    --popover-foreground: var(--foreground);
+    --primary: 350 92% 77%;
+    --primary-foreground: 350 50% 12%;
+    --secondary: 0 0% 16%;
+    --secondary-foreground: var(--foreground);
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 93%;
+    --accent: 0 0% 17%;
+    --accent-foreground: var(--foreground);
     --destructive: 350 89% 60%;
-    --border: 217 33% 17%;
-    --input: 215 25% 27%;
-    --ring: 239 84% 67%;
+    --border: 0 0% 22%;
+    --input: 0 0% 32%;
+    --ring: 350 90% 75%;
     --chart-1: 239 84% 67%;
     --chart-2: 160 84% 39%;
     --chart-3: 210 40% 98%;
@@ -112,8 +112,19 @@ a {
   }
 }
 
-:where(.workspace-header, .workspace-rail, .workspace-main) :focus-visible {
+@layer components {
+  .action-positive {
+    @apply bg-green-700 text-white hover:bg-green-800;
+  }
+}
+
+:where(.workspace-main) :focus-visible {
   outline: 2px solid hsl(var(--ring));
+  outline-offset: 1px;
+}
+
+:where(.workspace-header) :focus-visible {
+  outline: 2px solid currentColor;
   outline-offset: 1px;
 }
 
@@ -136,44 +147,102 @@ a {
 }
 
 :root {
-  --workspace-header-height: 56px;
-  --workspace-rail-width: 64px;
+  --workspace-header-height: 72px;
+}
+
+html:has(.workspace-main) {
+  scrollbar-gutter: stable;
+}
+
+html.dark:has(.workspace-main) {
+  background-color: #0a0a0a;
+}
+
+html:has(.workspace-header[data-open='true']),
+html:has(.workspace-header[data-open='true']) body {
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 .workspace-header {
-  height: var(--workspace-header-height);
+  --workspace-navigation-actions-height: 0px;
+  --workspace-glass-opacity: 28%;
+  grid-template-rows: 3.5rem minmax(0, 0fr) 0px;
+  border-color: rgb(125 141 166 / 22%);
+  transition: grid-template-rows 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.workspace-rail {
-  display: none;
-  top: var(--workspace-header-height);
-  bottom: 0;
+.workspace-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background-color: hsl(var(--background) / var(--workspace-glass-opacity));
+  background-image:
+    radial-gradient(ellipse at 3% 5%, rgb(166 203 255 / 24%), transparent 22%),
+    radial-gradient(ellipse at 98% 96%, rgb(204 181 255 / 21%), transparent 24%),
+    linear-gradient(
+      180deg,
+      rgb(255 255 255 / 24%),
+      transparent 24%,
+      transparent 77%,
+      rgb(255 255 255 / 9%)
+    );
+  box-shadow:
+    inset 0 1px 2px rgb(255 255 255 / 58%),
+    inset 1px -1px 6px rgb(156 192 255 / 18%),
+    inset -1px 0 5px rgb(217 194 255 / 17%),
+    0 10px 24px -16px rgb(14 23 41 / 40%);
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  backdrop-filter: blur(10px) saturate(1.4);
+  transition: background-color 180ms ease;
 }
 
-.workspace-mobile-menu,
-.workspace-menu-overlay {
-  top: var(--workspace-header-height);
+.workspace-header[data-open='true'] {
+  --workspace-glass-opacity: 64%;
+  grid-template-rows: 3.5rem minmax(0, 1fr) var(--workspace-navigation-actions-height);
+}
+
+.workspace-navigation-panel {
+  opacity: 0;
+  transition: opacity 170ms ease;
+}
+
+.workspace-header[data-open='true'] .workspace-navigation-panel {
+  opacity: 1;
+}
+
+@media (max-width: 767px) {
+  .workspace-header {
+    --workspace-navigation-actions-height: 3.5625rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-header,
+  .workspace-header::before,
+  .workspace-navigation-panel {
+    transition: none;
+  }
+}
+
+.dark .workspace-header {
+  border-color: rgb(232 240 255 / 25%);
+}
+
+.dark .workspace-header::before {
+  box-shadow:
+    inset 0 1px 2px rgb(255 255 255 / 32%),
+    inset 1px -1px 6px rgb(156 192 255 / 16%),
+    inset -1px 0 5px rgb(217 194 255 / 14%),
+    0 10px 24px -16px rgb(0 0 0 / 70%);
 }
 
 .workspace-main {
   padding-top: calc(var(--workspace-header-height) + 1.25rem);
   overflow-wrap: anywhere;
-}
-
-@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
-  .workspace-rail {
-    display: block;
-  }
-
-  .workspace-main {
-    margin-left: var(--workspace-rail-width);
-  }
-
-  .workspace-menu-button,
-  .workspace-mobile-menu,
-  .workspace-menu-overlay {
-    display: none;
-  }
 }
 
 .database-loader {

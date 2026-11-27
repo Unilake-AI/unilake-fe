@@ -19,17 +19,15 @@ import {
 
 import { FLOW_STEP_PRESENTATION, IngestionFlowCard } from './ingestion-flow-card'
 
-export function PipelineDashboard({ refresh }: { refresh: boolean }) {
+export function PipelineDashboard() {
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const overview = useQuery({
     queryKey: ['auto-silver', 'dashboard', 'overview'],
     queryFn: API_AutoSilverOverview,
-    refetchInterval: refresh ? 5000 : false,
   })
   const flows = useQuery({
     queryKey: ['auto-silver', 'dashboard', 'recent-flows'],
     queryFn: () => API_ListIngestionFlows({ limit: 5, offset: 0 }),
-    refetchInterval: refresh ? 5000 : false,
   })
   const selected = flows.data?.items.find((flow) => flow.ingestion_job_id === selectedId)
   return (

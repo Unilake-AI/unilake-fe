@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Layers, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { API_ListProfiles } from '@/api/admindata/profiles'
@@ -168,6 +168,7 @@ export function SilverView() {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<Layers />}
         breadcrumb={['Quản trị dữ liệu', 'Phiên bản Silver (Snapshots)']}
         title="Quản lý phiên bản Silver (Snapshots)"
         description="Theo dõi lịch sử các phiên bản Silver đã xuất bản theo Silver Profile, xem trước dữ liệu bảng và chuyển đổi phiên bản đang hoạt động."

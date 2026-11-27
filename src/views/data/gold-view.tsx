@@ -3,6 +3,7 @@
 import { useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { BarChart3 } from 'lucide-react'
 
 import {
   API_GoldSources,
@@ -89,6 +90,7 @@ const fields: Record<string, string> = {
   degree_level: 'Bậc học',
 }
 const size = 20
+const metricPageSize = 10
 
 export function GoldView() {
   const client = useQueryClient()
@@ -104,17 +106,15 @@ export function GoldView() {
   const sources = useQuery({
     queryKey: ['gold', 'sources', domain, sourcePage],
     queryFn: () => API_GoldSources({ ...filter, limit: size, offset: sourcePage * size }),
-    refetchInterval: 5000,
   })
   const jobs = useQuery({
     queryKey: ['gold', 'jobs', domain, jobPage],
     queryFn: () => API_GoldJobs({ ...filter, limit: size, offset: jobPage * size }),
-    refetchInterval: 5000,
   })
   const metrics = useQuery({
     queryKey: ['gold', 'metrics', domain, metricPage],
-    queryFn: () => API_GoldMetrics({ ...filter, limit: size, offset: metricPage * size }),
-    refetchInterval: 5000,
+    queryFn: () =>
+      API_GoldMetrics({ ...filter, limit: metricPageSize, offset: metricPage * metricPageSize }),
   })
   const workers = useQuery({
     queryKey: ['gold', 'workers'],
@@ -125,13 +125,11 @@ export function GoldView() {
     queryKey: ['gold', 'detail', selected],
     queryFn: () => API_GoldJob(selected),
     enabled: Boolean(selected),
-    refetchInterval: 5000,
   })
   const attempts = useQuery({
     queryKey: ['gold', 'attempts', selected],
     queryFn: () => API_GoldAttempts(selected),
     enabled: Boolean(selected),
-    refetchInterval: 5000,
   })
   const update = useMutation({
     mutationFn: API_RefreshGold,
@@ -169,14 +167,14 @@ export function GoldView() {
       setTimeout(() => URL.revokeObjectURL(url), 1000)
     },
   })
-  function paging(page: number, setPage: (page: number) => void, count = 0) {
+  function paging(page: number, setPage: (page: number) => void, count = 0, pageSize = size) {
     return (
       <div className="mt-3 flex items-center justify-end gap-2">
         <Button disabled={page === 0} onClick={() => setPage(page - 1)}>
           Trang trước
         </Button>
         <span className="text-xs text-slate-500">Trang {page + 1}</span>
-        <Button disabled={count < size} onClick={() => setPage(page + 1)}>
+        <Button disabled={count < pageSize} onClick={() => setPage(page + 1)}>
           Trang sau
         </Button>
       </div>
@@ -186,6 +184,7 @@ export function GoldView() {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<BarChart3 />}
         breadcrumb={['Quản trị dữ liệu', 'Gold']}
         title="Tổng hợp & Báo cáo Gold"
         description="Silver công bố xong sẽ tự tạo lượt Gold. Theo dõi công bố Gold, đồng bộ dữ liệu vào DB và tải báo cáo theo từng nguồn."
@@ -360,7 +359,7 @@ export function GoldView() {
             </table>
           </div>
         )}
-        {paging(metricPage, setMetricPage, metrics.data?.length)}
+        {paging(metricPage, setMetricPage, metrics.data?.length, metricPageSize)}
       </Card>
       <Card title="Lịch sử xử lý Gold">
         {jobs.isPending ? (

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { AxiosError, AxiosHeaders } from 'axios'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -120,7 +120,13 @@ describe('StaffOverviewView', () => {
 
       const { client } = renderWithClient()
       try {
-        expect(await screen.findByText('12')).toBeInTheDocument()
+        const chart = await screen.findByRole('figure', { name: 'Biểu đồ kết quả nạp dữ liệu' })
+        expect(chart).toHaveTextContent('Tổng số lượt: 12. Thành công: 7. Thất bại: 1.')
+        expect(within(chart).getByText('Thành công', { exact: true })).toBeVisible()
+        const queue = within(screen.getByRole('table', { name: 'Hàng đợi xử lý' }))
+        expect(queue.getByRole('row', { name: 'Đang chờ 1' })).toBeVisible()
+        expect(queue.getByRole('row', { name: 'Đang xử lý 2' })).toBeVisible()
+        expect(queue.getByRole('row', { name: 'Chờ thử lại 1' })).toBeVisible()
         expect(await screen.findByText('12,5%')).toBeVisible()
         expect(screen.queryByText('Lĩnh vực được cấp:')).not.toBeInTheDocument()
         expect(screen.queryByRole('link', { name: 'Nạp dữ liệu' })).not.toBeInTheDocument()
@@ -198,6 +204,9 @@ describe('StaffOverviewView', () => {
         await screen.findByText('Cần phân công phòng ban đang hiệu lực để nhận và báo sửa dữ liệu')
       ).toBeInTheDocument()
       expect(await screen.findByText('Chưa có dữ liệu nạp')).toBeVisible()
+      const chart = await screen.findByRole('figure', { name: 'Biểu đồ kết quả nạp dữ liệu' })
+      expect(chart).toHaveTextContent('Tổng số lượt: 0. Thành công: 0. Thất bại: 0.')
+      expect(within(chart).getByText('Thất bại', { exact: true })).toBeVisible()
     } finally {
       client.clear()
     }

@@ -46,13 +46,13 @@ export function CountChart({ data, unit }: { data: CountCategory[]; unit: string
           initialDimension={{ width: 320, height: 180 }}
         >
           <BarChart layout="vertical" data={data} margin={{ right: 42 }}>
-            <CartesianGrid horizontal={false} stroke="#dbe4ef" strokeDasharray="3 4" />
+            <CartesianGrid horizontal={false} stroke="hsl(var(--border))" strokeDasharray="3 4" />
             <XAxis
               type="number"
               allowDecimals={false}
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 11, fill: '#475569' }}
+              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
             />
             <YAxis
               type="category"
@@ -60,13 +60,24 @@ export function CountChart({ data, unit }: { data: CountCategory[]; unit: string
               width={102}
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 11, fill: '#334155' }}
+              tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }}
             />
             <Tooltip
-              cursor={{ fill: '#f1f5f9' }}
+              cursor={{ fill: 'hsl(var(--muted))' }}
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                borderColor: 'hsl(var(--border))',
+                color: 'hsl(var(--foreground))',
+              }}
+              itemStyle={{ color: 'hsl(var(--foreground))' }}
               formatter={(value) => [`${formatNumber(Number(value))} ${unit}`, 'Số lượng']}
             />
-            <Legend iconType="circle" iconSize={7} wrapperStyle={{ fontSize: 12 }} />
+            <Legend
+              iconType="circle"
+              iconSize={7}
+              wrapperStyle={{ fontSize: 12 }}
+              formatter={(value) => <span className="text-foreground">{value}</span>}
+            />
             <Bar
               dataKey="count"
               name={`Số ${unit}`}
@@ -78,7 +89,7 @@ export function CountChart({ data, unit }: { data: CountCategory[]; unit: string
               <LabelList
                 dataKey="count"
                 position="right"
-                fill="#192438"
+                fill="hsl(var(--foreground))"
                 fontSize={11}
                 fontWeight={600}
                 formatter={(value) => formatNumber(Number(value))}

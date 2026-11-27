@@ -3,7 +3,7 @@
 import Link from 'next/link'
 
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight } from 'lucide-react'
+import { LayoutDashboard, ArrowRight } from 'lucide-react'
 
 import { API_ListCleaningRuns } from '@/api/admindata/cleaning'
 import { API_ListIngestionWorkers } from '@/api/admindata/ingestion'
@@ -71,7 +71,7 @@ export function DataDashboardView() {
   return (
     <div className="space-y-4">
       <PageHeader
-        dashboard
+        icon={<LayoutDashboard />}
         breadcrumb={['Quản trị dữ liệu', 'Tổng quan']}
         title="Bảng điều khiển vận hành Data Lake"
         description="Theo dõi lượt nạp Bronze, tiến độ làm sạch và tình trạng vận hành."

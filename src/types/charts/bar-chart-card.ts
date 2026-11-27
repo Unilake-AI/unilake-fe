@@ -1,1 +1,1 @@
-export type BarChartRow = { label: string; value: number }
+export type BarChartRow = { label: string; value: number; color?: string }

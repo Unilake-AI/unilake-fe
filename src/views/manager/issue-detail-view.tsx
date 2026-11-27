@@ -3,6 +3,7 @@
 import Link from 'next/link'
 
 import { useQuery } from '@tanstack/react-query'
+import { ShieldCheck } from 'lucide-react'
 
 import { getApiErrorMessage } from '@/api/http'
 import { API_ManagerIssue } from '@/api/manager/reports'
@@ -43,6 +44,7 @@ function IssueDetail({ issueId }: { issueId: string }) {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<ShieldCheck />}
         breadcrumb={['Quản lý đơn vị', 'Yêu cầu xử lý lỗi']}
         title={issue.title}
         description={`${issue.department_name ?? 'Phòng phụ trách'} · ${label(issue.status)}`}
